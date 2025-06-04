@@ -1,0 +1,23 @@
+[package]
+name = "game_components_minigame"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+
+[cairo]
+sierra-replace-ids = true
+
+[dependencies]
+game_components_utils = { path = "../utils" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.5.0" }
+openzeppelin_token = "1.0.0"
+openzeppelin_introspection = "1.0.0"
+denshokan = { git = "https://github.com/Provable-Games/denshokan", branch = "main" }
+
+[[target.starknet-contract]]
+build-external-contracts = ["dojo::world::world_contract::world"]
+
+[dev-dependencies]
+cairo_test = "=2.10.1"
+dojo_cairo_test = { git = "https://github.com/dojoengine/dojo", tag = "v1.5.0" }

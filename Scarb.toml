@@ -1,0 +1,39 @@
+[workspace]
+members = [
+    "packages/minigame",
+    "packages/metagame",
+    "packages/utils",
+]
+
+[package]
+name = "game_components"
+readme = "README.md"
+version = "1.5.0"
+edition = "2024_07"
+
+[workspace.package]
+version = "0.0.1"
+edition = "2024_07"
+cairo-version = "=2.10.1"
+authors = ["Provable Games <maintainers@provable.games>"]
+keywords = [
+    "openzeppelin",
+    "starknet",
+    "contracts",
+    "security",
+    "standards"
+]
+
+[dependencies]
+game_components_minigame = { path = "packages/minigame" }
+game_components_metagame = { path = "packages/metagame" }
+game_components_utils = { path = "packages/utils" }
+
+[dev-dependencies]
+cairo_test = "=2.10.1"
+dojo_cairo_test = { git = "https://github.com/dojoengine/dojo", tag = "v1.5.0" }
+
+[lib]
+
+[[target.starknet-contract]]
+build-external-contracts = ["dojo::world::world_contract::world"]
