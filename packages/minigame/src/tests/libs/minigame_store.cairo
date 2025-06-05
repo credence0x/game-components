@@ -1,6 +1,6 @@
 use dojo::world::{WorldStorage};
 use dojo::model::{ModelStorage};
-use crate::constants::VERSION;
+use crate::tests::constants::VERSION;
 
 use crate::tests::models::minigame::{Score, ScoreObjective, ScoreObjectiveCount};
 use crate::models::objectives::{ObjectiveDetails};

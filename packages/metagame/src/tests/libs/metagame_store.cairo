@@ -1,7 +1,7 @@
 use dojo::world::{WorldStorage};
 use dojo::model::{ModelStorage};
 
-use crate::models::context::Context;
+use crate::tests::models::metagame::Context;
 
 #[derive(Copy, Drop)]
 pub struct Store {

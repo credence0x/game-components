@@ -24,7 +24,7 @@ pub trait IMetagameMockInit<TContractState> {
 mod metagame_mock {
     use starknet::ContractAddress;
     use crate::models::context::GameContext;
-    use crate::tests::models::metagame::MetagameContext;
+    use crate::tests::models::metagame::Context;
     use crate::interface::{IMetagameContext, IMetagameContextURI};
     use crate::metagame::metagame_component;
 
@@ -106,7 +106,7 @@ mod metagame_mock {
     }
 
     #[abi(embed_v0)]
-    impl GameContextImpl of IGameContext<ContractState> {
+    impl GameContextImpl of IMetagameContext<ContractState> {
         fn has_context(self: @ContractState, token_id: u64) -> bool {
             let world = self.world(@self.namespace());
             let store: Store = StoreTrait::new(world);
@@ -126,7 +126,7 @@ mod metagame_mock {
     }
 
     #[abi(embed_v0)]
-    impl GameContextURIImpl of IGameContextURI<ContractState> {
+    impl GameContextURIImpl of IMetagameContextURI<ContractState> {
         fn context_uri(self: @ContractState, token_id: u64) -> ByteArray {
             "test context uri"
         }

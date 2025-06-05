@@ -43,11 +43,11 @@ mod minigame_mock {
 
     use starknet::ContractAddress;
 
-    component!(path: game_component, storage: game, event: GameEvent);
+    component!(path: minigame_component, storage: minigame, event: MinigameEvent);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
     #[abi(embed_v0)]
-    impl GameImpl = game_component::GameImpl<ContractState>;
-    impl GameInternalImpl = game_component::InternalImpl<ContractState>;
+    impl MinigameImpl = minigame_component::MinigameImpl<ContractState>;
+    impl MinigameInternalImpl = minigame_component::InternalImpl<ContractState>;
 
     #[abi(embed_v0)]
     impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
@@ -55,7 +55,7 @@ mod minigame_mock {
     #[storage]
     struct Storage {
         #[substorage(v0)]
-        game: game_component::Storage,
+        minigame: minigame_component::Storage,
         #[substorage(v0)]
         src5: SRC5Component::Storage,
     }
@@ -64,7 +64,7 @@ mod minigame_mock {
     #[derive(Drop, starknet::Event)]
     enum Event {
         #[flat]
-        GameEvent: game_component::Event,
+        MinigameEvent: minigame_component::Event,
         #[flat]
         SRC5Event: SRC5Component::Event,
     }
@@ -72,7 +72,7 @@ mod minigame_mock {
     //*******************************
 
     #[abi(embed_v0)]
-    impl SettingsImpl of ISettings<ContractState> {
+    impl SettingsImpl of IMinigameSettings<ContractState> {
         fn setting_exists(self: @ContractState, settings_id: u32) -> bool {
             let world = self.world(@self.namespace());
             let store: Store = StoreTrait::new(world);
@@ -98,14 +98,14 @@ mod minigame_mock {
     }
 
     #[abi(embed_v0)]
-    impl SettingsURIImpl of ISettingsURI<ContractState> {
+    impl SettingsURIImpl of IMinigameSettingsURI<ContractState> {
         fn settings_uri(self: @ContractState, settings_id: u32) -> ByteArray {
             "test settings uri"
         }
     }
 
     #[abi(embed_v0)]
-    impl GameDetailsImpl of IGameDetails<ContractState> {
+    impl GameDetailsImpl of IMinigameDetails<ContractState> {
         fn score(self: @ContractState, token_id: u64) -> u32 {
             let world = self.world(@self.namespace());
             let store: Store = StoreTrait::new(world);
@@ -114,7 +114,7 @@ mod minigame_mock {
     }
 
     #[abi(embed_v0)]
-    impl ObjectivesImpl of IObjectives<ContractState> {
+    impl ObjectivesImpl of IMinigameObjectives<ContractState> {
         fn objective_exists(self: @ContractState, objective_id: u32) -> bool {
             let world = self.world(@self.namespace());
             let store: Store = StoreTrait::new(world);
@@ -130,7 +130,7 @@ mod minigame_mock {
         fn objectives(self: @ContractState, token_id: u64) -> ByteArray {
             let world = self.world(@self.namespace());
             let store: Store = StoreTrait::new(world);
-            let objective_ids = self.game.get_objective_ids(token_id);
+            let objective_ids = self.minigame.get_objective_ids(token_id);
             let mut objective_index = 0;
             let mut objectives = array![];
             loop {
@@ -147,21 +147,21 @@ mod minigame_mock {
     }
 
     #[abi(embed_v0)]
-    impl ObjectivesURIImpl of IObjectivesURI<ContractState> {
+    impl ObjectivesURIImpl of IMinigameObjectivesURI<ContractState> {
         fn objectives_uri(self: @ContractState, token_id: u64) -> ByteArray {
             "test objectives uri"
         }
     }
 
     #[abi(embed_v0)]
-    impl TokenUriImpl of ITokenUri<ContractState> {
+    impl TokenUriImpl of IMinigameTokenUri<ContractState> {
         fn token_uri(self: @ContractState, token_id: u256) -> ByteArray {
             "game mock uri"
         }
     }
 
     #[abi(embed_v0)]
-    impl GameMockImpl of super::IGameTokenMock<ContractState> {
+    impl GameMockImpl of super::IMinigameMock<ContractState> {
         fn start_game(ref self: ContractState, token_id: u64) {
             let mut world = self.world(@self.namespace());
             let mut store: Store = StoreTrait::new(world);
@@ -173,7 +173,7 @@ mod minigame_mock {
             let mut world = self.world(@self.namespace());
             let mut store: Store = StoreTrait::new(world);
             store.set_score(@Score { token_id, score });
-            self.game.end_game(token_id);
+            self.minigame.end_game(token_id);
         }
 
         fn create_objective_score(ref self: ContractState, score: u32) {
@@ -185,7 +185,7 @@ mod minigame_mock {
                     @ScoreObjective { id: objective_count + 1, score, exists: true },
                 );
             store.set_objective_count(objective_count + 1);
-            self.game.create_objective(objective_count + 1, format!("Score Above {}", score));
+            self.minigame.create_objective(objective_count + 1, format!("Score Above {}", score));
         }
 
         fn create_settings_difficulty(
@@ -211,12 +211,12 @@ mod minigame_mock {
                 },
             ];
             let settings_json = create_settings_json(name.clone(), description.clone(), settings.span());
-            self.game.create_settings(settings_count + 1, settings_json);
+            self.minigame.create_settings(settings_count + 1, settings_json);
         }
     }
 
     #[abi(embed_v0)]
-    impl GameInitializerImpl of super::IGameTokenMockInit<ContractState> {
+    impl GameInitializerImpl of super::IMinigameMockInit<ContractState> {
         fn initializer(
             ref self: ContractState,
             game_creator: ContractAddress,
@@ -231,7 +231,7 @@ mod minigame_mock {
             denshokan_address: ContractAddress,
         ) {
             self
-                .game
+                .minigame
                 .initializer(
                     game_creator,
                     game_name,
