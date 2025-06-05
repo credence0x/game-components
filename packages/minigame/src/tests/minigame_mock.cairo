@@ -34,8 +34,8 @@ pub trait IMinigameMockInit<TContractState> {
 mod minigame_mock {
     use crate::interface::{WorldImpl, IMinigameSettings, IMinigameDetails, IMinigameObjectives, IMinigameTokenUri, IMinigameSettingsURI, IMinigameObjectivesURI};
     use crate::minigame::minigame_component;
-    use crate::models::settings::{Settings, GameSetting, SettingsDetails};
-    use crate::tests::models::minigame::{Score, ScoreObjective};
+    use crate::models::settings::GameSetting;
+    use crate::tests::models::minigame::{Score, ScoreObjective, Settings, SettingsDetails};
     use openzeppelin_introspection::src5::SRC5Component;
 
     use crate::tests::libs::minigame_store::{Store, StoreTrait};
