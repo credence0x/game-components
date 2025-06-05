@@ -33,7 +33,7 @@ mod metagame_mock {
 
     use crate::tests::libs::metagame_store::{Store, StoreTrait};
     use game_components_utils::json::create_context_json;
-    use denshokan::interfaces::denshokan::{IDenshokanDispatcher, IDenshokanDispatcherTrait};
+    use game_components_denshokan::interface::{IDenshokanDispatcher, IDenshokanDispatcherTrait};
 
     component!(path: metagame_component, storage: metagame, event: MetagameEvent);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);

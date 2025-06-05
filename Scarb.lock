@@ -49,18 +49,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "denshokan"
-version = "1.5.0"
-source = "git+https://github.com/Provable-Games/denshokan?branch=main#31631336e39c0700a339238b05c047bd692cfe4b"
-dependencies = [
- "alexandria_encoding",
- "dojo",
- "graffiti",
- "openzeppelin_introspection",
- "openzeppelin_token",
-]
-
-[[package]]
 name = "dojo"
 version = "1.5.0"
 source = "git+https://github.com/dojoengine/dojo?tag=v1.5.0#812f17c9c57fd057d0bf1e648a591ea0ca9ea718"
@@ -86,18 +74,23 @@ name = "game_components"
 version = "1.5.0"
 dependencies = [
  "dojo_cairo_test",
+ "game_components_denshokan",
  "game_components_metagame",
  "game_components_minigame",
  "game_components_utils",
 ]
 
 [[package]]
+name = "game_components_denshokan"
+version = "0.0.1"
+
+[[package]]
 name = "game_components_metagame"
 version = "0.0.1"
 dependencies = [
- "denshokan",
  "dojo",
  "dojo_cairo_test",
+ "game_components_denshokan",
  "game_components_utils",
  "openzeppelin_introspection",
 ]
@@ -106,9 +99,9 @@ dependencies = [
 name = "game_components_minigame"
 version = "0.0.1"
 dependencies = [
- "denshokan",
  "dojo",
  "dojo_cairo_test",
+ "game_components_denshokan",
  "game_components_utils",
  "openzeppelin_introspection",
  "openzeppelin_token",

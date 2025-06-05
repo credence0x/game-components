@@ -9,10 +9,10 @@ edition.workspace = true
 sierra-replace-ids = true
 
 [dependencies]
+game_components_denshokan = { path = "../denshokan" }
 game_components_utils = { path = "../utils" }
 dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.5.0" }
 openzeppelin_introspection = "1.0.0"
-denshokan = { git = "https://github.com/Provable-Games/denshokan", branch = "main" }
 
 [[target.starknet-contract]]
 build-external-contracts = ["dojo::world::world_contract::world"]

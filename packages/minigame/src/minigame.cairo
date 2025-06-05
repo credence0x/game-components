@@ -4,7 +4,7 @@
 #[starknet::component]
 pub mod minigame_component {
     use crate::interface::{IMinigame, IMinigameDetails, IMinigameSettings, IMinigameObjectives, WorldImpl, IMINIGAME_ID};
-    use denshokan::interfaces::denshokan::{IDenshokanDispatcher, IDenshokanDispatcherTrait};
+    use game_components_denshokan::interface::{IDenshokanDispatcher, IDenshokanDispatcherTrait};
     use starknet::{ContractAddress, get_contract_address};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use dojo::contract::components::world_provider::{IWorldProvider};
