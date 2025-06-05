@@ -59,7 +59,7 @@ pub mod minigame_component {
                     start,
                     end,
                     objective_ids,
-                    false,
+                    Option::None,
                     to,
                     soulbound,
                 );

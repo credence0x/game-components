@@ -26,7 +26,7 @@ pub trait IDenshokan<TContractState> {
         start: Option<u64>,
         end: Option<u64>,
         objective_ids: Option<Span<u32>>,
-        has_context: bool,
+        context: Option<ByteArray>,
         to: ContractAddress,
         soulbound: bool,
     ) -> u64;
@@ -39,7 +39,7 @@ pub trait IDenshokan<TContractState> {
         start: Option<u64>,
         end: Option<u64>,
         objective_ids: Option<Span<u32>>,
-        has_context: bool,
+        context: Option<ByteArray>,
     );
     fn update_game(ref self: TContractState, token_id: u64);
     fn end_game(ref self: TContractState, token_id: u64);

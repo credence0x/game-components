@@ -9,10 +9,10 @@ pub trait IMetagameMock<TContractState> {
         settings_id: Option<u32>,
         start: Option<u64>,
         end: Option<u64>,
+        objective_ids: Option<Span<u32>>,
         to: ContractAddress,
         soulbound: bool,
     ) -> u64;
-    fn create_context(ref self: TContractState, token_id: u64, context: ByteArray);
 }
 
 #[starknet::interface]
@@ -75,33 +75,31 @@ mod metagame_mock {
             settings_id: Option<u32>,
             start: Option<u64>,
             end: Option<u64>,
+            objective_ids: Option<Span<u32>>,
             to: ContractAddress,
             soulbound: bool,
         ) -> u64 {
+            let context_key_values = array![
+                GameContext { name: "Test Context 1", value: "Test Context" },
+            ].span();
+            let context = create_context_json(context_key_values);
             let denshokan_dispatcher = IDenshokanDispatcher { contract_address: self.denshokan_address.read() };
-            let objective_ids = array![1, 2];
-            denshokan_dispatcher
+            let token_id = denshokan_dispatcher
                 .mint(
                     game_id,
                     player_name,
                     settings_id,
                     start,
                     end,
-                    Option::Some(objective_ids.span()),
-                    true,
+                    objective_ids,
+                    Option::Some(context.clone()),
                     to,
                     soulbound,
-                )
-        }
-
-        fn create_context(
-            ref self: ContractState,
-            token_id: u64,
-            context: ByteArray,
-        ) {
+                );
             let mut world = self.world(@self.namespace());
             let mut store: Store = StoreTrait::new(world);
-            store.set_context(@Context { token_id, context, exists: true });
+            store.set_context(@Context { token_id, context: context.clone(), exists: true });
+            token_id
         }
     }
 
@@ -118,10 +116,7 @@ mod metagame_mock {
             let world = self.world(@self.namespace());
             let store: Store = StoreTrait::new(world);
             let context = store.get_context(token_id);
-            let contexts = array![
-                GameContext { name: "Test Context 1", value: context.context },
-            ].span();
-            create_context_json(contexts)
+            context.context
         }
     }
 
