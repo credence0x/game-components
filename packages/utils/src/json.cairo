@@ -3,24 +3,22 @@ use game_components_metagame::models::context::GameContext;
 use graffiti::json::JsonImpl;
 
 pub fn create_settings_json(name: ByteArray, description: ByteArray, settings: Span<GameSetting>) -> ByteArray {
-    let mut settings_array = array![];
+    let mut settings_json = JsonImpl::new();
     let mut settings_index = 0;
     loop {
         if settings_index == settings.len() {
             break;
         }
         let setting = settings.at(settings_index);
-        let setting_json = JsonImpl::new()
-            .add(setting.name.clone(), setting.value.clone())
-            .build();
-        settings_array.append(setting_json);
+        settings_json = settings_json.add(setting.name.clone(), setting.value.clone());
         settings_index += 1;
     };
+    let settings_json = settings_json.build();
 
     let metadata = JsonImpl::new()
         .add("Name", name)
         .add("Description", description)
-        .add_array("Settings", settings_array.span())
+        .add("Settings", settings_json)
         .build();
 
     metadata
