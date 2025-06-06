@@ -18,9 +18,9 @@ pub fn create_settings_json(name: ByteArray, description: ByteArray, settings: S
     };
 
     let metadata = JsonImpl::new()
-        .add("name", name)
-        .add("description", description)
-        .add_array("settings", settings_array.span())
+        .add("Name", name)
+        .add("Description", description)
+        .add_array("Settings", settings_array.span())
         .build();
 
     metadata
