@@ -3,22 +3,24 @@ use game_components_metagame::models::context::GameContext;
 use graffiti::json::JsonImpl;
 
 pub fn create_settings_json(name: ByteArray, description: ByteArray, settings: Span<GameSetting>) -> ByteArray {
-    let mut settings_json = JsonImpl::new();
+    let mut settings_array = array![];
     let mut settings_index = 0;
     loop {
         if settings_index == settings.len() {
             break;
         }
         let setting = settings.at(settings_index);
-        settings_json = settings_json.add(setting.name.clone(), setting.value.clone());
+        let setting_json = JsonImpl::new()
+            .add(setting.name.clone(), setting.value.clone())
+            .build();
+        settings_array.append(setting_json);
         settings_index += 1;
     };
-    let settings_json = settings_json.build();
 
     let metadata = JsonImpl::new()
         .add("name", name)
         .add("description", description)
-        .add("settings", settings_json)
+        .add_array("settings", settings_array.span())
         .build();
 
     metadata
@@ -53,11 +55,36 @@ pub fn create_context_json(contexts: Span<GameContext>) -> ByteArray {
     metadata.build()
 }
 
+pub fn create_json_array(values: Span<ByteArray>) -> ByteArray {
+    if values.len() == 0 {
+        return "[]";
+    }
+    
+    let mut result = "[";
+    let mut index = 0;
+    loop {
+        if index == values.len() {
+            break;
+        }
+        let value = values.at(index);
+        result += "\"" + value.clone() + "\"";
+        
+        // Add comma if not the last element
+        if index < values.len() - 1 {
+            result += ",";
+        }
+        index += 1;
+    };
+    result += "]";
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use super::create_settings_json;
     use super::create_objectives_json;
     use super::create_context_json;
+    use super::create_json_array;
 
     use game_components_minigame::models::settings::GameSetting;
     use game_components_metagame::models::context::GameContext;
@@ -100,6 +127,16 @@ mod tests {
             GameContext { name: "Test Context 2", value: "Test Context 2 Value" },
         ].span();
         let _current_1 = create_context_json(contexts);
+        println!("{}", _current_1);
+    }
+
+    #[test]
+    fn test_json_array() {
+        let values = array![
+            "Test Value 1",
+            "Test Value 2",
+        ].span();
+        let _current_1 = create_json_array(values);
         println!("{}", _current_1);
     }
 }
