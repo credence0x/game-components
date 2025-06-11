@@ -1,3 +1,5 @@
+use crate::models::context::GameContextDetails;
+
 pub const IMETAGAME_ID: felt252 =
     0x0260d5160a283a03815f6c3799926c7bdbec5f22e759f992fb8faf172243ab20;
 
@@ -9,7 +11,7 @@ pub trait IMetagame<TContractState> {
 #[starknet::interface]
 pub trait IMetagameContext<TContractState> {
     fn has_context(self: @TContractState, token_id: u64) -> bool;
-    fn context(self: @TContractState, token_id: u64) -> ByteArray;
+    fn context(self: @TContractState, token_id: u64) -> GameContextDetails;
 }
 
 #[starknet::interface]

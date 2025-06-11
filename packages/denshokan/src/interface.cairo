@@ -27,6 +27,8 @@ pub trait IDenshokan<TContractState> {
         end: Option<u64>,
         objective_ids: Option<Span<u32>>,
         context: Option<ByteArray>,
+        client_url: Option<ByteArray>,
+        renderer_address: Option<ContractAddress>,
         to: ContractAddress,
         soulbound: bool,
     ) -> u64;

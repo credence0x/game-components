@@ -10,6 +10,8 @@ pub trait IMetagameMock<TContractState> {
         start: Option<u64>,
         end: Option<u64>,
         objective_ids: Option<Span<u32>>,
+        client_url: Option<ByteArray>,
+        renderer_address: Option<ContractAddress>,
         to: ContractAddress,
         soulbound: bool,
     ) -> u64;
@@ -23,7 +25,7 @@ pub trait IMetagameMockInit<TContractState> {
 #[dojo::contract]
 mod metagame_mock {
     use starknet::ContractAddress;
-    use crate::models::context::GameContext;
+    use crate::models::context::{GameContextDetails, GameContext};
     use crate::tests::models::metagame::Context;
     use crate::interface::{IMetagameContext, IMetagameContextURI};
     use crate::metagame::metagame_component;
@@ -76,13 +78,15 @@ mod metagame_mock {
             start: Option<u64>,
             end: Option<u64>,
             objective_ids: Option<Span<u32>>,
+            client_url: Option<ByteArray>,
+            renderer_address: Option<ContractAddress>,
             to: ContractAddress,
             soulbound: bool,
         ) -> u64 {
-            let context_key_values = array![
+            let context = array![
                 GameContext { name: "Test Context 1", value: "Test Context" },
             ].span();
-            let context = create_context_json(context_key_values);
+            let context_json = create_context_json("Test App", "Test App Description", context);
             let denshokan_dispatcher = IDenshokanDispatcher { contract_address: self.denshokan_address.read() };
             let token_id = denshokan_dispatcher
                 .mint(
@@ -92,7 +96,9 @@ mod metagame_mock {
                     start,
                     end,
                     objective_ids,
-                    Option::Some(context.clone()),
+                    Option::Some(context_json.clone()),
+                    client_url,
+                    renderer_address,
                     to,
                     soulbound,
                 );
@@ -112,11 +118,15 @@ mod metagame_mock {
             context.exists
         }
 
-        fn context(self: @ContractState, token_id: u64) -> ByteArray {
+        fn context(self: @ContractState, token_id: u64) -> GameContextDetails {
             let world = self.world(@self.namespace());
             let store: Store = StoreTrait::new(world);
             let context = store.get_context(token_id);
-            context.context
+            GameContextDetails {
+                name: "Test App",
+                description: "Test App Description",
+                context: context.context,
+            }
         }
     }
 

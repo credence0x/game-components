@@ -39,18 +39,26 @@ pub fn create_objectives_json(objectives: Span<ByteArray>) -> ByteArray {
     metadata.build()
 }
 
-pub fn create_context_json(contexts: Span<GameContext>) -> ByteArray {
-    let mut metadata = JsonImpl::new();
-    let mut context_index = 0;
+pub fn create_context_json(name: ByteArray, description: ByteArray, contexts: Span<GameContext>) -> ByteArray {
+    let mut contexts_json = JsonImpl::new();
+    let mut contexts_index = 0;
     loop {
-        if context_index == contexts.len() {
+        if contexts_index == contexts.len() {
             break;
         }
-        let context = contexts.at(context_index);
-        metadata = metadata.add(context.name.clone(), context.value.clone());
-        context_index += 1;
+        let context = contexts.at(contexts_index);
+        contexts_json = contexts_json.add(context.name.clone(), context.value.clone());
+        contexts_index += 1;
     };
-    metadata.build()
+    let contexts_json = contexts_json.build();
+
+    let metadata = JsonImpl::new()
+        .add("Name", name)
+        .add("Description", description)
+        .add("Contexts", contexts_json)
+        .build();
+
+    metadata
 }
 
 pub fn create_json_array(values: Span<ByteArray>) -> ByteArray {

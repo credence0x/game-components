@@ -38,6 +38,9 @@ pub mod minigame_component {
             start: Option<u64>,
             end: Option<u64>,
             objective_ids: Option<Span<u32>>,
+            context: Option<ByteArray>,
+            client_url: Option<ByteArray>,
+            renderer_address: Option<ContractAddress>,
             to: ContractAddress,
             soulbound: bool,
         ) -> u64 {
@@ -59,7 +62,9 @@ pub mod minigame_component {
                     start,
                     end,
                     objective_ids,
-                    Option::None,
+                    context,
+                    client_url,
+                    renderer_address,
                     to,
                     soulbound,
                 );

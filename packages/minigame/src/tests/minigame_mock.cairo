@@ -34,12 +34,13 @@ pub trait IMinigameMockInit<TContractState> {
 mod minigame_mock {
     use crate::interface::{WorldImpl, IMinigameSettings, IMinigameDetails, IMinigameObjectives, IMinigameTokenUri, IMinigameSettingsURI, IMinigameObjectivesURI};
     use crate::minigame::minigame_component;
-    use crate::models::settings::GameSetting;
+    use crate::models::settings::{GameSetting, GameSettingDetails};
+    use crate::models::objectives::GameObjective;
     use crate::tests::models::minigame::{Score, ScoreObjective, Settings, SettingsDetails};
     use openzeppelin_introspection::src5::SRC5Component;
 
     use crate::tests::libs::minigame_store::{Store, StoreTrait};
-    use game_components_utils::json::{create_settings_json, create_objectives_json};
+    use game_components_utils::json::create_settings_json;
 
     use starknet::ContractAddress;
 
@@ -78,22 +79,21 @@ mod minigame_mock {
             let store: Store = StoreTrait::new(world);
             store.get_settings_details(settings_id).exists
         }
-        fn settings(self: @ContractState, settings_id: u32) -> ByteArray {
+        fn settings(self: @ContractState, settings_id: u32) -> GameSettingDetails {
             let world = self.world(@self.namespace());
             let store: Store = StoreTrait::new(world);
             let settings = store.get_settings(settings_id);
             let settings_details = store.get_settings_details(settings_id);
-            let settings_json = array![
-                GameSetting {
-                    name: "Difficulty",
-                    value: format!("{}", settings.difficulty),
-                },
-            ];
-            create_settings_json(
-                settings_details.name,
-                settings_details.description,
-                settings_json.span(),
-            )
+            GameSettingDetails {
+                name: settings_details.name,
+                description: settings_details.description,
+                settings: array![
+                    GameSetting {
+                        name: "Difficulty",
+                        value: format!("{}", settings.difficulty),
+                    },
+                ].span(),
+            }
         }
     }
 
@@ -127,7 +127,7 @@ mod minigame_mock {
             let objective_score = store.get_objective_score(objective_id);
             store.get_score(token_id) >= objective_score.score
         }
-        fn objectives(self: @ContractState, token_id: u64) -> ByteArray {
+        fn objectives(self: @ContractState, token_id: u64) -> Span<GameObjective> {
             let world = self.world(@self.namespace());
             let store: Store = StoreTrait::new(world);
             let objective_ids = self.minigame.get_objective_ids(token_id);
@@ -139,10 +139,10 @@ mod minigame_mock {
                 }
                 let objective_id = *objective_ids.at(objective_index);
                 let objective_score = store.get_objective_score(objective_id);
-                objectives.append(format!("Score Above {}", objective_score.score));
+                objectives.append(GameObjective { name: "Score Target", value: format!("Score Above {}", objective_score.score) });
                 objective_index += 1;
             };
-            create_objectives_json(objectives.span())
+            objectives.span()
         }
     }
 

@@ -1,5 +1,7 @@
 use starknet::{ContractAddress, contract_address_const};
 use dojo::world::{WorldStorage, WorldStorageTrait, IWorldDispatcher};
+use crate::models::settings::GameSettingDetails;
+use crate::models::objectives::GameObjective;
 
 pub const IMINIGAME_ID: felt252 =
     0x02c0f9265d397c10970f24822e4b57cac7d8895f8c449b7c9caaa26910499704;
@@ -13,6 +15,9 @@ pub trait IMinigame<TState> {
         start: Option<u64>,
         end: Option<u64>,
         objective_ids: Option<Span<u32>>,
+        context: Option<ByteArray>,
+        client_url: Option<ByteArray>,
+        renderer_address: Option<ContractAddress>,
         to: ContractAddress,
         soulbound: bool,
     ) -> u64;
@@ -27,7 +32,7 @@ pub trait IMinigameDetails<TState> {
 #[starknet::interface]
 pub trait IMinigameSettings<TState> {
     fn setting_exists(self: @TState, settings_id: u32) -> bool;
-    fn settings(self: @TState, settings_id: u32) -> ByteArray;
+    fn settings(self: @TState, settings_id: u32) -> GameSettingDetails;
 }
 
 #[starknet::interface]
@@ -39,7 +44,7 @@ pub trait IMinigameSettingsURI<TState> {
 pub trait IMinigameObjectives<TState> {
     fn objective_exists(self: @TState, objective_id: u32) -> bool;
     fn completed_objective(self: @TState, token_id: u64, objective_id: u32) -> bool;
-    fn objectives(self: @TState, token_id: u64) -> ByteArray;
+    fn objectives(self: @TState, token_id: u64) -> Span<GameObjective>;
 }
 
 #[starknet::interface]
