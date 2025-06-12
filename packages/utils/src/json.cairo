@@ -132,7 +132,7 @@ mod tests {
             GameContext { name: "Test Context 1", value: "Test Context 1 Value" },
             GameContext { name: "Test Context 2", value: "Test Context 2 Value" },
         ].span();
-        let _current_1 = create_context_json(contexts);
+        let _current_1 = create_context_json("Test App", "Test App Description", contexts);
         println!("{}", _current_1);
     }
 
@@ -144,14 +144,6 @@ mod tests {
         ].span();
         let _current_1 = create_json_array(values);
         println!("{}", _current_1);
-    }
-
-    #[test]
-    fn test_extract_traits() {
-        let json_input = "{\"Objective 1\":\"Score 100 points\",\"Objective 2\":\"Kill 10 enemies\"}";
-        let traits_result = extract_traits(json_input);
-        println!("Input: {}", json_input);
-        println!("Output: {}", traits_result);
     }
 
     #[test]
