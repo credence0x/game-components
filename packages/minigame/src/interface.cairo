@@ -36,8 +36,8 @@ pub trait IMinigameSettings<TState> {
 }
 
 #[starknet::interface]
-pub trait IMinigameSettingsURI<TState> {
-    fn settings_uri(self: @TState, settings_id: u32) -> ByteArray;
+pub trait IMinigameSettingsSVG<TState> {
+    fn settings_svg(self: @TState, settings_id: u32) -> ByteArray;
 }
 
 #[starknet::interface]
@@ -48,8 +48,13 @@ pub trait IMinigameObjectives<TState> {
 }
 
 #[starknet::interface]
-pub trait IMinigameObjectivesURI<TState> {
-    fn objectives_uri(self: @TState, token_id: u64) -> ByteArray;
+pub trait IMinigameObjectivesSVG<TState> {
+    fn objectives_svg(self: @TState, token_id: u64) -> ByteArray;
+}
+
+#[starknet::interface]
+pub trait IMinigameDetailsSVG<TState> {
+    fn game_details_svg(self: @TState, token_id: u64) -> ByteArray;
 }
 
 #[starknet::interface]

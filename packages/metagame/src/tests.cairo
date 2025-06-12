@@ -1,4 +1,4 @@
 pub mod constants;
 pub mod libs;
-pub mod metagame_mock;
+pub mod mocks;
 pub mod models;

@@ -15,7 +15,7 @@ pub trait IMetagameContext<TContractState> {
 }
 
 #[starknet::interface]
-pub trait IMetagameContextURI<TContractState> {
-    fn context_uri(self: @TContractState, token_id: u64) -> ByteArray;
+pub trait IMetagameContextSVG<TContractState> {
+    fn context_svg(self: @TContractState, token_id: u64) -> ByteArray;
 }
 

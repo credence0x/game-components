@@ -1,7 +1,7 @@
 use starknet::ContractAddress;
 
 #[starknet::interface]
-pub trait IMetagameMock<TContractState> {
+pub trait IBudokanMock<TContractState> {
     fn mint_game(
         ref self: TContractState,
         game_id: Option<u64>,
@@ -12,22 +12,23 @@ pub trait IMetagameMock<TContractState> {
         objective_ids: Option<Span<u32>>,
         client_url: Option<ByteArray>,
         renderer_address: Option<ContractAddress>,
+        tournament_id: u64,
         to: ContractAddress,
         soulbound: bool,
     ) -> u64;
 }
 
 #[starknet::interface]
-pub trait IMetagameMockInit<TContractState> {
+pub trait IBudokanMockInit<TContractState> {
     fn initializer(ref self: TContractState, namespace: ByteArray, denshokan_address: ContractAddress);
 }
 
 #[dojo::contract]
-mod metagame_mock {
+mod budokan_mock {
     use starknet::ContractAddress;
     use crate::models::context::{GameContextDetails, GameContext};
     use crate::tests::models::metagame::Context;
-    use crate::interface::{IMetagameContext, IMetagameContextURI};
+    use crate::interface::IMetagameContext;
     use crate::metagame::metagame_component;
 
     use openzeppelin_introspection::src5::SRC5Component;
@@ -69,7 +70,7 @@ mod metagame_mock {
     //*******************************
 
     #[abi(embed_v0)]
-    impl MetagameMockImpl of super::IMetagameMock<ContractState> {
+    impl BudokanMockImpl of super::IBudokanMock<ContractState> {
         fn mint_game(
             ref self: ContractState,
             game_id: Option<u64>,
@@ -80,13 +81,14 @@ mod metagame_mock {
             objective_ids: Option<Span<u32>>,
             client_url: Option<ByteArray>,
             renderer_address: Option<ContractAddress>,
+            tournament_id: u64,
             to: ContractAddress,
             soulbound: bool,
         ) -> u64 {
             let context = array![
-                GameContext { name: "Test Context 1", value: "Test Context" },
+                GameContext { name: "Tournament Id", value: format!("{}", tournament_id) },
             ].span();
-            let context_json = create_context_json("Test App", "Test App Description", context);
+            let context_json = create_context_json("Budokan", "The onchain tournament system", context);
             let denshokan_dispatcher = IDenshokanDispatcher { contract_address: self.denshokan_address.read() };
             let token_id = denshokan_dispatcher
                 .mint(
@@ -123,22 +125,15 @@ mod metagame_mock {
             let store: Store = StoreTrait::new(world);
             let context = store.get_context(token_id);
             GameContextDetails {
-                name: "Test App",
-                description: "Test App Description",
+                name: "Budokan",
+                description: "The onchain tournament system",
                 context: context.context,
             }
         }
     }
 
     #[abi(embed_v0)]
-    impl GameContextURIImpl of IMetagameContextURI<ContractState> {
-        fn context_uri(self: @ContractState, token_id: u64) -> ByteArray {
-            "test context uri"
-        }
-    }
-
-    #[abi(embed_v0)]
-    impl MetagameInitializerImpl of super::IMetagameMockInit<ContractState> {
+    impl BudokanInitializerImpl of super::IBudokanMockInit<ContractState> {
         fn initializer(
             ref self: ContractState, namespace: ByteArray, denshokan_address: ContractAddress,
         ) {
@@ -146,4 +141,4 @@ mod metagame_mock {
             self.denshokan_address.write(denshokan_address.clone());
         }
     }
-}
+} 

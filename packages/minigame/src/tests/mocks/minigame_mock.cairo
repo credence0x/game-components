@@ -32,7 +32,7 @@ pub trait IMinigameMockInit<TContractState> {
 
 #[dojo::contract]
 mod minigame_mock {
-    use crate::interface::{WorldImpl, IMinigameSettings, IMinigameDetails, IMinigameObjectives, IMinigameTokenUri, IMinigameSettingsURI, IMinigameObjectivesURI};
+    use crate::interface::{WorldImpl, IMinigameSettings, IMinigameDetails, IMinigameObjectives};
     use crate::minigame::minigame_component;
     use crate::models::settings::{GameSetting, GameSettingDetails};
     use crate::models::objectives::GameObjective;
@@ -98,13 +98,6 @@ mod minigame_mock {
     }
 
     #[abi(embed_v0)]
-    impl SettingsURIImpl of IMinigameSettingsURI<ContractState> {
-        fn settings_uri(self: @ContractState, settings_id: u32) -> ByteArray {
-            "test settings uri"
-        }
-    }
-
-    #[abi(embed_v0)]
     impl GameDetailsImpl of IMinigameDetails<ContractState> {
         fn score(self: @ContractState, token_id: u64) -> u32 {
             let world = self.world(@self.namespace());
@@ -143,20 +136,6 @@ mod minigame_mock {
                 objective_index += 1;
             };
             objectives.span()
-        }
-    }
-
-    #[abi(embed_v0)]
-    impl ObjectivesURIImpl of IMinigameObjectivesURI<ContractState> {
-        fn objectives_uri(self: @ContractState, token_id: u64) -> ByteArray {
-            "test objectives uri"
-        }
-    }
-
-    #[abi(embed_v0)]
-    impl TokenUriImpl of IMinigameTokenUri<ContractState> {
-        fn token_uri(self: @ContractState, token_id: u256) -> ByteArray {
-            "game mock uri"
         }
     }
 

@@ -145,4 +145,33 @@ mod tests {
         let _current_1 = create_json_array(values);
         println!("{}", _current_1);
     }
+
+    #[test]
+    fn test_extract_traits() {
+        let json_input = "{\"Objective 1\":\"Score 100 points\",\"Objective 2\":\"Kill 10 enemies\"}";
+        let traits_result = extract_traits(json_input);
+        println!("Input: {}", json_input);
+        println!("Output: {}", traits_result);
+    }
+
+    #[test]
+    fn test_budokan_context_json() {
+        let tournament_id: u64 = 12345;
+        let context = array![
+            GameContext { name: "Tournament Id", value: format!("{}", tournament_id) },
+        ].span();
+        let context_json = create_context_json("Budokan", "The onchain tournament system", context);
+        println!("Budokan context: {}", context_json);
+    }
+
+    #[test]
+    fn test_eternum_context_json() {
+        let quest_id: u64 = 67890;
+        let context = array![
+            GameContext { name: "Quest Id", value: format!("{}", quest_id) },
+            GameContext { name: "Reward", value: "1000 Stone" },
+        ].span();
+        let context_json = create_context_json("Eternum", "Multiplayer Civilization with a real economy that never sleeps", context);
+        println!("Eternum context: {}", context_json);
+    }
 }
