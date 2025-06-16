@@ -1,11 +1,14 @@
 use starknet::ContractAddress;
+use crate::models::TokenMetadata;
 
 #[starknet::interface]
 pub trait IDenshokan<TContractState> {
-    fn get_game_id(self: @TContractState, game_address: ContractAddress) -> u64;
     fn is_game_playable(self: @TContractState, token_id: u64) -> bool;
+    fn game_address(self: @TContractState, token_id: u64) -> ContractAddress;
+    fn minted_by_address(self: @TContractState, token_id: u64) -> ContractAddress;
     fn settings_id(self: @TContractState, token_id: u64) -> u32;
     fn objective_ids(self: @TContractState, token_id: u64) -> Span<u32>;
+    fn game_id_from_address(self: @TContractState, game_address: ContractAddress) -> u64;
 
     fn register_game(
         ref self: TContractState,
@@ -20,7 +23,7 @@ pub trait IDenshokan<TContractState> {
     );
     fn mint(
         ref self: TContractState,
-        game_id: Option<u64>,
+        game_address: Option<ContractAddress>,
         player_name: Option<felt252>,
         settings_id: Option<u32>,
         start: Option<u64>,
