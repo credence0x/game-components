@@ -53,10 +53,9 @@ pub mod minigame_component {
             // mint game token
             let denshokan_address = self.denshokan_address.read();
             let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-            let game_id = denshokan_dispatcher.get_game_id(get_contract_address());
             let token_id = denshokan_dispatcher
                 .mint(
-                    Option::Some(game_id),
+                    Option::Some(get_contract_address()),
                     player_name,
                     settings_id,
                     start,
@@ -194,15 +193,13 @@ pub mod minigame_component {
         fn create_objective(self: @ComponentState<TContractState>, objective_id: u32, data: ByteArray) {
             let denshokan_address = self.denshokan_address.read();
             let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-            let game_id = denshokan_dispatcher.get_game_id(get_contract_address());
-            denshokan_dispatcher.create_objective(game_id, objective_id, data);
+            denshokan_dispatcher.create_objective(get_contract_address(), objective_id, data);
         }
 
         fn create_settings(self: @ComponentState<TContractState>, settings_id: u32, data: ByteArray) {
             let denshokan_address = self.denshokan_address.read();
             let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-            let game_id = denshokan_dispatcher.get_game_id(get_contract_address());
-            denshokan_dispatcher.create_settings(game_id, settings_id, data);
+            denshokan_dispatcher.create_settings(get_contract_address(), settings_id, data);
         }
 
         fn validate_playable(self: @ComponentState<TContractState>, token_id: u64) {

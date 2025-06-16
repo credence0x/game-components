@@ -4,7 +4,7 @@ use starknet::ContractAddress;
 pub trait IMetagameMock<TContractState> {
     fn mint_game(
         ref self: TContractState,
-        game_id: Option<u64>,
+        game_address: Option<ContractAddress>,
         player_name: Option<felt252>,
         settings_id: Option<u32>,
         start: Option<u64>,
@@ -72,7 +72,7 @@ mod metagame_mock {
     impl MetagameMockImpl of super::IMetagameMock<ContractState> {
         fn mint_game(
             ref self: ContractState,
-            game_id: Option<u64>,
+            game_address: Option<ContractAddress>,
             player_name: Option<felt252>,
             settings_id: Option<u32>,
             start: Option<u64>,
@@ -90,7 +90,7 @@ mod metagame_mock {
             let denshokan_dispatcher = IDenshokanDispatcher { contract_address: self.denshokan_address.read() };
             let token_id = denshokan_dispatcher
                 .mint(
-                    game_id,
+                    game_address,
                     player_name,
                     settings_id,
                     start,
