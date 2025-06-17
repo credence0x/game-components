@@ -32,7 +32,6 @@ mod budokan_mock {
     use crate::metagame::metagame_component;
 
     use openzeppelin_introspection::src5::SRC5Component;
-    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     use crate::tests::libs::metagame_store::{Store, StoreTrait};
     use game_components_utils::json::create_context_json;
@@ -55,7 +54,6 @@ mod budokan_mock {
         metagame: metagame_component::Storage,
         #[substorage(v0)]
         src5: SRC5Component::Storage,
-        denshokan_address: ContractAddress,
     }
 
     #[event]
@@ -89,7 +87,7 @@ mod budokan_mock {
                 GameContext { name: "Tournament Id", value: format!("{}", tournament_id) },
             ].span();
             let context_json = create_context_json("Budokan", "The onchain tournament system", context);
-            let denshokan_dispatcher = IDenshokanDispatcher { contract_address: self.denshokan_address.read() };
+            let denshokan_dispatcher = IDenshokanDispatcher { contract_address: self.denshokan_address() };
             let token_id = denshokan_dispatcher
                 .mint(
                     game_address,
@@ -137,8 +135,7 @@ mod budokan_mock {
         fn initializer(
             ref self: ContractState, namespace: ByteArray, denshokan_address: ContractAddress,
         ) {
-            self.metagame.initializer(namespace);
-            self.denshokan_address.write(denshokan_address.clone());
+            self.metagame.initializer(namespace, denshokan_address);
         }
     }
 } 

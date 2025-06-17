@@ -204,7 +204,7 @@ pub mod minigame_component {
 
         fn validate_playable(self: @ComponentState<TContractState>, token_id: u64) {
             self.assert_token_ownership(token_id);
-            self.assert_is_playable(token_id);
+            self.assert_game_token_playable(token_id);
         }
 
         fn assert_token_ownership(self: @ComponentState<TContractState>, token_id: u64) {
@@ -218,10 +218,10 @@ pub mod minigame_component {
             );
         }
 
-        fn assert_is_playable(self: @ComponentState<TContractState>, token_id: u64) {
+        fn assert_game_token_playable(self: @ComponentState<TContractState>, token_id: u64) {
             let denshokan_address = self.denshokan_address.read();
             let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-            let is_playable = denshokan_dispatcher.is_game_playable(token_id);
+            let is_playable = denshokan_dispatcher.is_game_token_playable(token_id);
             assert!(is_playable, "Game is not playable");
         }
     }

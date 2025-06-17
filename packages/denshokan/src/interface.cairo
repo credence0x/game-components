@@ -2,7 +2,8 @@ use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait IDenshokan<TContractState> {
-    fn is_game_playable(self: @TContractState, token_id: u64) -> bool;
+    fn is_game_token_playable(self: @TContractState, token_id: u64) -> bool;
+    fn is_game_registered(self: @TContractState, game_address: ContractAddress) -> bool;
     fn game_address(self: @TContractState, token_id: u64) -> ContractAddress;
     fn minted_by_address(self: @TContractState, token_id: u64) -> ContractAddress;
     fn settings_id(self: @TContractState, token_id: u64) -> u32;
