@@ -3,7 +3,7 @@
 ///
 #[starknet::component]
 pub mod minigame_component {
-    use crate::interface::{IMinigame, IMinigameDetails, IMinigameSettings, IMinigameObjectives, WorldImpl, IMINIGAME_ID};
+    use crate::interface::{IMinigame, IMinigameScore, IMinigameDetails, IMinigameSettings, IMinigameObjectives, WorldImpl, IMINIGAME_ID};
     use game_components_denshokan::interface::{IDenshokanDispatcher, IDenshokanDispatcherTrait};
     use starknet::{ContractAddress, get_contract_address};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
@@ -25,8 +25,9 @@ pub mod minigame_component {
         TContractState,
         +HasComponent<TContractState>,
         +IWorldProvider<TContractState>,
-        +IMinigameSettings<TContractState>,
+        +IMinigameScore<TContractState>,
         +IMinigameDetails<TContractState>,
+        +IMinigameSettings<TContractState>,
         +IMinigameObjectives<TContractState>,
         impl SRC5: SRC5Component::HasComponent<TContractState>,
         +Drop<TContractState>,
@@ -166,16 +167,19 @@ pub mod minigame_component {
             }
         }
 
-        fn update_game(self: @ComponentState<TContractState>, token_id: u64) {
-            let denshokan_address = self.denshokan_address.read();
-            let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-            denshokan_dispatcher.update_game(token_id);
+        fn pre_action(self: @ComponentState<TContractState>, token_id: u64) {
+            self.assert_token_ownership(token_id);
+            self.assert_game_token_playable(token_id);
         }
 
-        fn end_game(self: @ComponentState<TContractState>, token_id: u64) {
+        fn post_action(self: @ComponentState<TContractState>, token_id: u64, game_over: bool) {
             let denshokan_address = self.denshokan_address.read();
             let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-            denshokan_dispatcher.end_game(token_id);
+            if game_over {
+                denshokan_dispatcher.end_game(token_id);
+            } else {
+                denshokan_dispatcher.update_game(token_id);
+            }
         }
 
         fn get_objective_ids(self: @ComponentState<TContractState>, token_id: u64) -> Span<u32> {
@@ -200,11 +204,6 @@ pub mod minigame_component {
             let denshokan_address = self.denshokan_address.read();
             let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
             denshokan_dispatcher.create_settings(get_contract_address(), settings_id, data);
-        }
-
-        fn validate_playable(self: @ComponentState<TContractState>, token_id: u64) {
-            self.assert_token_ownership(token_id);
-            self.assert_game_token_playable(token_id);
         }
 
         fn assert_token_ownership(self: @ComponentState<TContractState>, token_id: u64) {

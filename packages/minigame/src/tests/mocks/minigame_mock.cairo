@@ -32,8 +32,9 @@ pub trait IMinigameMockInit<TContractState> {
 
 #[dojo::contract]
 mod minigame_mock {
-    use crate::interface::{WorldImpl, IMinigameSettings, IMinigameDetails, IMinigameObjectives};
+    use crate::interface::{WorldImpl, IMinigameScore, IMinigameDetails, IMinigameSettings, IMinigameObjectives};
     use crate::minigame::minigame_component;
+    use crate::models::game_details::GameDetail;
     use crate::models::settings::{GameSetting, GameSettingDetails};
     use crate::models::objectives::GameObjective;
     use crate::tests::models::minigame::{Score, ScoreObjective, Settings, SettingsDetails};
@@ -46,6 +47,7 @@ mod minigame_mock {
 
     component!(path: minigame_component, storage: minigame, event: MinigameEvent);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
+
     #[abi(embed_v0)]
     impl MinigameImpl = minigame_component::MinigameImpl<ContractState>;
     impl MinigameInternalImpl = minigame_component::InternalImpl<ContractState>;
@@ -73,6 +75,30 @@ mod minigame_mock {
     //*******************************
 
     #[abi(embed_v0)]
+    impl GameScoreImpl of IMinigameScore<ContractState> {
+        fn score(self: @ContractState, token_id: u64) -> u32 {
+            let world = self.world(@self.namespace());
+            let store: Store = StoreTrait::new(world);
+            store.get_score(token_id)
+        }
+    }
+
+    #[abi(embed_v0)]
+    impl GameDetailsImpl of IMinigameDetails<ContractState> {
+        fn token_description(self: @ContractState, token_id: u64) -> ByteArray {
+            format!("Test Token Description for token {}", token_id)
+        }
+        fn game_details(self: @ContractState, token_id: u64) -> Span<GameDetail> {
+            array![
+                GameDetail {
+                    name: "Test Game Detail",
+                    value: format!("Test Value for token {}", token_id),
+                },
+            ].span()
+        }
+    }
+
+    #[abi(embed_v0)]
     impl SettingsImpl of IMinigameSettings<ContractState> {
         fn setting_exists(self: @ContractState, settings_id: u32) -> bool {
             let world = self.world(@self.namespace());
@@ -94,15 +120,6 @@ mod minigame_mock {
                     },
                 ].span(),
             }
-        }
-    }
-
-    #[abi(embed_v0)]
-    impl GameDetailsImpl of IMinigameDetails<ContractState> {
-        fn score(self: @ContractState, token_id: u64) -> u32 {
-            let world = self.world(@self.namespace());
-            let store: Store = StoreTrait::new(world);
-            store.get_score(token_id)
         }
     }
 
@@ -152,7 +169,7 @@ mod minigame_mock {
             let mut world = self.world(@self.namespace());
             let mut store: Store = StoreTrait::new(world);
             store.set_score(@Score { token_id, score });
-            self.minigame.end_game(token_id);
+            self.minigame.post_action(token_id, true);
         }
 
         fn create_objective_score(ref self: ContractState, score: u32) {

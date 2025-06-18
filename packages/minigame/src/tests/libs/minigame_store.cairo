@@ -25,7 +25,7 @@ pub impl StoreImpl of StoreTrait {
         let score: Score = self.world.read_model(game_id);
         score.score
     }
-
+    
     #[inline(always)]
     fn get_objective_score(self: Store, objective_id: u32) -> ScoreObjective {
         (self.world.read_model(objective_id))

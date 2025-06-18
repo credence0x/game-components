@@ -1,5 +1,6 @@
 use starknet::{ContractAddress, contract_address_const};
 use dojo::world::{WorldStorage, WorldStorageTrait, IWorldDispatcher};
+use crate::models::game_details::GameDetail;
 use crate::models::settings::GameSettingDetails;
 use crate::models::objectives::GameObjective;
 
@@ -25,9 +26,22 @@ pub trait IMinigame<TState> {
 }
 
 #[starknet::interface]
-pub trait IMinigameDetails<TState> {
+pub trait IMinigameScore<TState> {
     fn score(self: @TState, token_id: u64) -> u32;
 }
+
+#[starknet::interface]
+pub trait IMinigameDetails<TState> {
+    fn token_description(self: @TState, token_id: u64) -> ByteArray;
+    fn game_details(self: @TState, token_id: u64) -> Span<GameDetail>;
+}
+
+
+#[starknet::interface]
+pub trait IMinigameDetailsSVG<TState> {
+    fn game_details_svg(self: @TState, token_id: u64) -> ByteArray;
+}
+
 
 #[starknet::interface]
 pub trait IMinigameSettings<TState> {
@@ -50,11 +64,6 @@ pub trait IMinigameObjectives<TState> {
 #[starknet::interface]
 pub trait IMinigameObjectivesSVG<TState> {
     fn objectives_svg(self: @TState, token_id: u64) -> ByteArray;
-}
-
-#[starknet::interface]
-pub trait IMinigameDetailsSVG<TState> {
-    fn game_details_svg(self: @TState, token_id: u64) -> ByteArray;
 }
 
 #[starknet::interface]
