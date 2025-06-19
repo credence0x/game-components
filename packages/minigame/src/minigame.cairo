@@ -4,6 +4,7 @@
 #[starknet::component]
 pub mod minigame_component {
     use crate::interface::{IMinigame, IMinigameScore, IMinigameDetails, IMinigameSettings, IMinigameObjectives, WorldImpl, IMINIGAME_ID};
+    use crate::game_actions::game_actions;
     use game_components_denshokan::interface::{IDenshokanDispatcher, IDenshokanDispatcherTrait};
     use starknet::{ContractAddress, get_contract_address};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
@@ -12,7 +13,6 @@ pub mod minigame_component {
     use openzeppelin_introspection::src5::SRC5Component;
     use openzeppelin_introspection::src5::SRC5Component::InternalTrait as SRC5InternalTrait;
     use openzeppelin_introspection::src5::SRC5Component::SRC5Impl;
-    use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
 
     #[storage]
     pub struct Storage {
@@ -75,6 +75,10 @@ pub mod minigame_component {
         fn namespace(self: @ComponentState<TContractState>) -> ByteArray {
             self.namespace.read()
         }
+
+        fn denshokan_address(self: @ComponentState<TContractState>) -> ContractAddress {
+            self.denshokan_address.read()
+        }
     }
     #[generate_trait]
     pub impl InternalImpl<
@@ -96,6 +100,7 @@ pub mod minigame_component {
             genre: felt252,
             image: ByteArray,
             color: Option<ByteArray>,
+            renderer_address: Option<ContractAddress>,
             namespace: ByteArray,
             denshokan_address: ContractAddress,
         ) {
@@ -118,6 +123,7 @@ pub mod minigame_component {
                     genre,
                     image,
                     color,
+                    renderer_address,
                     denshokan_address,
                 );
         }
@@ -132,6 +138,7 @@ pub mod minigame_component {
             genre: felt252,
             image: ByteArray,
             color: Option<ByteArray>,
+            renderer_address: Option<ContractAddress>,
             denshokan_address: ContractAddress,
         ) {
             let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
@@ -145,6 +152,7 @@ pub mod minigame_component {
                     genre,
                     image,
                     color,
+                    renderer_address,
                 );
         }
 
@@ -168,18 +176,13 @@ pub mod minigame_component {
         }
 
         fn pre_action(self: @ComponentState<TContractState>, token_id: u64) {
-            self.assert_token_ownership(token_id);
-            self.assert_game_token_playable(token_id);
+            let denshokan_address = self.denshokan_address.read();
+            game_actions::pre_action(denshokan_address, token_id);
         }
 
         fn post_action(self: @ComponentState<TContractState>, token_id: u64, game_over: bool) {
             let denshokan_address = self.denshokan_address.read();
-            let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-            if game_over {
-                denshokan_dispatcher.end_game(token_id);
-            } else {
-                denshokan_dispatcher.update_game(token_id);
-            }
+            game_actions::post_action(denshokan_address, token_id, game_over);
         }
 
         fn get_objective_ids(self: @ComponentState<TContractState>, token_id: u64) -> Span<u32> {
@@ -208,20 +211,12 @@ pub mod minigame_component {
 
         fn assert_token_ownership(self: @ComponentState<TContractState>, token_id: u64) {
             let denshokan_address = self.denshokan_address.read();
-            let erc721_dispatcher = IERC721Dispatcher { contract_address: denshokan_address };
-            let token_owner = erc721_dispatcher.owner_of(token_id.into());
-            assert!(
-                token_owner == starknet::get_caller_address(),
-                "Caller is not owner of token {}",
-                token_id,
-            );
+            game_actions::assert_token_ownership(denshokan_address, token_id);
         }
 
         fn assert_game_token_playable(self: @ComponentState<TContractState>, token_id: u64) {
             let denshokan_address = self.denshokan_address.read();
-            let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-            let is_playable = denshokan_dispatcher.is_game_token_playable(token_id);
-            assert!(is_playable, "Game is not playable");
+            game_actions::assert_game_token_playable(denshokan_address, token_id);
         }
     }
 }

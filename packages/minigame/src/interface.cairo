@@ -23,6 +23,7 @@ pub trait IMinigame<TState> {
         soulbound: bool,
     ) -> u64;
     fn namespace(self: @TState) -> ByteArray;
+    fn denshokan_address(self: @TState) -> ContractAddress;
 }
 
 #[starknet::interface]

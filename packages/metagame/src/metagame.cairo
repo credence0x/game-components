@@ -4,6 +4,7 @@
 #[starknet::component]
 pub mod metagame_component {
     use crate::interface::{IMetagame, IMetagameContext, IMETAGAME_ID};
+    use crate::metagame_actions::metagame_actions;
 
     use dojo::contract::components::world_provider::{IWorldProvider};
     use openzeppelin_introspection::src5::SRC5Component;
@@ -12,8 +13,6 @@ pub mod metagame_component {
 
     use starknet::contract_address::ContractAddress;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
-
-    use game_components_denshokan::interface::{IDenshokanDispatcher, IDenshokanDispatcherTrait};
 
     #[storage]
     pub struct Storage {
@@ -59,9 +58,8 @@ pub mod metagame_component {
         }
 
         fn assert_game_registered(ref self: ComponentState<TContractState>, game_address: ContractAddress) {
-            let denshokan_dispatcher = IDenshokanDispatcher{ contract_address: self.denshokan_address.read() };
-            let game_exists = denshokan_dispatcher.is_game_registered(game_address);
-            assert!(game_exists, "Game is not registered");
+            let denshokan_address = self.denshokan_address.read();
+            metagame_actions::assert_game_registered(denshokan_address, game_address);
         }
     }
 }

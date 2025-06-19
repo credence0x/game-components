@@ -25,6 +25,7 @@ pub trait IMinigameMockInit<TContractState> {
         game_genre: felt252,
         game_image: ByteArray,
         game_color: Option<ByteArray>,
+        renderer_address: Option<ContractAddress>,
         game_namespace: ByteArray,
         denshokan_address: ContractAddress,
     );
@@ -223,6 +224,7 @@ mod minigame_mock {
             game_genre: felt252,
             game_image: ByteArray,
             game_color: Option<ByteArray>,
+            renderer_address: Option<ContractAddress>,
             game_namespace: ByteArray,
             denshokan_address: ContractAddress,
         ) {
@@ -237,6 +239,7 @@ mod minigame_mock {
                     game_genre,
                     game_image,
                     game_color,
+                    renderer_address,
                     game_namespace,
                     denshokan_address,
                 );
