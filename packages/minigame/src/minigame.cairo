@@ -4,8 +4,7 @@
 #[starknet::component]
 pub mod minigame_component {
     use crate::interface::{IMinigame, IMinigameScore, IMinigameDetails, IMinigameSettings, IMinigameObjectives, WorldImpl, IMINIGAME_ID};
-    use crate::game_actions::game_actions;
-    use game_components_denshokan::interface::{IDenshokanDispatcher, IDenshokanDispatcherTrait};
+    use crate::libs::{game, objectives, settings};
     use starknet::{ContractAddress, get_contract_address};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use dojo::contract::components::world_provider::{IWorldProvider};
@@ -53,23 +52,20 @@ pub mod minigame_component {
 
             // mint game token
             let denshokan_address = self.denshokan_address.read();
-            let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-            let token_id = denshokan_dispatcher
-                .mint(
-                    Option::Some(get_contract_address()),
-                    player_name,
-                    settings_id,
-                    start,
-                    end,
-                    objective_ids,
-                    context,
-                    client_url,
-                    renderer_address,
-                    to,
-                    soulbound,
-                );
-
-            token_id
+            game::mint(
+                denshokan_address,
+                get_contract_address(),
+                player_name,
+                settings_id,
+                start,
+                end,
+                objective_ids,
+                context,
+                client_url,
+                renderer_address,
+                to,
+                soulbound,
+            )
         }
 
         fn namespace(self: @ComponentState<TContractState>) -> ByteArray {
@@ -113,47 +109,18 @@ pub mod minigame_component {
             self.denshokan_address.write(denshokan_address.clone());
 
             // Now register the game (this will work because SRC5 interfaces are registered)
-            self
-                .register_game(
-                    creator_address,
-                    name,
-                    description,
-                    developer,
-                    publisher,
-                    genre,
-                    image,
-                    color,
-                    renderer_address,
-                    denshokan_address,
-                );
-        }
-
-        fn register_game(
-            ref self: ComponentState<TContractState>,
-            creator_address: ContractAddress,
-            name: felt252,
-            description: ByteArray,
-            developer: felt252,
-            publisher: felt252,
-            genre: felt252,
-            image: ByteArray,
-            color: Option<ByteArray>,
-            renderer_address: Option<ContractAddress>,
-            denshokan_address: ContractAddress,
-        ) {
-            let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-            denshokan_dispatcher
-                .register_game(
-                    creator_address,
-                    name,
-                    description,
-                    developer,
-                    publisher,
-                    genre,
-                    image,
-                    color,
-                    renderer_address,
-                );
+            game::register_game(
+                denshokan_address,
+                creator_address,
+                name,
+                description,
+                developer,
+                publisher,
+                genre,
+                image,
+                color,
+                renderer_address,
+            );
         }
 
         fn register_src5_interfaces(ref self: ComponentState<TContractState>) {
@@ -162,61 +129,51 @@ pub mod minigame_component {
         }
 
         fn assert_setting_exists(self: @ComponentState<TContractState>, settings_id: u32) {
-            let setting_exists = self.get_contract().setting_exists(settings_id);
-            if !setting_exists {
-                panic!("Game: Setting ID {} does not exist", settings_id);
-            }
+            settings::assert_setting_exists(self.get_contract(), settings_id);
         }
 
         fn assert_objective_exists(self: @ComponentState<TContractState>, objective_id: u32) {
-            let objective_exists = self.get_contract().objective_exists(objective_id);
-            if !objective_exists {
-                panic!("Game: Objective ID {} does not exist", objective_id);
-            }
+            objectives::assert_objective_exists(self.get_contract(), objective_id);
         }
 
         fn pre_action(self: @ComponentState<TContractState>, token_id: u64) {
             let denshokan_address = self.denshokan_address.read();
-            game_actions::pre_action(denshokan_address, token_id);
+            game::pre_action(denshokan_address, token_id);
         }
 
         fn post_action(self: @ComponentState<TContractState>, token_id: u64, game_over: bool) {
             let denshokan_address = self.denshokan_address.read();
-            game_actions::post_action(denshokan_address, token_id, game_over);
+            game::post_action(denshokan_address, token_id, game_over);
         }
 
         fn get_objective_ids(self: @ComponentState<TContractState>, token_id: u64) -> Span<u32> {
             let denshokan_address = self.denshokan_address.read();
-            let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-            denshokan_dispatcher.objective_ids(token_id)
+            objectives::get_objective_ids(denshokan_address, token_id)
         }
 
         fn get_settings_id(self: @ComponentState<TContractState>, token_id: u64) -> u32 {
             let denshokan_address = self.denshokan_address.read();
-            let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-            denshokan_dispatcher.settings_id(token_id)
+            settings::get_settings_id(denshokan_address, token_id)
         }
 
         fn create_objective(self: @ComponentState<TContractState>, objective_id: u32, data: ByteArray) {
             let denshokan_address = self.denshokan_address.read();
-            let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-            denshokan_dispatcher.create_objective(get_contract_address(), objective_id, data);
+            objectives::create_objective(denshokan_address, get_contract_address(), objective_id, data);
         }
 
         fn create_settings(self: @ComponentState<TContractState>, settings_id: u32, data: ByteArray) {
             let denshokan_address = self.denshokan_address.read();
-            let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-            denshokan_dispatcher.create_settings(get_contract_address(), settings_id, data);
+            settings::create_settings(denshokan_address, get_contract_address(), settings_id, data);
         }
 
         fn assert_token_ownership(self: @ComponentState<TContractState>, token_id: u64) {
             let denshokan_address = self.denshokan_address.read();
-            game_actions::assert_token_ownership(denshokan_address, token_id);
+            game::assert_token_ownership(denshokan_address, token_id);
         }
 
         fn assert_game_token_playable(self: @ComponentState<TContractState>, token_id: u64) {
             let denshokan_address = self.denshokan_address.read();
-            game_actions::assert_game_token_playable(denshokan_address, token_id);
+            game::assert_game_token_playable(denshokan_address, token_id);
         }
     }
 }
