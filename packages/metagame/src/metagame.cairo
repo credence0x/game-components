@@ -46,7 +46,11 @@ pub mod metagame_component {
         impl SRC5: SRC5Component::HasComponent<TContractState>,
         +Drop<TContractState>,
     > of InternalTrait<TContractState> {
-        fn initializer(ref self: ComponentState<TContractState>, namespace: ByteArray, denshokan_address: ContractAddress) {
+        fn initializer(
+            ref self: ComponentState<TContractState>,
+            namespace: ByteArray,
+            denshokan_address: ContractAddress,
+        ) {
             self.register_src5_interfaces();
             self.namespace.write(namespace.clone());
             self.denshokan_address.write(denshokan_address.clone());
@@ -57,7 +61,9 @@ pub mod metagame_component {
             src5_component.register_interface(IMETAGAME_ID);
         }
 
-        fn assert_game_registered(ref self: ComponentState<TContractState>, game_address: ContractAddress) {
+        fn assert_game_registered(
+            ref self: ComponentState<TContractState>, game_address: ContractAddress,
+        ) {
             let denshokan_address = self.denshokan_address.read();
             metagame_actions::assert_game_registered(denshokan_address, game_address);
         }

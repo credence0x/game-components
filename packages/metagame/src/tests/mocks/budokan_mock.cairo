@@ -20,7 +20,9 @@ pub trait IBudokanMock<TContractState> {
 
 #[starknet::interface]
 pub trait IBudokanMockInit<TContractState> {
-    fn initializer(ref self: TContractState, namespace: ByteArray, denshokan_address: ContractAddress);
+    fn initializer(
+        ref self: TContractState, namespace: ByteArray, denshokan_address: ContractAddress,
+    );
 }
 
 #[dojo::contract]
@@ -85,9 +87,14 @@ mod budokan_mock {
         ) -> u64 {
             let context = array![
                 GameContext { name: "Tournament Id", value: format!("{}", tournament_id) },
-            ].span();
-            let context_json = create_context_json("Budokan", "The onchain tournament system", context);
-            let denshokan_dispatcher = IDenshokanDispatcher { contract_address: self.denshokan_address() };
+            ]
+                .span();
+            let context_json = create_context_json(
+                "Budokan", "The onchain tournament system", context,
+            );
+            let denshokan_dispatcher = IDenshokanDispatcher {
+                contract_address: self.denshokan_address(),
+            };
             let token_id = denshokan_dispatcher
                 .mint(
                     game_address,
@@ -138,4 +145,4 @@ mod budokan_mock {
             self.metagame.initializer(namespace, denshokan_address);
         }
     }
-} 
+}

@@ -3,7 +3,10 @@
 ///
 #[starknet::component]
 pub mod minigame_component {
-    use crate::interface::{IMinigame, IMinigameScore, IMinigameDetails, IMinigameSettings, IMinigameObjectives, WorldImpl, IMINIGAME_ID};
+    use crate::interface::{
+        IMinigame, IMinigameScore, IMinigameDetails, IMinigameSettings, IMinigameObjectives,
+        WorldImpl, IMINIGAME_ID,
+    };
     use crate::libs::{game, objectives, settings};
     use starknet::{ContractAddress, get_contract_address};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
@@ -156,12 +159,18 @@ pub mod minigame_component {
             settings::get_settings_id(denshokan_address, token_id)
         }
 
-        fn create_objective(self: @ComponentState<TContractState>, objective_id: u32, data: ByteArray) {
+        fn create_objective(
+            self: @ComponentState<TContractState>, objective_id: u32, data: ByteArray,
+        ) {
             let denshokan_address = self.denshokan_address.read();
-            objectives::create_objective(denshokan_address, get_contract_address(), objective_id, data);
+            objectives::create_objective(
+                denshokan_address, get_contract_address(), objective_id, data,
+            );
         }
 
-        fn create_settings(self: @ComponentState<TContractState>, settings_id: u32, data: ByteArray) {
+        fn create_settings(
+            self: @ComponentState<TContractState>, settings_id: u32, data: ByteArray,
+        ) {
             let denshokan_address = self.denshokan_address.read();
             settings::create_settings(denshokan_address, get_contract_address(), settings_id, data);
         }

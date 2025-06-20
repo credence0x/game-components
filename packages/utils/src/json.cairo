@@ -2,7 +2,9 @@ use game_components_minigame::models::settings::GameSetting;
 use game_components_metagame::models::context::GameContext;
 use graffiti::json::JsonImpl;
 
-pub fn create_settings_json(name: ByteArray, description: ByteArray, settings: Span<GameSetting>) -> ByteArray {
+pub fn create_settings_json(
+    name: ByteArray, description: ByteArray, settings: Span<GameSetting>,
+) -> ByteArray {
     let mut settings_json = JsonImpl::new();
     let mut settings_index = 0;
     loop {
@@ -39,7 +41,9 @@ pub fn create_objectives_json(objectives: Span<ByteArray>) -> ByteArray {
     metadata.build()
 }
 
-pub fn create_context_json(name: ByteArray, description: ByteArray, contexts: Span<GameContext>) -> ByteArray {
+pub fn create_context_json(
+    name: ByteArray, description: ByteArray, contexts: Span<GameContext>,
+) -> ByteArray {
     let mut contexts_json = JsonImpl::new();
     let mut contexts_index = 0;
     loop {
@@ -65,7 +69,7 @@ pub fn create_json_array(values: Span<ByteArray>) -> ByteArray {
     if values.len() == 0 {
         return "[]";
     }
-    
+
     let mut result = "[";
     let mut index = 0;
     loop {
@@ -74,7 +78,7 @@ pub fn create_json_array(values: Span<ByteArray>) -> ByteArray {
         }
         let value = values.at(index);
         result += "\"" + value.clone() + "\"";
-        
+
         // Add comma if not the last element
         if index < values.len() - 1 {
             result += ",";
@@ -98,19 +102,12 @@ mod tests {
     #[test]
     fn test_settings_json() {
         let settings = array![
-            GameSetting {
-                name: "Test Setting 1",
-                value: "Test Setting 1 Value",
-            },
-            GameSetting {
-                name: "Test Setting 2",
-                value: "Test Setting 2 Value",
-            },
-        ].span();
+            GameSetting { name: "Test Setting 1", value: "Test Setting 1 Value" },
+            GameSetting { name: "Test Setting 2", value: "Test Setting 2 Value" },
+        ]
+            .span();
         let _current_1 = create_settings_json(
-            "Test Settings",
-            "Test Settings Description",
-            settings,
+            "Test Settings", "Test Settings Description", settings,
         );
 
         println!("{}", _current_1);
@@ -118,10 +115,7 @@ mod tests {
 
     #[test]
     fn test_objectives_json() {
-        let objectives = array![
-            "Score 100 points",
-            "Kill 10 enemies",
-        ].span();
+        let objectives = array!["Score 100 points", "Kill 10 enemies"].span();
         let _current_1 = create_objectives_json(objectives);
         println!("{}", _current_1);
     }
@@ -131,17 +125,15 @@ mod tests {
         let contexts = array![
             GameContext { name: "Test Context 1", value: "Test Context 1 Value" },
             GameContext { name: "Test Context 2", value: "Test Context 2 Value" },
-        ].span();
+        ]
+            .span();
         let _current_1 = create_context_json("Test App", "Test App Description", contexts);
         println!("{}", _current_1);
     }
 
     #[test]
     fn test_json_array() {
-        let values = array![
-            "Test Value 1",
-            "Test Value 2",
-        ].span();
+        let values = array!["Test Value 1", "Test Value 2"].span();
         let _current_1 = create_json_array(values);
         println!("{}", _current_1);
     }
@@ -151,7 +143,8 @@ mod tests {
         let tournament_id: u64 = 12345;
         let context = array![
             GameContext { name: "Tournament Id", value: format!("{}", tournament_id) },
-        ].span();
+        ]
+            .span();
         let context_json = create_context_json("Budokan", "The onchain tournament system", context);
         println!("Budokan context: {}", context_json);
     }
@@ -162,8 +155,11 @@ mod tests {
         let context = array![
             GameContext { name: "Quest Id", value: format!("{}", quest_id) },
             GameContext { name: "Reward", value: "1000 Stone" },
-        ].span();
-        let context_json = create_context_json("Eternum", "Multiplayer Civilization with a real economy that never sleeps", context);
+        ]
+            .span();
+        let context_json = create_context_json(
+            "Eternum", "Multiplayer Civilization with a real economy that never sleeps", context,
+        );
         println!("Eternum context: {}", context_json);
     }
 }

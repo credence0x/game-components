@@ -49,6 +49,10 @@ pub trait IDenshokan<TContractState> {
     );
     fn update_game(ref self: TContractState, token_id: u64);
     fn end_game(ref self: TContractState, token_id: u64);
-    fn create_objective(ref self: TContractState, game_address: ContractAddress, objective_id: u32, data: ByteArray);
-    fn create_settings(ref self: TContractState, game_address: ContractAddress, settings_id: u32, data: ByteArray);
+    fn create_objective(
+        ref self: TContractState, game_address: ContractAddress, objective_id: u32, data: ByteArray,
+    );
+    fn create_settings(
+        ref self: TContractState, game_address: ContractAddress, settings_id: u32, data: ByteArray,
+    );
 }
