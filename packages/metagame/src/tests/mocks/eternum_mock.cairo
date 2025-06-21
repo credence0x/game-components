@@ -20,7 +20,9 @@ pub trait IEternumMock<TContractState> {
 
 #[starknet::interface]
 pub trait IEternumMockInit<TContractState> {
-    fn initializer(ref self: TContractState, namespace: ByteArray, denshokan_address: ContractAddress);
+    fn initializer(
+        ref self: TContractState, namespace: ByteArray, denshokan_address: ContractAddress,
+    );
 }
 
 #[dojo::contract]
@@ -86,9 +88,16 @@ mod eternum_mock {
             let context = array![
                 GameContext { name: "Quest Id", value: format!("{}", quest_id) },
                 GameContext { name: "Reward", value: "1000 Stone" },
-            ].span();
-            let context_json = create_context_json("Eternum", "Multiplayer Civilization with a real economy that never sleeps", context);
-            let denshokan_dispatcher = IDenshokanDispatcher { contract_address: self.denshokan_address() };
+            ]
+                .span();
+            let context_json = create_context_json(
+                "Eternum",
+                "Multiplayer Civilization with a real economy that never sleeps",
+                context,
+            );
+            let denshokan_dispatcher = IDenshokanDispatcher {
+                contract_address: self.denshokan_address(),
+            };
             let token_id = denshokan_dispatcher
                 .mint(
                     game_address,
@@ -139,4 +148,4 @@ mod eternum_mock {
             self.metagame.initializer(namespace, denshokan_address);
         }
     }
-} 
+}

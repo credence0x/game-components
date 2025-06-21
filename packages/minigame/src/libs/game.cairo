@@ -3,7 +3,7 @@ use starknet::ContractAddress;
 use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
 
 /// Performs pre-action validation including token ownership and game playability
-/// 
+///
 /// # Arguments
 /// * `denshokan_address` - The address of the denshokan contract
 /// * `token_id` - The game token ID to validate
@@ -13,7 +13,7 @@ pub fn pre_action(denshokan_address: ContractAddress, token_id: u64) {
 }
 
 /// Performs post-action updates to the game state
-/// 
+///
 /// # Arguments
 /// * `denshokan_address` - The address of the denshokan contract
 /// * `token_id` - The game token ID to update
@@ -28,7 +28,7 @@ pub fn post_action(denshokan_address: ContractAddress, token_id: u64, game_over:
 }
 
 /// Asserts that the caller owns the specified token
-/// 
+///
 /// # Arguments
 /// * `denshokan_address` - The address of the denshokan contract
 /// * `token_id` - The token ID to check ownership for
@@ -36,14 +36,12 @@ pub fn assert_token_ownership(denshokan_address: ContractAddress, token_id: u64)
     let erc721_dispatcher = IERC721Dispatcher { contract_address: denshokan_address };
     let token_owner = erc721_dispatcher.owner_of(token_id.into());
     assert!(
-        token_owner == starknet::get_caller_address(),
-        "Caller is not owner of token {}",
-        token_id,
+        token_owner == starknet::get_caller_address(), "Caller is not owner of token {}", token_id,
     );
 }
 
 /// Asserts that the game token is in a playable state
-/// 
+///
 /// # Arguments
 /// * `denshokan_address` - The address of the denshokan contract
 /// * `token_id` - The token ID to check playability for
@@ -54,7 +52,7 @@ pub fn assert_game_token_playable(denshokan_address: ContractAddress, token_id: 
 }
 
 /// Registers a game with the denshokan contract
-/// 
+///
 /// # Arguments
 /// * `denshokan_address` - The address of the denshokan contract
 /// * `creator_address` - The address of the game creator
@@ -94,7 +92,7 @@ pub fn register_game(
 }
 
 /// Mints a game token through the denshokan contract
-/// 
+///
 /// # Arguments
 /// * `denshokan_address` - The address of the denshokan contract
 /// * `game_address` - The address of the game contract minting the token
@@ -108,7 +106,7 @@ pub fn register_game(
 /// * `renderer_address` - Optional renderer contract address
 /// * `to` - Address to mint the token to
 /// * `soulbound` - Whether the token should be soulbound
-/// 
+///
 /// # Returns
 /// * `u64` - The minted token ID
 pub fn mint(

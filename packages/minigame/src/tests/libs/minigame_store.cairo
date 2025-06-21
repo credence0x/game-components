@@ -2,7 +2,9 @@ use dojo::world::{WorldStorage};
 use dojo::model::{ModelStorage};
 use crate::tests::constants::VERSION;
 
-use crate::tests::models::minigame::{Score, ScoreObjective, ScoreObjectiveCount, SettingsDetails, SettingsCounter, Settings};
+use crate::tests::models::minigame::{
+    Score, ScoreObjective, ScoreObjectiveCount, SettingsDetails, SettingsCounter, Settings,
+};
 
 #[derive(Copy, Drop)]
 pub struct Store {
@@ -25,7 +27,7 @@ pub impl StoreImpl of StoreTrait {
         let score: Score = self.world.read_model(game_id);
         score.score
     }
-    
+
     #[inline(always)]
     fn get_objective_score(self: Store, objective_id: u32) -> ScoreObjective {
         (self.world.read_model(objective_id))

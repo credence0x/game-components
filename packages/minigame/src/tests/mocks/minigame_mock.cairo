@@ -6,10 +6,7 @@ pub trait IMinigameMock<TContractState> {
     fn end_game(ref self: TContractState, token_id: u64, score: u32);
     fn create_objective_score(ref self: TContractState, score: u32);
     fn create_settings_difficulty(
-        ref self: TContractState,
-        name: ByteArray,
-        description: ByteArray,
-        difficulty: u8,
+        ref self: TContractState, name: ByteArray, description: ByteArray, difficulty: u8,
     );
 }
 
@@ -33,7 +30,9 @@ pub trait IMinigameMockInit<TContractState> {
 
 #[dojo::contract]
 mod minigame_mock {
-    use crate::interface::{WorldImpl, IMinigameScore, IMinigameDetails, IMinigameSettings, IMinigameObjectives};
+    use crate::interface::{
+        WorldImpl, IMinigameScore, IMinigameDetails, IMinigameSettings, IMinigameObjectives,
+    };
     use crate::minigame::minigame_component;
     use crate::models::game_details::GameDetail;
     use crate::models::settings::{GameSetting, GameSettingDetails};
@@ -91,10 +90,10 @@ mod minigame_mock {
         fn game_details(self: @ContractState, token_id: u64) -> Span<GameDetail> {
             array![
                 GameDetail {
-                    name: "Test Game Detail",
-                    value: format!("Test Value for token {}", token_id),
+                    name: "Test Game Detail", value: format!("Test Value for token {}", token_id),
                 },
-            ].span()
+            ]
+                .span()
         }
     }
 
@@ -114,11 +113,9 @@ mod minigame_mock {
                 name: settings_details.name,
                 description: settings_details.description,
                 settings: array![
-                    GameSetting {
-                        name: "Difficulty",
-                        value: format!("{}", settings.difficulty),
-                    },
-                ].span(),
+                    GameSetting { name: "Difficulty", value: format!("{}", settings.difficulty) },
+                ]
+                    .span(),
             }
         }
     }
@@ -149,7 +146,13 @@ mod minigame_mock {
                 }
                 let objective_id = *objective_ids.at(objective_index);
                 let objective_score = store.get_objective_score(objective_id);
-                objectives.append(GameObjective { name: "Score Target", value: format!("Score Above {}", objective_score.score) });
+                objectives
+                    .append(
+                        GameObjective {
+                            name: "Score Target",
+                            value: format!("Score Above {}", objective_score.score),
+                        },
+                    );
                 objective_index += 1;
             };
             objectives.span()
@@ -185,10 +188,7 @@ mod minigame_mock {
         }
 
         fn create_settings_difficulty(
-            ref self: ContractState,
-            name: ByteArray,
-            description: ByteArray,
-            difficulty: u8,
+            ref self: ContractState, name: ByteArray, description: ByteArray, difficulty: u8,
         ) {
             let mut world = self.world(@self.namespace());
             let mut store: Store = StoreTrait::new(world);
@@ -197,14 +197,16 @@ mod minigame_mock {
             store.set_settings(@Settings { id: settings_count + 1, difficulty });
             store
                 .set_settings_details(
-                    @SettingsDetails { id: settings_count + 1, name: name.clone(), description: description.clone(), exists: true },
+                    @SettingsDetails {
+                        id: settings_count + 1,
+                        name: name.clone(),
+                        description: description.clone(),
+                        exists: true,
+                    },
                 );
             store.set_settings_count(settings_count + 1);
             let settings = array![
-                GameSetting {
-                    name: "Difficulty",
-                    value: format!("{}", difficulty),
-                },
+                GameSetting { name: "Difficulty", value: format!("{}", difficulty) },
             ];
             self.minigame.create_settings(settings_count + 1, name, description, settings.span());
         }

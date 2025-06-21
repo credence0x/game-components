@@ -19,7 +19,9 @@ pub trait IMetagameMock<TContractState> {
 
 #[starknet::interface]
 pub trait IMetagameMockInit<TContractState> {
-    fn initializer(ref self: TContractState, namespace: ByteArray, denshokan_address: ContractAddress);
+    fn initializer(
+        ref self: TContractState, namespace: ByteArray, denshokan_address: ContractAddress,
+    );
 }
 
 #[dojo::contract]
@@ -81,11 +83,12 @@ mod metagame_mock {
             to: ContractAddress,
             soulbound: bool,
         ) -> u64 {
-            let context = array![
-                GameContext { name: "Test Context 1", value: "Test Context" },
-            ].span();
+            let context = array![GameContext { name: "Test Context 1", value: "Test Context" }]
+                .span();
             let context_json = create_context_json("Test App", "Test App Description", context);
-            let denshokan_dispatcher = IDenshokanDispatcher { contract_address: self.denshokan_address() };
+            let denshokan_dispatcher = IDenshokanDispatcher {
+                contract_address: self.denshokan_address(),
+            };
             let token_id = denshokan_dispatcher
                 .mint(
                     game_address,
@@ -121,9 +124,7 @@ mod metagame_mock {
             let store: Store = StoreTrait::new(world);
             let context = store.get_context(token_id);
             GameContextDetails {
-                name: "Test App",
-                description: "Test App Description",
-                context: context.context,
+                name: "Test App", description: "Test App Description", context: context.context,
             }
         }
     }

@@ -3,11 +3,11 @@ use starknet::ContractAddress;
 use crate::models::settings::GameSetting;
 
 /// Gets the settings ID for a game token
-/// 
+///
 /// # Arguments
 /// * `denshokan_address` - The address of the denshokan contract
 /// * `token_id` - The token ID to get settings for
-/// 
+///
 /// # Returns
 /// * `u32` - The settings ID
 pub fn get_settings_id(denshokan_address: ContractAddress, token_id: u64) -> u32 {
@@ -16,7 +16,7 @@ pub fn get_settings_id(denshokan_address: ContractAddress, token_id: u64) -> u32
 }
 
 /// Creates settings in the denshokan contract
-/// 
+///
 /// # Arguments
 /// * `denshokan_address` - The address of the denshokan contract
 /// * `game_address` - The address of the game contract creating the settings
@@ -28,13 +28,15 @@ pub fn create_settings(denshokan_address: ContractAddress, game_address: Contrac
 }
 
 /// Asserts that a setting exists by checking the game contract
-/// 
+///
 /// # Arguments
 /// * `game_contract` - Reference to the game contract implementing IMinigameSettings
 /// * `settings_id` - The ID of the setting to check
-pub fn assert_setting_exists<T, +crate::interface::IMinigameSettings<T>>(game_contract: @T, settings_id: u32) {
+pub fn assert_setting_exists<T, +crate::interface::IMinigameSettings<T>>(
+    game_contract: @T, settings_id: u32,
+) {
     let setting_exists = game_contract.setting_exists(settings_id);
     if !setting_exists {
         panic!("Game: Setting ID {} does not exist", settings_id);
     }
-} 
+}
