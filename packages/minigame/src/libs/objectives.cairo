@@ -1,5 +1,6 @@
 use game_components_denshokan::interface::{IDenshokanDispatcher, IDenshokanDispatcherTrait};
 use starknet::ContractAddress;
+use game_components_minigame::models::objectives::GameObjective;
 
 /// Gets the objective IDs for a game token
 /// 
@@ -21,9 +22,13 @@ pub fn get_objective_ids(denshokan_address: ContractAddress, token_id: u64) -> S
 /// * `game_address` - The address of the game contract creating the objective
 /// * `objective_id` - The ID of the objective to create
 /// * `data` - The objective data
-pub fn create_objective(denshokan_address: ContractAddress, game_address: ContractAddress, objective_id: u32, data: ByteArray) {
+pub fn create_objective(denshokan_address: ContractAddress, game_address: ContractAddress, objective_id: u32, name: ByteArray, value: ByteArray) {
+    let objective = GameObjective {
+        name: name.clone(),
+        value: value.clone(),
+    };
     let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-    denshokan_dispatcher.create_objective(game_address, objective_id, data);
+    denshokan_dispatcher.create_objective(game_address, objective_id, objective);
 }
 
 /// Asserts that an objective exists by checking the game contract

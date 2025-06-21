@@ -141,3 +141,16 @@ pub fn mint(
             soulbound,
         )
 } 
+
+/// Gets the player name for a game token
+/// 
+/// # Arguments
+/// * `denshokan_address` - The address of the denshokan contract
+/// * `token_id` - The token ID to get the player name for
+/// 
+/// # Returns
+/// * `felt252` - The player name
+pub fn get_player_name(denshokan_address: ContractAddress, token_id: u64) -> felt252 {
+    let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
+    denshokan_dispatcher.player_name(token_id)
+}

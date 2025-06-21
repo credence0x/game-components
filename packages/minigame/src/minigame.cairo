@@ -4,6 +4,7 @@
 #[starknet::component]
 pub mod minigame_component {
     use crate::interface::{IMinigame, IMinigameScore, IMinigameDetails, IMinigameSettings, IMinigameObjectives, WorldImpl, IMINIGAME_ID};
+    use crate::models::settings::GameSetting;
     use crate::libs::{game, objectives, settings};
     use starknet::{ContractAddress, get_contract_address};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
@@ -156,14 +157,25 @@ pub mod minigame_component {
             settings::get_settings_id(denshokan_address, token_id)
         }
 
-        fn create_objective(self: @ComponentState<TContractState>, objective_id: u32, data: ByteArray) {
+        fn get_player_name(self: @ComponentState<TContractState>, token_id: u64) -> felt252 {
             let denshokan_address = self.denshokan_address.read();
-            objectives::create_objective(denshokan_address, get_contract_address(), objective_id, data);
+            game::get_player_name(denshokan_address, token_id)
         }
 
-        fn create_settings(self: @ComponentState<TContractState>, settings_id: u32, data: ByteArray) {
+        fn create_objective(self: @ComponentState<TContractState>, objective_id: u32, name: ByteArray, value: ByteArray) {
             let denshokan_address = self.denshokan_address.read();
-            settings::create_settings(denshokan_address, get_contract_address(), settings_id, data);
+            objectives::create_objective(denshokan_address, get_contract_address(), objective_id, name, value);
+        }
+
+        fn create_settings(
+            self: @ComponentState<TContractState>, 
+            settings_id: u32, 
+            name: ByteArray,
+            description: ByteArray,
+            settings: Span<GameSetting>,
+        ) {
+            let denshokan_address = self.denshokan_address.read();
+            settings::create_settings(denshokan_address, get_contract_address(), settings_id, name, description, settings);
         }
 
         fn assert_token_ownership(self: @ComponentState<TContractState>, token_id: u64) {

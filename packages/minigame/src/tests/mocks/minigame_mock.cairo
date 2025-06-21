@@ -42,7 +42,6 @@ mod minigame_mock {
     use openzeppelin_introspection::src5::SRC5Component;
 
     use crate::tests::libs::minigame_store::{Store, StoreTrait};
-    use game_components_utils::json::create_settings_json;
 
     use starknet::ContractAddress;
 
@@ -182,7 +181,7 @@ mod minigame_mock {
                     @ScoreObjective { id: objective_count + 1, score, exists: true },
                 );
             store.set_objective_count(objective_count + 1);
-            self.minigame.create_objective(objective_count + 1, format!("Score Above {}", score));
+            self.minigame.create_objective(objective_count + 1, "Score Target", format!("Score Above {}", score));
         }
 
         fn create_settings_difficulty(
@@ -207,8 +206,7 @@ mod minigame_mock {
                     value: format!("{}", difficulty),
                 },
             ];
-            let settings_json = create_settings_json(name.clone(), description.clone(), settings.span());
-            self.minigame.create_settings(settings_count + 1, settings_json);
+            self.minigame.create_settings(settings_count + 1, name, description, settings.span());
         }
     }
 

@@ -7,3 +7,6 @@ edition.workspace = true
 
 [cairo]
 sierra-replace-ids = true
+
+[dependencies]
+game_components_minigame = { path = "../minigame" }

@@ -1,4 +1,6 @@
 use starknet::ContractAddress;
+use game_components_minigame::models::objectives::GameObjective;
+use game_components_minigame::models::settings::GameSetting;
 
 #[starknet::interface]
 pub trait IDenshokan<TContractState> {
@@ -9,6 +11,7 @@ pub trait IDenshokan<TContractState> {
     fn settings_id(self: @TContractState, token_id: u64) -> u32;
     fn objective_ids(self: @TContractState, token_id: u64) -> Span<u32>;
     fn game_id_from_address(self: @TContractState, game_address: ContractAddress) -> u64;
+    fn player_name(ref self: TContractState, token_id: u64) -> felt252;
 
     fn register_game(
         ref self: TContractState,
@@ -49,6 +52,6 @@ pub trait IDenshokan<TContractState> {
     );
     fn update_game(ref self: TContractState, token_id: u64);
     fn end_game(ref self: TContractState, token_id: u64);
-    fn create_objective(ref self: TContractState, game_address: ContractAddress, objective_id: u32, data: ByteArray);
-    fn create_settings(ref self: TContractState, game_address: ContractAddress, settings_id: u32, data: ByteArray);
+    fn create_objective(ref self: TContractState, game_address: ContractAddress, objective_id: u32, objective_data: GameObjective);
+    fn create_settings(ref self: TContractState, game_address: ContractAddress, settings_id: u32, name: ByteArray, description: ByteArray, settings_data: Span<GameSetting>);
 }
