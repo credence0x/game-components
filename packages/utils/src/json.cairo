@@ -1,4 +1,5 @@
 use game_components_minigame::models::settings::GameSetting;
+use game_components_minigame::models::objectives::GameObjective;
 use game_components_metagame::models::context::GameContext;
 use graffiti::json::JsonImpl;
 
@@ -26,16 +27,15 @@ pub fn create_settings_json(
     metadata
 }
 
-pub fn create_objectives_json(objectives: Span<ByteArray>) -> ByteArray {
+pub fn create_objectives_json(objectives: Span<GameObjective>) -> ByteArray {
     let mut metadata = JsonImpl::new();
     let mut objective_index = 0;
     loop {
         if objective_index == objectives.len() {
             break;
         }
-        let objective_name = format!("Objective {}", objective_index + 1);
-        let objective_value = objectives.at(objective_index);
-        metadata = metadata.add(objective_name, objective_value.clone());
+        let objective = objectives.at(objective_index);
+        metadata = metadata.add(objective.name.clone(), objective.value.clone());
         objective_index += 1;
     };
     metadata.build()
@@ -115,7 +115,11 @@ mod tests {
 
     #[test]
     fn test_objectives_json() {
-        let objectives = array!["Score 100 points", "Kill 10 enemies"].span();
+        let objectives = array![
+            GameObjective { name: "Score 100 points", value: "100 points" },
+            GameObjective { name: "Kill 10 enemies", value: "10 enemies" },
+        ]
+            .span();
         let _current_1 = create_objectives_json(objectives);
         println!("{}", _current_1);
     }
