@@ -22,7 +22,10 @@ pub trait IMinigameMockInit<TContractState> {
         game_genre: felt252,
         game_image: ByteArray,
         game_color: Option<ByteArray>,
+        client_url: Option<ByteArray>,
         renderer_address: Option<ContractAddress>,
+        settings_address: Option<ContractAddress>,
+        objectives_address: Option<ContractAddress>,
         game_namespace: ByteArray,
         denshokan_address: ContractAddress,
     );
@@ -172,7 +175,7 @@ mod minigame_mock {
             let mut world = self.world(@self.namespace());
             let mut store: Store = StoreTrait::new(world);
             store.set_score(@Score { token_id, score });
-            self.minigame.post_action(token_id, true);
+            self.minigame.post_action(token_id);
         }
 
         fn create_objective_score(ref self: ContractState, score: u32) {
@@ -224,7 +227,10 @@ mod minigame_mock {
             game_genre: felt252,
             game_image: ByteArray,
             game_color: Option<ByteArray>,
+            client_url: Option<ByteArray>,
             renderer_address: Option<ContractAddress>,
+            settings_address: Option<ContractAddress>,
+            objectives_address: Option<ContractAddress>,
             game_namespace: ByteArray,
             denshokan_address: ContractAddress,
         ) {
@@ -239,7 +245,10 @@ mod minigame_mock {
                     game_genre,
                     game_image,
                     game_color,
+                    client_url,
                     renderer_address,
+                    settings_address,
+                    objectives_address,
                     game_namespace,
                     denshokan_address,
                 );

@@ -97,7 +97,10 @@ pub mod minigame_component {
             genre: felt252,
             image: ByteArray,
             color: Option<ByteArray>,
+            client_url: Option<ByteArray>,
             renderer_address: Option<ContractAddress>,
+            settings_address: Option<ContractAddress>,
+            objectives_address: Option<ContractAddress>,
             namespace: ByteArray,
             denshokan_address: ContractAddress,
         ) {
@@ -120,7 +123,10 @@ pub mod minigame_component {
                 genre,
                 image,
                 color,
+                client_url,
                 renderer_address,
+                settings_address,
+                objectives_address,
             );
         }
 
@@ -142,9 +148,9 @@ pub mod minigame_component {
             game::pre_action(denshokan_address, token_id);
         }
 
-        fn post_action(self: @ComponentState<TContractState>, token_id: u64, game_over: bool) {
+        fn post_action(self: @ComponentState<TContractState>, token_id: u64) {
             let denshokan_address = self.denshokan_address.read();
-            game::post_action(denshokan_address, token_id, game_over);
+            game::post_action(denshokan_address, token_id);
         }
 
         fn get_objective_ids(self: @ComponentState<TContractState>, token_id: u64) -> Span<u32> {

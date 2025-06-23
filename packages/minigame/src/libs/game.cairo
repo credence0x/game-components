@@ -2,13 +2,12 @@ use game_components_denshokan::interface::{IDenshokanDispatcher, IDenshokanDispa
 use starknet::ContractAddress;
 use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
 
-/// Performs pre-action validation including token ownership and game playability
+/// Performs pre-action validation for the game playability
 ///
 /// # Arguments
 /// * `denshokan_address` - The address of the denshokan contract
 /// * `token_id` - The game token ID to validate
 pub fn pre_action(denshokan_address: ContractAddress, token_id: u64) {
-    assert_token_ownership(denshokan_address, token_id);
     assert_game_token_playable(denshokan_address, token_id);
 }
 
@@ -17,14 +16,9 @@ pub fn pre_action(denshokan_address: ContractAddress, token_id: u64) {
 /// # Arguments
 /// * `denshokan_address` - The address of the denshokan contract
 /// * `token_id` - The game token ID to update
-/// * `game_over` - Whether the game has ended
-pub fn post_action(denshokan_address: ContractAddress, token_id: u64, game_over: bool) {
+pub fn post_action(denshokan_address: ContractAddress, token_id: u64) {
     let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-    if game_over {
-        denshokan_dispatcher.end_game(token_id);
-    } else {
-        denshokan_dispatcher.update_game(token_id);
-    }
+    denshokan_dispatcher.update_game(token_id);
 }
 
 /// Asserts that the caller owns the specified token
@@ -74,7 +68,10 @@ pub fn register_game(
     genre: felt252,
     image: ByteArray,
     color: Option<ByteArray>,
+    client_url: Option<ByteArray>,
     renderer_address: Option<ContractAddress>,
+    settings_address: Option<ContractAddress>,
+    objectives_address: Option<ContractAddress>,
 ) {
     let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
     denshokan_dispatcher
@@ -87,7 +84,10 @@ pub fn register_game(
             genre,
             image,
             color,
+            client_url,
             renderer_address,
+            settings_address,
+            objectives_address,
         );
 }
 

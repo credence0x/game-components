@@ -23,7 +23,10 @@ pub trait IDenshokan<TContractState> {
         genre: felt252,
         image: ByteArray,
         color: Option<ByteArray>,
+        client_url: Option<ByteArray>,
         renderer_address: Option<ContractAddress>,
+        settings_address: Option<ContractAddress>,
+        objectives_address: Option<ContractAddress>,
     );
     fn mint(
         ref self: TContractState,
