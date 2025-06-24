@@ -6,12 +6,10 @@ edition = "2023_11"
 [dependencies]
 starknet.workspace = true
 openzeppelin_introspection = "1.0.0"
-
-[dev-dependencies]
-snforge_std = "0.45.0"
-
-# Local component dependencies
 game_components_minigame = { path = "../minigame" }
 game_components_metagame = { path = "../metagame" }
 game_components_minigame_token = { path = "../minigame_token" }
 game_components_utils = { path = "../utils" }
+
+[dev-dependencies]
+snforge_std = "0.45.0"

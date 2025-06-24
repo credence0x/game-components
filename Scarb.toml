@@ -6,7 +6,7 @@ members = [
     "packages/minigame_token",
     # Test packages can be uncommented when needed
     # "packages/test_dojo",  # Excluded - must be built separately with sozo
-    # "packages/test_starknet",
+    "packages/test_starknet",
 ]
 
 [package]
@@ -41,7 +41,7 @@ game_components_metagame = { path = "packages/metagame" }
 game_components_minigame_token = { path = "packages/minigame_token" }
 # Test packages
 # game_components_test_dojo = { path = "packages/test_dojo" }  # Excluded - must be built separately
-# game_components_test_starknet = { path = "packages/test_starknet" }
+game_components_test_starknet = { path = "packages/test_starknet" }
 
 [dev-dependencies]
 snforge_std.workspace = true

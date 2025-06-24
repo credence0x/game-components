@@ -1,2 +1,3 @@
 pub mod mocks;
-pub mod tests; 
+#[cfg(test)]
+pub mod test_minigame; 

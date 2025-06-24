@@ -36,17 +36,17 @@ pub trait IMinigameStarknetMockInit<TContractState> {
 #[starknet::contract]
 mod minigame_starknet_mock {
     use game_components_minigame::interface::{
-        IMinigameScore, IMinigameDetails, IMinigameSettings, IMinigameObjectives,
+        IMinigameTokenData, IMinigameDetails, IMinigameSettings, IMinigameObjectives,
     };
     use game_components_minigame::minigame::minigame_component;
-    use game_components_minigame::models::game_details::GameDetail;
-    use game_components_minigame::models::settings::{GameSetting, GameSettingDetails};
-    use game_components_minigame::models::objectives::GameObjective;
+    use game_components_minigame::structs::game_details::GameDetail;
+    use game_components_minigame::structs::settings::{GameSetting, GameSettingDetails};
+    use game_components_minigame::structs::objectives::GameObjective;
     use openzeppelin_introspection::src5::SRC5Component;
 
     use starknet::ContractAddress;
     use starknet::storage::{
-        StoragePointerReadAccess, StoragePointerWriteAccess, Map, Vec, VecTrait, MutableVecTrait
+        StoragePointerReadAccess, StoragePointerWriteAccess, Map
     };
 
     component!(path: minigame_component, storage: minigame, event: MinigameEvent);
@@ -80,8 +80,9 @@ mod minigame_starknet_mock {
         objective_count: u32,
         objective_scores: Map<u32, (u32, bool)>, // objective_id -> (target_score, exists)
         
-        // Token objective mappings
-        token_objectives: Map<u64, Vec<u32>>, // token_id -> objective_ids
+        // Token objective mappings - using a simpler storage pattern
+        token_objective_count: Map<u64, u32>, // token_id -> count of objectives
+        token_objective_at_index: Map<(u64, u32), u32>, // (token_id, index) -> objective_id
     }
 
     #[event]
@@ -94,9 +95,13 @@ mod minigame_starknet_mock {
     }
 
     #[abi(embed_v0)]
-    impl GameScoreImpl of IMinigameScore<ContractState> {
+    impl GameTokenDataImpl of IMinigameTokenData<ContractState> {
         fn score(self: @ContractState, token_id: u64) -> u32 {
             self.scores.read(token_id)
+        }
+
+        fn game_over(self: @ContractState, token_id: u64) -> bool {
+            self.scores.read(token_id) >= 100
         }
     }
 
@@ -154,12 +159,12 @@ mod minigame_starknet_mock {
         }
         
         fn objectives(self: @ContractState, token_id: u64) -> Span<GameObjective> {
-            let objective_ids = self.token_objectives.read(token_id);
+            let objective_count = self.token_objective_count.read(token_id);
             let mut objectives = array![];
             
             let mut i = 0;
-            while i < objective_ids.len() {
-                let objective_id = objective_ids.at(i).read();
+            while i < objective_count {
+                let objective_id = self.token_objective_at_index.read((token_id, i));
                 let (target_score, _) = self.objective_scores.read(objective_id);
                 
                 objectives.append(
@@ -283,11 +288,13 @@ mod minigame_starknet_mock {
     #[generate_trait]
     impl HelperImpl of HelperTrait {
         fn store_token_objectives(ref self: ContractState, token_id: u64, objective_ids: Span<u32>) {
-            let mut objectives_vec = self.token_objectives.read(token_id);
+            let len: u32 = objective_ids.len().try_into().unwrap();
+            self.token_objective_count.write(token_id, len);
             
             let mut i = 0;
-            while i < objective_ids.len() {
-                objectives_vec.append().write(*objective_ids.at(i));
+            while i < len {
+                let objective_id: u32 = *objective_ids.at(i.into());
+                self.token_objective_at_index.write((token_id, i), objective_id);
                 i += 1;
             };
         }
