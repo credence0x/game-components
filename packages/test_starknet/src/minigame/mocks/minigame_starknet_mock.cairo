@@ -34,7 +34,7 @@ pub trait IMinigameStarknetMockInit<TContractState> {
 }
 
 #[starknet::contract]
-mod minigame_starknet_mock {
+pub mod minigame_starknet_mock {
     use game_components_minigame::interface::{
         IMinigameTokenData, IMinigameDetails, IMinigameSettings, IMinigameObjectives,
     };

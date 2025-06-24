@@ -12,4 +12,5 @@ game_components_minigame_token = { path = "../minigame_token" }
 game_components_utils = { path = "../utils" }
 
 [dev-dependencies]
+cairo_test = "2.10.1"
 snforge_std = "0.45.0"
