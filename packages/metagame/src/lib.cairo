@@ -1,5 +1,4 @@
 pub mod metagame;
 pub mod interface;
-pub mod models;
-pub mod tests;
+pub mod structs;
 pub mod metagame_actions;

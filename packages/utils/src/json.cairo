@@ -1,6 +1,6 @@
-use game_components_minigame::models::settings::GameSetting;
-use game_components_minigame::models::objectives::GameObjective;
-use game_components_metagame::models::context::GameContext;
+use game_components_minigame::structs::settings::GameSetting;
+use game_components_minigame::structs::objectives::GameObjective;
+use game_components_metagame::structs::context::GameContext;
 use graffiti::json::JsonImpl;
 
 pub fn create_settings_json(

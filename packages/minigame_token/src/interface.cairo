@@ -1,6 +1,6 @@
 use starknet::ContractAddress;
-use game_components_minigame::models::objectives::GameObjective;
-use game_components_minigame::models::settings::GameSetting;
+use game_components_minigame::structs::objectives::GameObjective;
+use game_components_minigame::structs::settings::GameSetting;
 
 #[starknet::interface]
 pub trait IMinigameToken<TContractState> {

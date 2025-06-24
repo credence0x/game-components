@@ -1,4 +1,4 @@
-use crate::models::context::GameContextDetails;
+use crate::structs::context::GameContextDetails;
 use starknet::ContractAddress;
 
 pub const IMETAGAME_ID: felt252 =

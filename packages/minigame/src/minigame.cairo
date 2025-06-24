@@ -7,7 +7,7 @@ pub mod minigame_component {
         IMinigame, IMinigameTokenData, IMinigameSettings, IMinigameObjectives, IMINIGAME_ID,
         IMINIGAME_OBJECTIVES_ID, IMINIGAME_SETTINGS_ID,
     };
-    use crate::models::settings::GameSetting;
+    use crate::structs::settings::GameSetting;
     use crate::libs::{game, objectives, settings};
     use starknet::{ContractAddress, get_contract_address};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};

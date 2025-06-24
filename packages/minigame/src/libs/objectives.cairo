@@ -2,7 +2,7 @@ use game_components_minigame_token::interface::{
     IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait,
 };
 use starknet::ContractAddress;
-use game_components_minigame::models::objectives::GameObjective;
+use game_components_minigame::structs::objectives::GameObjective;
 
 /// Gets the objective IDs for a game token
 ///

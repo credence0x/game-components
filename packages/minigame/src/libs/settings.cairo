@@ -2,7 +2,7 @@ use game_components_minigame_token::interface::{
     IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait,
 };
 use starknet::ContractAddress;
-use crate::models::settings::GameSetting;
+use crate::structs::settings::GameSetting;
 
 /// Gets the settings ID for a game token
 ///
