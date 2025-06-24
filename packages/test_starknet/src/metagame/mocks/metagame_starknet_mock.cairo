@@ -28,7 +28,7 @@ pub trait IMetagameStarknetMockInit<TContractState> {
 }
 
 #[starknet::contract]
-mod metagame_starknet_mock {
+pub mod metagame_starknet_mock {
     use game_components_metagame::interface::{IMetagameContext};
     use game_components_metagame::metagame::metagame_component;
     use game_components_metagame::structs::context::{GameContextDetails, GameContext};
