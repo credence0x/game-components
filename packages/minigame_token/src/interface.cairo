@@ -3,7 +3,7 @@ use game_components_minigame::models::objectives::GameObjective;
 use game_components_minigame::models::settings::GameSetting;
 
 #[starknet::interface]
-pub trait IDenshokan<TContractState> {
+pub trait IMinigameToken<TContractState> {
     fn is_game_token_playable(self: @TContractState, token_id: u64) -> bool;
     fn is_game_registered(self: @TContractState, game_address: ContractAddress) -> bool;
     fn game_address(self: @TContractState, token_id: u64) -> ContractAddress;

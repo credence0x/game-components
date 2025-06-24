@@ -9,7 +9,7 @@ edition.workspace = true
 sierra-replace-ids = true
 
 [dependencies]
-game_components_denshokan = { path = "../denshokan" }
+game_components_minigame_token = { path = "../minigame_token" }
 game_components_utils = { path = "../utils" }
 dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.5.1" }
 openzeppelin_introspection = "1.0.0"

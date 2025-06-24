@@ -3,7 +3,7 @@
 ///
 #[starknet::component]
 pub mod metagame_component {
-    use crate::interface::{IMetagame, IMetagameContext, IMETAGAME_ID};
+    use crate::interface::{IMetagame, IMetagameContext, IMETAGAME_ID, IMETAGAME_CONTEXT_ID};
     use crate::metagame_actions::metagame_actions;
 
     use dojo::contract::components::world_provider::{IWorldProvider};
@@ -17,7 +17,7 @@ pub mod metagame_component {
     #[storage]
     pub struct Storage {
         namespace: ByteArray,
-        denshokan_address: ContractAddress,
+        minigame_token_address: ContractAddress,
     }
 
     #[embeddable_as(MetagameImpl)]
@@ -25,7 +25,6 @@ pub mod metagame_component {
         TContractState,
         +HasComponent<TContractState>,
         +IWorldProvider<TContractState>,
-        +IMetagameContext<TContractState>,
         impl SRC5: SRC5Component::HasComponent<TContractState>,
         +Drop<TContractState>,
     > of IMetagame<ComponentState<TContractState>> {
@@ -33,8 +32,8 @@ pub mod metagame_component {
             self.namespace.read()
         }
 
-        fn denshokan_address(self: @ComponentState<TContractState>) -> ContractAddress {
-            self.denshokan_address.read()
+        fn minigame_token_address(self: @ComponentState<TContractState>) -> ContractAddress {
+            self.minigame_token_address.read()
         }
     }
 
@@ -49,11 +48,11 @@ pub mod metagame_component {
         fn initializer(
             ref self: ComponentState<TContractState>,
             namespace: ByteArray,
-            denshokan_address: ContractAddress,
+            minigame_token_address: ContractAddress,
         ) {
             self.register_src5_interfaces();
             self.namespace.write(namespace.clone());
-            self.denshokan_address.write(denshokan_address.clone());
+            self.minigame_token_address.write(minigame_token_address.clone());
         }
 
         fn register_src5_interfaces(ref self: ComponentState<TContractState>) {
@@ -64,8 +63,27 @@ pub mod metagame_component {
         fn assert_game_registered(
             ref self: ComponentState<TContractState>, game_address: ContractAddress,
         ) {
-            let denshokan_address = self.denshokan_address.read();
-            metagame_actions::assert_game_registered(denshokan_address, game_address);
+            let minigame_token_address = self.minigame_token_address.read();
+            metagame_actions::assert_game_registered(minigame_token_address, game_address);
+        }
+    }
+
+    #[generate_trait]
+    pub impl InternalContextImpl<
+        TContractState,
+        +HasComponent<TContractState>,
+        +IWorldProvider<TContractState>,
+        +IMetagameContext<TContractState>,
+        impl SRC5: SRC5Component::HasComponent<TContractState>,
+        +Drop<TContractState>,
+    > of InternalContextTrait<TContractState> {
+        fn initialize_context(ref self: ComponentState<TContractState>) {
+            self.register_context_interface();
+        }
+
+        fn register_context_interface(ref self: ComponentState<TContractState>) {
+            let mut src5_component = get_dep_component_mut!(ref self, SRC5);
+            src5_component.register_interface(IMETAGAME_CONTEXT_ID);
         }
     }
 }

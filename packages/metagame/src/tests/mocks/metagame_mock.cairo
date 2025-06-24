@@ -36,7 +36,7 @@ mod metagame_mock {
 
     use crate::tests::libs::metagame_store::{Store, StoreTrait};
     use game_components_utils::json::create_context_json;
-    use game_components_denshokan::interface::{IDenshokanDispatcher, IDenshokanDispatcherTrait};
+    use game_components_minigame_token::interface::{IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait};
 
     component!(path: metagame_component, storage: metagame, event: MetagameEvent);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
@@ -44,6 +44,7 @@ mod metagame_mock {
     #[abi(embed_v0)]
     impl MetagameImpl = metagame_component::MetagameImpl<ContractState>;
     impl MetagameInternalImpl = metagame_component::InternalImpl<ContractState>;
+    impl MetagameInternalContextImpl = metagame_component::InternalContextImpl<ContractState>;
 
     #[abi(embed_v0)]
     impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
@@ -86,10 +87,10 @@ mod metagame_mock {
             let context = array![GameContext { name: "Test Context 1", value: "Test Context" }]
                 .span();
             let context_json = create_context_json("Test App", "Test App Description", context);
-            let denshokan_dispatcher = IDenshokanDispatcher {
-                contract_address: self.denshokan_address(),
+            let minigame_token_dispatcher = IMinigameTokenDispatcher {
+                contract_address: self.minigame_token_address(),
             };
-            let token_id = denshokan_dispatcher
+            let token_id = minigame_token_dispatcher
                 .mint(
                     game_address,
                     player_name,
@@ -135,6 +136,9 @@ mod metagame_mock {
             ref self: ContractState, namespace: ByteArray, denshokan_address: ContractAddress,
         ) {
             self.metagame.initializer(namespace, denshokan_address);
+            
+            // Initialize context functionality since this mock implements IMetagameContext
+            self.metagame.initialize_context();
         }
     }
 }

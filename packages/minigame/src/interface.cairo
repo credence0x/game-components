@@ -1,11 +1,14 @@
-use starknet::{ContractAddress, contract_address_const};
-use dojo::world::{WorldStorage, WorldStorageTrait, IWorldDispatcher};
+use starknet::ContractAddress;
 use crate::models::game_details::GameDetail;
 use crate::models::settings::GameSettingDetails;
 use crate::models::objectives::GameObjective;
 
 pub const IMINIGAME_ID: felt252 =
     0x02c0f9265d397c10970f24822e4b57cac7d8895f8c449b7c9caaa26910499704;
+pub const IMINIGAME_SETTINGS_ID: felt252 =
+    0x0379f4343538c65a38349fb1318328629dd950d3624101aeaac1b4bd45a39eff;
+pub const IMINIGAME_OBJECTIVES_ID: felt252 =
+    0x0213cfcf73543e549f00c7cad49cf27a1e544d71315ff981930aaf77ac0709bd;
 
 #[starknet::interface]
 pub trait IMinigame<TState> {
@@ -23,12 +26,13 @@ pub trait IMinigame<TState> {
         soulbound: bool,
     ) -> u64;
     fn namespace(self: @TState) -> ByteArray;
-    fn denshokan_address(self: @TState) -> ContractAddress;
+    fn token_address(self: @TState) -> ContractAddress;
 }
 
 #[starknet::interface]
-pub trait IMinigameScore<TState> {
+pub trait IMinigameTokenData<TState> {
     fn score(self: @TState, token_id: u64) -> u32;
+    fn game_over(self: @TState, token_id: u64) -> bool;
 }
 
 #[starknet::interface]
@@ -37,12 +41,10 @@ pub trait IMinigameDetails<TState> {
     fn game_details(self: @TState, token_id: u64) -> Span<GameDetail>;
 }
 
-
 #[starknet::interface]
 pub trait IMinigameDetailsSVG<TState> {
     fn game_details_svg(self: @TState, token_id: u64) -> ByteArray;
 }
-
 
 #[starknet::interface]
 pub trait IMinigameSettings<TState> {
@@ -70,23 +72,5 @@ pub trait IMinigameObjectivesSVG<TState> {
 #[starknet::interface]
 pub trait IMinigameTokenUri<TState> {
     fn token_uri(self: @TState, token_id: u256) -> ByteArray;
-}
-
-#[generate_trait]
-pub impl WorldImpl of WorldTrait {
-    fn contract_address(self: @WorldStorage, contract_name: @ByteArray) -> ContractAddress {
-        match self.dns(contract_name) {
-            Option::Some((contract_address, _)) => { (contract_address) },
-            Option::None => { (contract_address_const::<0x0>()) },
-        }
-    }
-
-    // Create a Store from a dispatcher
-    // https://github.com/dojoengine/dojo/blob/main/crates/dojo/core/src/contract/components/world_provider.cairo
-    // https://github.com/dojoengine/dojo/blob/main/crates/dojo/core/src/world/storage.cairo
-    #[inline(always)]
-    fn storage(dispatcher: IWorldDispatcher, namespace: @ByteArray) -> WorldStorage {
-        (WorldStorageTrait::new(dispatcher, namespace))
-    }
 }
 

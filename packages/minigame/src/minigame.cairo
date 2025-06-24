@@ -3,12 +3,14 @@
 ///
 #[starknet::component]
 pub mod minigame_component {
-    use crate::interface::{IMinigame, IMinigameScore, IMinigameDetails, IMinigameSettings, IMinigameObjectives, WorldImpl, IMINIGAME_ID};
+    use crate::interface::{
+        IMinigame, IMinigameTokenData, IMinigameSettings, IMinigameObjectives, IMINIGAME_ID,
+        IMINIGAME_OBJECTIVES_ID, IMINIGAME_SETTINGS_ID,
+    };
     use crate::models::settings::GameSetting;
     use crate::libs::{game, objectives, settings};
     use starknet::{ContractAddress, get_contract_address};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
-    use dojo::contract::components::world_provider::{IWorldProvider};
 
     use openzeppelin_introspection::src5::SRC5Component;
     use openzeppelin_introspection::src5::SRC5Component::InternalTrait as SRC5InternalTrait;
@@ -17,18 +19,14 @@ pub mod minigame_component {
     #[storage]
     pub struct Storage {
         namespace: ByteArray,
-        denshokan_address: ContractAddress,
+        token_address: ContractAddress,
     }
 
     #[embeddable_as(MinigameImpl)]
     impl Minigame<
         TContractState,
         +HasComponent<TContractState>,
-        +IWorldProvider<TContractState>,
-        +IMinigameScore<TContractState>,
-        +IMinigameDetails<TContractState>,
-        +IMinigameSettings<TContractState>,
-        +IMinigameObjectives<TContractState>,
+        +IMinigameTokenData<TContractState>,
         impl SRC5: SRC5Component::HasComponent<TContractState>,
         +Drop<TContractState>,
     > of IMinigame<ComponentState<TContractState>> {
@@ -45,16 +43,30 @@ pub mod minigame_component {
             to: ContractAddress,
             soulbound: bool,
         ) -> u64 {
-            // verify settings exist
             match settings_id {
-                Option::Some(settings_id) => { self.assert_setting_exists(settings_id); },
+                Option::Some(_) => {
+                    let src5_component = get_dep_component_mut!(ref self, SRC5);
+                    assert!(
+                        src5_component.supports_interface(IMINIGAME_SETTINGS_ID),
+                        "Minigame: Settings interface not supported",
+                    );
+                },
                 Option::None => {},
             };
-
+            match objective_ids {
+                Option::Some(_) => {
+                    let src5_component = get_dep_component_mut!(ref self, SRC5);
+                    assert!(
+                        src5_component.supports_interface(IMINIGAME_OBJECTIVES_ID),
+                        "Minigame: Objectives interface not supported",
+                    );
+                },
+                Option::None => {},
+            };
             // mint game token
-            let denshokan_address = self.denshokan_address.read();
+            let token_address = self.token_address.read();
             game::mint(
-                denshokan_address,
+                token_address,
                 get_contract_address(),
                 player_name,
                 settings_id,
@@ -73,17 +85,15 @@ pub mod minigame_component {
             self.namespace.read()
         }
 
-        fn denshokan_address(self: @ComponentState<TContractState>) -> ContractAddress {
-            self.denshokan_address.read()
+        fn token_address(self: @ComponentState<TContractState>) -> ContractAddress {
+            self.token_address.read()
         }
     }
+
     #[generate_trait]
     pub impl InternalImpl<
         TContractState,
         +HasComponent<TContractState>,
-        +IWorldProvider<TContractState>,
-        +IMinigameSettings<TContractState>,
-        +IMinigameObjectives<TContractState>,
         impl SRC5: SRC5Component::HasComponent<TContractState>,
         +Drop<TContractState>,
     > of InternalTrait<TContractState> {
@@ -102,19 +112,18 @@ pub mod minigame_component {
             settings_address: Option<ContractAddress>,
             objectives_address: Option<ContractAddress>,
             namespace: ByteArray,
-            denshokan_address: ContractAddress,
+            token_address: ContractAddress,
         ) {
-            // Register SRC5 interfaces FIRST so the contract can be identified as implementing
-            // IGameToken
-            self.register_src5_interfaces();
+            // Register base SRC5 interface
+            self.register_game_interface();
 
-            // Store the namespace and denshokan address
+            // Store the namespace, token address, and feature flags
             self.namespace.write(namespace.clone());
-            self.denshokan_address.write(denshokan_address.clone());
+            self.token_address.write(token_address.clone());
 
             // Now register the game (this will work because SRC5 interfaces are registered)
             game::register_game(
-                denshokan_address,
+                token_address,
                 creator_address,
                 name,
                 description,
@@ -130,68 +139,105 @@ pub mod minigame_component {
             );
         }
 
-        fn register_src5_interfaces(ref self: ComponentState<TContractState>) {
+        fn register_game_interface(ref self: ComponentState<TContractState>) {
             let mut src5_component = get_dep_component_mut!(ref self, SRC5);
             src5_component.register_interface(IMINIGAME_ID);
         }
 
-        fn assert_setting_exists(self: @ComponentState<TContractState>, settings_id: u32) {
-            settings::assert_setting_exists(self.get_contract(), settings_id);
-        }
-
-        fn assert_objective_exists(self: @ComponentState<TContractState>, objective_id: u32) {
-            objectives::assert_objective_exists(self.get_contract(), objective_id);
-        }
-
         fn pre_action(self: @ComponentState<TContractState>, token_id: u64) {
-            let denshokan_address = self.denshokan_address.read();
-            game::pre_action(denshokan_address, token_id);
+            let token_address = self.token_address.read();
+            game::pre_action(token_address, token_id);
         }
 
         fn post_action(self: @ComponentState<TContractState>, token_id: u64) {
-            let denshokan_address = self.denshokan_address.read();
-            game::post_action(denshokan_address, token_id);
-        }
-
-        fn get_objective_ids(self: @ComponentState<TContractState>, token_id: u64) -> Span<u32> {
-            let denshokan_address = self.denshokan_address.read();
-            objectives::get_objective_ids(denshokan_address, token_id)
-        }
-
-        fn get_settings_id(self: @ComponentState<TContractState>, token_id: u64) -> u32 {
-            let denshokan_address = self.denshokan_address.read();
-            settings::get_settings_id(denshokan_address, token_id)
+            let token_address = self.token_address.read();
+            game::post_action(token_address, token_id);
         }
 
         fn get_player_name(self: @ComponentState<TContractState>, token_id: u64) -> felt252 {
-            let denshokan_address = self.denshokan_address.read();
-            game::get_player_name(denshokan_address, token_id)
+            let token_address = self.token_address.read();
+            game::get_player_name(token_address, token_id)
         }
 
-        fn create_objective(self: @ComponentState<TContractState>, objective_id: u32, name: ByteArray, value: ByteArray) {
-            let denshokan_address = self.denshokan_address.read();
-            objectives::create_objective(denshokan_address, get_contract_address(), objective_id, name, value);
+        fn assert_token_ownership(self: @ComponentState<TContractState>, token_id: u64) {
+            let token_address = self.token_address.read();
+            game::assert_token_ownership(token_address, token_id);
+        }
+
+        fn assert_game_token_playable(self: @ComponentState<TContractState>, token_id: u64) {
+            let token_address = self.token_address.read();
+            game::assert_game_token_playable(token_address, token_id);
+        }
+    }
+
+    #[generate_trait]
+    pub impl InternalObjectivesImpl<
+        TContractState,
+        +HasComponent<TContractState>,
+        +IMinigameObjectives<TContractState>,
+        impl SRC5: SRC5Component::HasComponent<TContractState>,
+        +Drop<TContractState>,
+    > of InternalObjectivesTrait<TContractState> {
+        fn initialize_objectives(ref self: ComponentState<TContractState>) {
+            self.register_objectives_interface();
+        }
+
+        fn get_objective_ids(self: @ComponentState<TContractState>, token_id: u64) -> Span<u32> {
+            let token_address = self.token_address.read();
+            objectives::get_objective_ids(token_address, token_id)
+        }
+
+        fn register_objectives_interface(ref self: ComponentState<TContractState>) {
+            let mut src5_component = get_dep_component_mut!(ref self, SRC5);
+            src5_component.register_interface(IMINIGAME_OBJECTIVES_ID);
+        }
+
+        fn create_objective(
+            self: @ComponentState<TContractState>,
+            objective_id: u32,
+            name: ByteArray,
+            value: ByteArray,
+        ) {
+            let token_address = self.token_address.read();
+            objectives::create_objective(
+                token_address, get_contract_address(), objective_id, name, value,
+            );
+        }
+    }
+
+    #[generate_trait]
+    pub impl InternalSettingsImpl<
+        TContractState,
+        +HasComponent<TContractState>,
+        +IMinigameSettings<TContractState>,
+        impl SRC5: SRC5Component::HasComponent<TContractState>,
+        +Drop<TContractState>,
+    > of InternalSettingsTrait<TContractState> {
+        fn initialize_settings(ref self: ComponentState<TContractState>) {
+            self.register_settings_interface();
+        }
+
+        fn get_settings_id(self: @ComponentState<TContractState>, token_id: u64) -> u32 {
+            let token_address = self.token_address.read();
+            settings::get_settings_id(token_address, token_id)
+        }
+
+        fn register_settings_interface(ref self: ComponentState<TContractState>) {
+            let mut src5_component = get_dep_component_mut!(ref self, SRC5);
+            src5_component.register_interface(IMINIGAME_SETTINGS_ID);
         }
 
         fn create_settings(
-            self: @ComponentState<TContractState>, 
-            settings_id: u32, 
+            self: @ComponentState<TContractState>,
+            settings_id: u32,
             name: ByteArray,
             description: ByteArray,
             settings: Span<GameSetting>,
         ) {
-            let denshokan_address = self.denshokan_address.read();
-            settings::create_settings(denshokan_address, get_contract_address(), settings_id, name, description, settings);
-        }
-
-        fn assert_token_ownership(self: @ComponentState<TContractState>, token_id: u64) {
-            let denshokan_address = self.denshokan_address.read();
-            game::assert_token_ownership(denshokan_address, token_id);
-        }
-
-        fn assert_game_token_playable(self: @ComponentState<TContractState>, token_id: u64) {
-            let denshokan_address = self.denshokan_address.read();
-            game::assert_game_token_playable(denshokan_address, token_id);
+            let token_address = self.token_address.read();
+            settings::create_settings(
+                token_address, get_contract_address(), settings_id, name, description, settings,
+            );
         }
     }
 }

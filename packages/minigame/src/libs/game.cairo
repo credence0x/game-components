@@ -1,33 +1,37 @@
-use game_components_denshokan::interface::{IDenshokanDispatcher, IDenshokanDispatcherTrait};
+use game_components_minigame_token::interface::{
+    IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait,
+};
 use starknet::ContractAddress;
 use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
 
 /// Performs pre-action validation for the game playability
 ///
 /// # Arguments
-/// * `denshokan_address` - The address of the denshokan contract
+/// * `minigame_token_address` - The address of the minigame token contract
 /// * `token_id` - The game token ID to validate
-pub fn pre_action(denshokan_address: ContractAddress, token_id: u64) {
-    assert_game_token_playable(denshokan_address, token_id);
+pub fn pre_action(minigame_token_address: ContractAddress, token_id: u64) {
+    assert_game_token_playable(minigame_token_address, token_id);
 }
 
 /// Performs post-action updates to the game state
 ///
 /// # Arguments
-/// * `denshokan_address` - The address of the denshokan contract
+/// * `minigame_token_address` - The address of the minigame token contract
 /// * `token_id` - The game token ID to update
-pub fn post_action(denshokan_address: ContractAddress, token_id: u64) {
-    let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-    denshokan_dispatcher.update_game(token_id);
+pub fn post_action(minigame_token_address: ContractAddress, token_id: u64) {
+    let minigame_token_dispatcher = IMinigameTokenDispatcher {
+        contract_address: minigame_token_address,
+    };
+    minigame_token_dispatcher.update_game(token_id);
 }
 
 /// Asserts that the caller owns the specified token
 ///
 /// # Arguments
-/// * `denshokan_address` - The address of the denshokan contract
+/// * `minigame_token_address` - The address of the minigame token contract
 /// * `token_id` - The token ID to check ownership for
-pub fn assert_token_ownership(denshokan_address: ContractAddress, token_id: u64) {
-    let erc721_dispatcher = IERC721Dispatcher { contract_address: denshokan_address };
+pub fn assert_token_ownership(minigame_token_address: ContractAddress, token_id: u64) {
+    let erc721_dispatcher = IERC721Dispatcher { contract_address: minigame_token_address };
     let token_owner = erc721_dispatcher.owner_of(token_id.into());
     assert!(
         token_owner == starknet::get_caller_address(), "Caller is not owner of token {}", token_id,
@@ -37,18 +41,20 @@ pub fn assert_token_ownership(denshokan_address: ContractAddress, token_id: u64)
 /// Asserts that the game token is in a playable state
 ///
 /// # Arguments
-/// * `denshokan_address` - The address of the denshokan contract
+/// * `minigame_token_address` - The address of the minigame token contract
 /// * `token_id` - The token ID to check playability for
-pub fn assert_game_token_playable(denshokan_address: ContractAddress, token_id: u64) {
-    let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-    let is_playable = denshokan_dispatcher.is_game_token_playable(token_id);
+pub fn assert_game_token_playable(minigame_token_address: ContractAddress, token_id: u64) {
+    let minigame_token_dispatcher = IMinigameTokenDispatcher {
+        contract_address: minigame_token_address,
+    };
+    let is_playable = minigame_token_dispatcher.is_game_token_playable(token_id);
     assert!(is_playable, "Game is not playable");
 }
 
 /// Registers a game with the denshokan contract
 ///
 /// # Arguments
-/// * `denshokan_address` - The address of the denshokan contract
+/// * `minigame_token_address` - The address of the minigame token contract
 /// * `creator_address` - The address of the game creator
 /// * `name` - The name of the game
 /// * `description` - The description of the game
@@ -59,7 +65,7 @@ pub fn assert_game_token_playable(denshokan_address: ContractAddress, token_id: 
 /// * `color` - Optional color theme for the game
 /// * `renderer_address` - Optional renderer contract address
 pub fn register_game(
-    denshokan_address: ContractAddress,
+    minigame_token_address: ContractAddress,
     creator_address: ContractAddress,
     name: felt252,
     description: ByteArray,
@@ -73,8 +79,10 @@ pub fn register_game(
     settings_address: Option<ContractAddress>,
     objectives_address: Option<ContractAddress>,
 ) {
-    let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-    denshokan_dispatcher
+    let minigame_token_dispatcher = IMinigameTokenDispatcher {
+        contract_address: minigame_token_address,
+    };
+    minigame_token_dispatcher
         .register_game(
             creator_address,
             name,
@@ -94,7 +102,7 @@ pub fn register_game(
 /// Mints a game token through the denshokan contract
 ///
 /// # Arguments
-/// * `denshokan_address` - The address of the denshokan contract
+/// * `minigame_token_address` - The address of the minigame token contract
 /// * `game_address` - The address of the game contract minting the token
 /// * `player_name` - Optional player name
 /// * `settings_id` - Optional settings ID
@@ -110,7 +118,7 @@ pub fn register_game(
 /// # Returns
 /// * `u64` - The minted token ID
 pub fn mint(
-    denshokan_address: ContractAddress,
+    minigame_token_address: ContractAddress,
     game_address: ContractAddress,
     player_name: Option<felt252>,
     settings_id: Option<u32>,
@@ -123,8 +131,10 @@ pub fn mint(
     to: ContractAddress,
     soulbound: bool,
 ) -> u64 {
-    let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-    denshokan_dispatcher
+    let minigame_token_dispatcher = IMinigameTokenDispatcher {
+        contract_address: minigame_token_address,
+    };
+    minigame_token_dispatcher
         .mint(
             Option::Some(game_address),
             player_name,
@@ -138,17 +148,19 @@ pub fn mint(
             to,
             soulbound,
         )
-} 
+}
 
 /// Gets the player name for a game token
-/// 
+///
 /// # Arguments
-/// * `denshokan_address` - The address of the denshokan contract
+/// * `minigame_token_address` - The address of the minigame token contract
 /// * `token_id` - The token ID to get the player name for
-/// 
+///
 /// # Returns
 /// * `felt252` - The player name
-pub fn get_player_name(denshokan_address: ContractAddress, token_id: u64) -> felt252 {
-    let denshokan_dispatcher = IDenshokanDispatcher { contract_address: denshokan_address };
-    denshokan_dispatcher.player_name(token_id)
+pub fn get_player_name(minigame_token_address: ContractAddress, token_id: u64) -> felt252 {
+    let minigame_token_dispatcher = IMinigameTokenDispatcher {
+        contract_address: minigame_token_address,
+    };
+    minigame_token_dispatcher.player_name(token_id)
 }

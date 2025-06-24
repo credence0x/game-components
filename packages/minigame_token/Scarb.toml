@@ -1,5 +1,5 @@
 [package]
-name = "game_components_denshokan"
+name = "game_components_minigame_token"
 version.workspace = true
 edition.workspace = true
 

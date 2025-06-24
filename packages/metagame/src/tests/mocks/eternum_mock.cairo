@@ -21,7 +21,7 @@ pub trait IEternumMock<TContractState> {
 #[starknet::interface]
 pub trait IEternumMockInit<TContractState> {
     fn initializer(
-        ref self: TContractState, namespace: ByteArray, denshokan_address: ContractAddress,
+        ref self: TContractState, namespace: ByteArray, minigame_token_address: ContractAddress,
     );
 }
 
@@ -37,7 +37,7 @@ mod eternum_mock {
 
     use crate::tests::libs::metagame_store::{Store, StoreTrait};
     use game_components_utils::json::create_context_json;
-    use game_components_denshokan::interface::{IDenshokanDispatcher, IDenshokanDispatcherTrait};
+    use game_components_minigame_token::interface::{IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait};
 
     component!(path: metagame_component, storage: metagame, event: MetagameEvent);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
@@ -95,10 +95,10 @@ mod eternum_mock {
                 "Multiplayer Civilization with a real economy that never sleeps",
                 context,
             );
-            let denshokan_dispatcher = IDenshokanDispatcher {
-                contract_address: self.denshokan_address(),
+            let minigame_token_dispatcher = IMinigameTokenDispatcher {
+                contract_address: self.minigame_token_address(),
             };
-            let token_id = denshokan_dispatcher
+            let token_id = minigame_token_dispatcher
                 .mint(
                     game_address,
                     player_name,
@@ -143,9 +143,9 @@ mod eternum_mock {
     #[abi(embed_v0)]
     impl EternumInitializerImpl of super::IEternumMockInit<ContractState> {
         fn initializer(
-            ref self: ContractState, namespace: ByteArray, denshokan_address: ContractAddress,
+            ref self: ContractState, namespace: ByteArray, minigame_token_address: ContractAddress,
         ) {
-            self.metagame.initializer(namespace, denshokan_address);
+            self.metagame.initializer(namespace, minigame_token_address);
         }
     }
 }
