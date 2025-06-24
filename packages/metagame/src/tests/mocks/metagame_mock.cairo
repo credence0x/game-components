@@ -20,7 +20,8 @@ pub trait IMetagameMock<TContractState> {
 #[starknet::interface]
 pub trait IMetagameMockInit<TContractState> {
     fn initializer(
-        ref self: TContractState, namespace: ByteArray, denshokan_address: ContractAddress,
+        ref self: TContractState, namespace: ByteArray, minigame_token_address: ContractAddress,
+        supports_context: bool,
     );
 }
 
@@ -36,7 +37,6 @@ mod metagame_mock {
 
     use crate::tests::libs::metagame_store::{Store, StoreTrait};
     use game_components_utils::json::create_context_json;
-    use game_components_minigame_token::interface::{IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait};
 
     component!(path: metagame_component, storage: metagame, event: MetagameEvent);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
@@ -87,11 +87,8 @@ mod metagame_mock {
             let context = array![GameContext { name: "Test Context 1", value: "Test Context" }]
                 .span();
             let context_json = create_context_json("Test App", "Test App Description", context);
-            let minigame_token_dispatcher = IMinigameTokenDispatcher {
-                contract_address: self.minigame_token_address(),
-            };
-            let token_id = minigame_token_dispatcher
-                .mint(
+
+            let token_id = self.metagame.mint(
                     game_address,
                     player_name,
                     settings_id,
@@ -133,12 +130,16 @@ mod metagame_mock {
     #[abi(embed_v0)]
     impl MetagameInitializerImpl of super::IMetagameMockInit<ContractState> {
         fn initializer(
-            ref self: ContractState, namespace: ByteArray, denshokan_address: ContractAddress,
+            ref self: ContractState, 
+            namespace: ByteArray, 
+            minigame_token_address: ContractAddress,
+            supports_context: bool,
         ) {
-            self.metagame.initializer(namespace, denshokan_address);
-            
-            // Initialize context functionality since this mock implements IMetagameContext
+            self.metagame.initializer(namespace, minigame_token_address);
             self.metagame.initialize_context();
+            if supports_context {
+                self.metagame.initialize_context();
+            }
         }
     }
 }

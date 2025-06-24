@@ -37,7 +37,6 @@ mod eternum_mock {
 
     use crate::tests::libs::metagame_store::{Store, StoreTrait};
     use game_components_utils::json::create_context_json;
-    use game_components_minigame_token::interface::{IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait};
 
     component!(path: metagame_component, storage: metagame, event: MetagameEvent);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
@@ -95,23 +94,19 @@ mod eternum_mock {
                 "Multiplayer Civilization with a real economy that never sleeps",
                 context,
             );
-            let minigame_token_dispatcher = IMinigameTokenDispatcher {
-                contract_address: self.minigame_token_address(),
-            };
-            let token_id = minigame_token_dispatcher
-                .mint(
-                    game_address,
-                    player_name,
-                    settings_id,
-                    start,
-                    end,
-                    objective_ids,
-                    Option::Some(context_json.clone()),
-                    client_url,
-                    renderer_address,
-                    to,
-                    soulbound,
-                );
+            let token_id = self.metagame.mint(
+                game_address,
+                player_name,
+                settings_id,
+                start,
+                end,
+                objective_ids,
+                Option::Some(context_json.clone()),
+                client_url,
+                renderer_address,
+                to,
+                soulbound,
+            );
             let mut world = self.world(@self.namespace());
             let mut store: Store = StoreTrait::new(world);
             store.set_context(@Context { token_id, context: context.clone(), exists: true });

@@ -4,9 +4,8 @@
 #[starknet::component]
 pub mod metagame_component {
     use crate::interface::{IMetagame, IMetagameContext, IMETAGAME_ID, IMETAGAME_CONTEXT_ID};
-    use crate::metagame_actions::metagame_actions;
+    use crate::metagame_actions;
 
-    use dojo::contract::components::world_provider::{IWorldProvider};
     use openzeppelin_introspection::src5::SRC5Component;
     use openzeppelin_introspection::src5::SRC5Component::InternalTrait as SRC5InternalTrait;
     use openzeppelin_introspection::src5::SRC5Component::SRC5Impl;
@@ -24,7 +23,6 @@ pub mod metagame_component {
     impl Metagame<
         TContractState,
         +HasComponent<TContractState>,
-        +IWorldProvider<TContractState>,
         impl SRC5: SRC5Component::HasComponent<TContractState>,
         +Drop<TContractState>,
     > of IMetagame<ComponentState<TContractState>> {
@@ -41,7 +39,6 @@ pub mod metagame_component {
     pub impl InternalImpl<
         TContractState,
         +HasComponent<TContractState>,
-        +IWorldProvider<TContractState>,
         impl SRC5: SRC5Component::HasComponent<TContractState>,
         +Drop<TContractState>,
     > of InternalTrait<TContractState> {
@@ -66,13 +63,43 @@ pub mod metagame_component {
             let minigame_token_address = self.minigame_token_address.read();
             metagame_actions::assert_game_registered(minigame_token_address, game_address);
         }
+
+        fn mint(
+            ref self: ComponentState<TContractState>,
+            game_address: Option<ContractAddress>,
+            player_name: Option<felt252>,
+            settings_id: Option<u32>,
+            start: Option<u64>,
+            end: Option<u64>,
+            objective_ids: Option<Span<u32>>,
+            context: Option<ByteArray>,
+            client_url: Option<ByteArray>,
+            renderer_address: Option<ContractAddress>,
+            to: ContractAddress,
+            soulbound: bool,
+        ) -> u64 {
+            let minigame_token_address = self.minigame_token_address.read();
+            metagame_actions::mint(
+                minigame_token_address, 
+                game_address, 
+                player_name, 
+                settings_id, 
+                start, 
+                end, 
+                objective_ids, 
+                context, 
+                client_url, 
+                renderer_address, 
+                to, 
+                soulbound
+            )
+        }
     }
 
     #[generate_trait]
     pub impl InternalContextImpl<
         TContractState,
         +HasComponent<TContractState>,
-        +IWorldProvider<TContractState>,
         +IMetagameContext<TContractState>,
         impl SRC5: SRC5Component::HasComponent<TContractState>,
         +Drop<TContractState>,
