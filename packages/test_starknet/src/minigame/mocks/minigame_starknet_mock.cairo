@@ -68,8 +68,10 @@ pub mod minigame_starknet_mock {
         #[substorage(v0)]
         src5: SRC5Component::Storage,
         
-        // Game scores storage
+        // Token data storage
         scores: Map<u64, u32>, // token_id -> score
+        game_over: Map<u64, bool>, // token_id -> game_over
+
         
         // Settings storage
         settings_count: u32,
@@ -101,7 +103,7 @@ pub mod minigame_starknet_mock {
         }
 
         fn game_over(self: @ContractState, token_id: u64) -> bool {
-            self.scores.read(token_id) >= 100
+            self.game_over.read(token_id)
         }
     }
 
@@ -188,6 +190,7 @@ pub mod minigame_starknet_mock {
 
         fn end_game(ref self: ContractState, token_id: u64, score: u32) {
             self.scores.write(token_id, score);
+            self.game_over.write(token_id, true);
             self.minigame.post_action(token_id);
         }
 
