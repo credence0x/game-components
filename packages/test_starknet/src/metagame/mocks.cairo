@@ -1,1 +1,1 @@
-pub mod metagame_starknet_mock; 
+pub mod metagame_starknet_mock;

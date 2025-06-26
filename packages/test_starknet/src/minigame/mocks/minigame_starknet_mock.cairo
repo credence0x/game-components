@@ -26,8 +26,7 @@ pub trait IMinigameStarknetMockInit<TContractState> {
         renderer_address: Option<ContractAddress>,
         settings_address: Option<ContractAddress>,
         objectives_address: Option<ContractAddress>,
-        game_namespace: ByteArray,
-        token_address: ContractAddress,
+        minigame_token_address: ContractAddress,
         supports_settings: bool,
         supports_objectives: bool,
     );
@@ -35,23 +34,19 @@ pub trait IMinigameStarknetMockInit<TContractState> {
 
 #[starknet::contract]
 pub mod minigame_starknet_mock {
-    use game_components_minigame::interface::{
-        IMinigameTokenData, IMinigameDetails,
-    };
+    use game_components_minigame::interface::{IMinigameTokenData, IMinigameDetails};
     use game_components_minigame_objectives::interface::IMinigameObjectives;
     use game_components_minigame_settings::interface::IMinigameSettings;
     use game_components_minigame::minigame::minigame_component;
     use game_components_minigame_objectives::objectives::objectives_component;
     use game_components_minigame_settings::settings::settings_component;
-    use game_components_minigame::structs::game_details::GameDetail;
+    use game_components_minigame::structs::GameDetail;
     use game_components_minigame_settings::structs::{GameSetting, GameSettingDetails};
     use game_components_minigame_objectives::structs::GameObjective;
     use openzeppelin_introspection::src5::SRC5Component;
 
     use starknet::ContractAddress;
-    use starknet::storage::{
-        StoragePointerReadAccess, StoragePointerWriteAccess, Map
-    };
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, Map};
 
     component!(path: minigame_component, storage: minigame, event: MinigameEvent);
     component!(path: objectives_component, storage: objectives, event: ObjectivesEvent);
@@ -77,24 +72,21 @@ pub mod minigame_starknet_mock {
         settings: settings_component::Storage,
         #[substorage(v0)]
         src5: SRC5Component::Storage,
-        
         // Token data storage
         scores: Map<u64, u32>, // token_id -> score
         game_over: Map<u64, bool>, // token_id -> game_over
-
-        
         // Settings storage
         settings_count: u32,
         settings_difficulty: Map<u32, u8>, // settings_id -> difficulty
-        settings_details: Map<u32, (ByteArray, ByteArray, bool)>, // settings_id -> (name, description, exists)
-        
+        settings_details: Map<
+            u32, (ByteArray, ByteArray, bool),
+        >, // settings_id -> (name, description, exists)
         // Objectives storage
         objective_count: u32,
         objective_scores: Map<u32, (u32, bool)>, // objective_id -> (target_score, exists)
-        
         // Token objective mappings - using a simpler storage pattern
         token_objective_count: Map<u64, u32>, // token_id -> count of objectives
-        token_objective_at_index: Map<(u64, u32), u32>, // (token_id, index) -> objective_id
+        token_objective_at_index: Map<(u64, u32), u32> // (token_id, index) -> objective_id
     }
 
     #[event]
@@ -126,14 +118,14 @@ pub mod minigame_starknet_mock {
         fn token_description(self: @ContractState, token_id: u64) -> ByteArray {
             format!("Test Token Description for token {}", token_id)
         }
-        
+
         fn game_details(self: @ContractState, token_id: u64) -> Span<GameDetail> {
             array![
                 GameDetail {
-                    name: "Test Game Detail", 
-                    value: format!("Test Value for token {}", token_id)
-                }
-            ].span()
+                    name: "Test Game Detail", value: format!("Test Value for token {}", token_id),
+                },
+            ]
+                .span()
         }
     }
 
@@ -143,20 +135,18 @@ pub mod minigame_starknet_mock {
             let (_, _, exists) = self.settings_details.read(settings_id);
             exists
         }
-        
+
         fn settings(self: @ContractState, settings_id: u32) -> GameSettingDetails {
             let (name, description, _) = self.settings_details.read(settings_id);
             let difficulty = self.settings_difficulty.read(settings_id);
-            
+
             GameSettingDetails {
                 name,
                 description,
                 settings: array![
-                    GameSetting { 
-                        name: "Difficulty", 
-                        value: format!("{}", difficulty) 
-                    }
-                ].span(),
+                    GameSetting { name: "Difficulty", value: format!("{}", difficulty) },
+                ]
+                    .span(),
             }
         }
     }
@@ -167,31 +157,31 @@ pub mod minigame_starknet_mock {
             let (_, exists) = self.objective_scores.read(objective_id);
             exists
         }
-        
+
         fn completed_objective(self: @ContractState, token_id: u64, objective_id: u32) -> bool {
             let (target_score, _) = self.objective_scores.read(objective_id);
             let player_score = self.scores.read(token_id);
             player_score >= target_score
         }
-        
+
         fn objectives(self: @ContractState, token_id: u64) -> Span<GameObjective> {
             let objective_count = self.token_objective_count.read(token_id);
             let mut objectives = array![];
-            
+
             let mut i = 0;
             while i < objective_count {
                 let objective_id = self.token_objective_at_index.read((token_id, i));
                 let (target_score, _) = self.objective_scores.read(objective_id);
-                
-                objectives.append(
-                    GameObjective {
-                        name: "Score Target",
-                        value: format!("Score Above {}", target_score),
-                    }
-                );
+
+                objectives
+                    .append(
+                        GameObjective {
+                            name: "Score Target", value: format!("Score Above {}", target_score),
+                        },
+                    );
                 i += 1;
             };
-            
+
             objectives.span()
         }
     }
@@ -211,40 +201,43 @@ pub mod minigame_starknet_mock {
         fn create_objective_score(ref self: ContractState, score: u32) {
             let objective_count = self.objective_count.read();
             let new_objective_id = objective_count + 1;
-            
+
             self.objective_scores.write(new_objective_id, (score, true));
             self.objective_count.write(new_objective_id);
-            
-            self.objectives.create_objective(
-                new_objective_id, 
-                "Score Target", 
-                format!("Score Above {}", score)
-            );
+
+            self
+                .objectives
+                .create_objective(
+                    new_objective_id,
+                    "Score Target",
+                    format!("Score Above {}", score),
+                    self.minigame.minigame_token_address(),
+                );
         }
 
         fn create_settings_difficulty(
-            ref self: ContractState, 
-            name: ByteArray, 
-            description: ByteArray, 
-            difficulty: u8,
+            ref self: ContractState, name: ByteArray, description: ByteArray, difficulty: u8,
         ) {
             let settings_count = self.settings_count.read();
             let new_settings_id = settings_count + 1;
-            
+
             self.settings_difficulty.write(new_settings_id, difficulty);
             self.settings_details.write(new_settings_id, (name.clone(), description.clone(), true));
             self.settings_count.write(new_settings_id);
-            
+
             let settings = array![
-                GameSetting { name: "Difficulty", value: format!("{}", difficulty) }
+                GameSetting { name: "Difficulty", value: format!("{}", difficulty) },
             ];
-            
-            self.settings.create_settings(
-                new_settings_id, 
-                name, 
-                description, 
-                settings.span()
-            );
+
+            self
+                .settings
+                .create_settings(
+                    new_settings_id,
+                    name,
+                    description,
+                    settings.span(),
+                    self.minigame.minigame_token_address(),
+                );
         }
     }
 
@@ -264,39 +257,40 @@ pub mod minigame_starknet_mock {
             renderer_address: Option<ContractAddress>,
             settings_address: Option<ContractAddress>,
             objectives_address: Option<ContractAddress>,
-            game_namespace: ByteArray,
-            token_address: ContractAddress,
+            minigame_token_address: ContractAddress,
             supports_settings: bool,
             supports_objectives: bool,
         ) {
             // Initialize storage counters
             self.settings_count.write(0);
             self.objective_count.write(0);
-            
-            // Initialize the base minigame component
-            self.minigame.initializer(
-                game_creator,
-                game_name,
-                game_description,
-                game_developer,
-                game_publisher,
-                game_genre,
-                game_image,
-                game_color,
-                client_url,
-                renderer_address,
-                settings_address,
-                objectives_address,
-                game_namespace,
-                token_address,
-            );
 
-            // Initialize optional features - these will only compile if the contract implements the required traits
+            // Initialize the base minigame component
+            self
+                .minigame
+                .initializer(
+                    game_creator,
+                    game_name,
+                    game_description,
+                    game_developer,
+                    game_publisher,
+                    game_genre,
+                    game_image,
+                    game_color,
+                    client_url,
+                    renderer_address,
+                    settings_address,
+                    objectives_address,
+                    minigame_token_address,
+                );
+
+            // Initialize optional features - these will only compile if the contract implements the
+            // required traits
             if supports_settings {
-                self.settings.initializer(token_address);
+                self.settings.initializer();
             }
             if supports_objectives {
-                self.objectives.initializer(token_address);
+                self.objectives.initializer();
             }
         }
     }
@@ -304,10 +298,12 @@ pub mod minigame_starknet_mock {
     // Helper function to store token objectives (called during mint)
     #[generate_trait]
     impl HelperImpl of HelperTrait {
-        fn store_token_objectives(ref self: ContractState, token_id: u64, objective_ids: Span<u32>) {
+        fn store_token_objectives(
+            ref self: ContractState, token_id: u64, objective_ids: Span<u32>,
+        ) {
             let len: u32 = objective_ids.len().try_into().unwrap();
             self.token_objective_count.write(token_id, len);
-            
+
             let mut i = 0;
             while i < len {
                 let objective_id: u32 = *objective_ids.at(i.into());
@@ -316,4 +312,4 @@ pub mod minigame_starknet_mock {
             };
         }
     }
-} 
+}

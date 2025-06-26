@@ -15,7 +15,9 @@ use super::mocks::minigame_starknet_mock::{
     IMinigameStarknetMockInit, IMinigameStarknetMockInitDispatcher,
     IMinigameStarknetMockInitDispatcherTrait,
 };
-use openzeppelin_introspection::src5::{SRC5Component::SRC5Impl, ISRC5Dispatcher, ISRC5DispatcherTrait};
+use openzeppelin_introspection::src5::{
+    SRC5Component::SRC5Impl, ISRC5Dispatcher, ISRC5DispatcherTrait,
+};
 
 // Test constants
 const GAME_CREATOR: felt252 = 'creator';
@@ -32,31 +34,32 @@ fn deploy_minigame_starknet_mock(
     supports_settings: bool, supports_objectives: bool,
 ) -> ContractAddress {
     let contract = declare("minigame_starknet_mock").unwrap().contract_class();
-    
+
     // Deploy with empty constructor calldata since the contract doesn't have a constructor
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     // Initialize the contract using the initializer function
     let initializer = IMinigameStarknetMockInitDispatcher { contract_address };
-    initializer.initializer(
-        contract_address_const::<GAME_CREATOR>(), // game_creator
-        GAME_NAME, // game_name
-        "Test Game Description", // game_description
-        GAME_DEVELOPER, // game_developer
-        GAME_PUBLISHER, // game_publisher
-        GAME_GENRE, // game_genre
-        "https://example.com/image.png", // game_image
-        Option::<ByteArray>::None, // game_color
-        Option::<ByteArray>::None, // client_url
-        Option::<ContractAddress>::None, // renderer_address
-        Option::<ContractAddress>::None, // settings_address
-        Option::<ContractAddress>::None, // objectives_address
-        "test_namespace", // game_namespace
-        contract_address_const::<TOKEN_ADDRESS>(), // token_address
-        supports_settings, // supports_settings
-        supports_objectives, // supports_objectives
-    );
-    
+    initializer
+        .initializer(
+            contract_address_const::<GAME_CREATOR>(), // game_creator
+            GAME_NAME, // game_name
+            "Test Game Description", // game_description
+            GAME_DEVELOPER, // game_developer
+            GAME_PUBLISHER, // game_publisher
+            GAME_GENRE, // game_genre
+            "https://example.com/image.png", // game_image
+            Option::<ByteArray>::None, // game_color
+            Option::<ByteArray>::None, // client_url
+            Option::<ContractAddress>::None, // renderer_address
+            Option::<ContractAddress>::None, // settings_address
+            Option::<ContractAddress>::None, // objectives_address
+            "test_namespace", // game_namespace
+            contract_address_const::<TOKEN_ADDRESS>(), // token_address
+            supports_settings, // supports_settings
+            supports_objectives // supports_objectives
+        );
+
     contract_address
 }
 

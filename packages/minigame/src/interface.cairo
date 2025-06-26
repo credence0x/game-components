@@ -1,5 +1,6 @@
 use starknet::ContractAddress;
-use crate::structs::game_details::GameDetail;
+use crate::structs::GameDetail;
+use game_components_metagame_context::structs::GameContextDetails;
 
 pub const IMINIGAME_ID: felt252 =
     0x02c0f9265d397c10970f24822e4b57cac7d8895f8c449b7c9caaa26910499704;
@@ -13,14 +14,13 @@ pub trait IMinigame<TState> {
         start: Option<u64>,
         end: Option<u64>,
         objective_ids: Option<Span<u32>>,
-        context: Option<ByteArray>,
+        context: Option<GameContextDetails>,
         client_url: Option<ByteArray>,
         renderer_address: Option<ContractAddress>,
         to: ContractAddress,
         soulbound: bool,
     ) -> u64;
-    fn namespace(self: @TState) -> ByteArray;
-    fn token_address(self: @TState) -> ContractAddress;
+    fn minigame_token_address(self: @TState) -> ContractAddress;
 }
 
 #[starknet::interface]

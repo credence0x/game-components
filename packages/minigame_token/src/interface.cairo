@@ -1,6 +1,7 @@
 use starknet::ContractAddress;
 use game_components_minigame_objectives::structs::GameObjective;
 use game_components_minigame_settings::structs::GameSetting;
+use game_components_metagame_context::structs::GameContextDetails;
 
 #[starknet::interface]
 pub trait IMinigameToken<TContractState> {
@@ -36,7 +37,7 @@ pub trait IMinigameToken<TContractState> {
         start: Option<u64>,
         end: Option<u64>,
         objective_ids: Option<Span<u32>>,
-        context: Option<ByteArray>,
+        context: Option<GameContextDetails>,
         client_url: Option<ByteArray>,
         renderer_address: Option<ContractAddress>,
         to: ContractAddress,

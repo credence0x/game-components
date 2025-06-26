@@ -7,15 +7,12 @@ pub mod settings_component {
     use crate::libs;
     use crate::structs::{GameSetting};
     use starknet::{ContractAddress, get_contract_address};
-    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     use openzeppelin_introspection::src5::SRC5Component;
     use openzeppelin_introspection::src5::SRC5Component::InternalTrait as SRC5InternalTrait;
 
     #[storage]
-    pub struct Storage {
-        token_address: ContractAddress,
-    }
+    pub struct Storage {}
 
     #[generate_trait]
     pub impl InternalImpl<
@@ -25,14 +22,12 @@ pub mod settings_component {
         impl SRC5: SRC5Component::HasComponent<TContractState>,
         +Drop<TContractState>,
     > of InternalTrait<TContractState> {
-        fn initializer(ref self: ComponentState<TContractState>, token_address: ContractAddress) {
-            self.token_address.write(token_address);
+        fn initializer(ref self: ComponentState<TContractState>) {
             self.register_settings_interface();
         }
 
-        fn get_settings_id(self: @ComponentState<TContractState>, token_id: u64) -> u32 {
-            let token_address = self.token_address.read();
-            libs::get_settings_id(token_address, token_id)
+        fn get_settings_id(self: @ComponentState<TContractState>, token_id: u64, minigame_token_address: ContractAddress) -> u32 {
+            libs::get_settings_id(minigame_token_address, token_id)
         }
 
         fn register_settings_interface(ref self: ComponentState<TContractState>) {
@@ -46,10 +41,10 @@ pub mod settings_component {
             name: ByteArray,
             description: ByteArray,
             settings: Span<GameSetting>,
+            minigame_token_address: ContractAddress,
         ) {
-            let token_address = self.token_address.read();
             libs::create_settings(
-                token_address, get_contract_address(), settings_id, name, description, settings,
+                minigame_token_address, get_contract_address(), settings_id, name, description, settings,
             );
         }
     }

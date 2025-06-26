@@ -1,4 +1,5 @@
 use game_components_minigame_token::interface::{IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait};
+use game_components_metagame_context::structs::GameContextDetails;
 use starknet::ContractAddress;
 
 /// Asserts that a game is registered in the minigame token contract
@@ -40,7 +41,7 @@ pub fn mint(
     start: Option<u64>,
     end: Option<u64>,
     objective_ids: Option<Span<u32>>,
-    context: Option<ByteArray>,
+    context: Option<GameContextDetails>,
     client_url: Option<ByteArray>,
     renderer_address: Option<ContractAddress>,
     to: ContractAddress,

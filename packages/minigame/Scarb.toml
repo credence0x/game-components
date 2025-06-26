@@ -13,6 +13,7 @@ starknet.workspace = true
 game_components_minigame_token = { path = "../minigame_token" }
 game_components_minigame_objectives = { path = "../minigame_objectives" }
 game_components_minigame_settings = { path = "../minigame_settings" }
+game_components_metagame_context = { path = "../metagame_context" }
 game_components_utils = { path = "../utils" }
 openzeppelin_token = "1.0.0"
 openzeppelin_introspection = "1.0.0"
