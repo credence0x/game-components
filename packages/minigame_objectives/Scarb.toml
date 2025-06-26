@@ -1,0 +1,14 @@
+[package]
+name = "game_components_minigame_objectives"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+
+[cairo]
+sierra-replace-ids = true
+
+[dependencies]
+starknet.workspace = true
+game_components_minigame_token = { path = "../minigame_token" }
+openzeppelin_introspection = "1.0.0" 

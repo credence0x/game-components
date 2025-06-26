@@ -7,6 +7,8 @@ edition = "2023_11"
 starknet.workspace = true
 openzeppelin_introspection = "1.0.0"
 game_components_minigame = { path = "../minigame" }
+game_components_minigame_objectives = { path = "../minigame_objectives" }
+game_components_minigame_settings = { path = "../minigame_settings" }
 game_components_metagame = { path = "../metagame" }
 game_components_minigame_token = { path = "../minigame_token" }
 game_components_utils = { path = "../utils" }

@@ -4,11 +4,16 @@
 #[starknet::component]
 pub mod minigame_component {
     use crate::interface::{
-        IMinigame, IMinigameTokenData, IMinigameSettings, IMinigameObjectives, IMINIGAME_ID,
-        IMINIGAME_OBJECTIVES_ID, IMINIGAME_SETTINGS_ID,
+        IMinigame, IMinigameTokenData, IMINIGAME_ID,
     };
-    use crate::structs::settings::GameSetting;
-    use crate::libs::{game, objectives, settings};
+    use crate::libs::game;
+    use game_components_minigame_objectives::interface::{
+        IMinigameObjectives, IMINIGAME_OBJECTIVES_ID
+    };
+    use game_components_minigame_settings::interface::{
+        IMinigameSettings, IMINIGAME_SETTINGS_ID
+    };
+    use game_components_minigame_settings::structs::GameSetting;
     use starknet::{ContractAddress, get_contract_address};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
@@ -170,74 +175,5 @@ pub mod minigame_component {
         }
     }
 
-    #[generate_trait]
-    pub impl InternalObjectivesImpl<
-        TContractState,
-        +HasComponent<TContractState>,
-        +IMinigameObjectives<TContractState>,
-        impl SRC5: SRC5Component::HasComponent<TContractState>,
-        +Drop<TContractState>,
-    > of InternalObjectivesTrait<TContractState> {
-        fn initialize_objectives(ref self: ComponentState<TContractState>) {
-            self.register_objectives_interface();
-        }
 
-        fn get_objective_ids(self: @ComponentState<TContractState>, token_id: u64) -> Span<u32> {
-            let token_address = self.token_address.read();
-            objectives::get_objective_ids(token_address, token_id)
-        }
-
-        fn register_objectives_interface(ref self: ComponentState<TContractState>) {
-            let mut src5_component = get_dep_component_mut!(ref self, SRC5);
-            src5_component.register_interface(IMINIGAME_OBJECTIVES_ID);
-        }
-
-        fn create_objective(
-            self: @ComponentState<TContractState>,
-            objective_id: u32,
-            name: ByteArray,
-            value: ByteArray,
-        ) {
-            let token_address = self.token_address.read();
-            objectives::create_objective(
-                token_address, get_contract_address(), objective_id, name, value,
-            );
-        }
-    }
-
-    #[generate_trait]
-    pub impl InternalSettingsImpl<
-        TContractState,
-        +HasComponent<TContractState>,
-        +IMinigameSettings<TContractState>,
-        impl SRC5: SRC5Component::HasComponent<TContractState>,
-        +Drop<TContractState>,
-    > of InternalSettingsTrait<TContractState> {
-        fn initialize_settings(ref self: ComponentState<TContractState>) {
-            self.register_settings_interface();
-        }
-
-        fn get_settings_id(self: @ComponentState<TContractState>, token_id: u64) -> u32 {
-            let token_address = self.token_address.read();
-            settings::get_settings_id(token_address, token_id)
-        }
-
-        fn register_settings_interface(ref self: ComponentState<TContractState>) {
-            let mut src5_component = get_dep_component_mut!(ref self, SRC5);
-            src5_component.register_interface(IMINIGAME_SETTINGS_ID);
-        }
-
-        fn create_settings(
-            self: @ComponentState<TContractState>,
-            settings_id: u32,
-            name: ByteArray,
-            description: ByteArray,
-            settings: Span<GameSetting>,
-        ) {
-            let token_address = self.token_address.read();
-            settings::create_settings(
-                token_address, get_contract_address(), settings_id, name, description, settings,
-            );
-        }
-    }
 }

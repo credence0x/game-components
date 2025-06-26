@@ -2,7 +2,7 @@ use game_components_minigame_token::interface::{
     IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait,
 };
 use starknet::ContractAddress;
-use game_components_minigame::structs::objectives::GameObjective;
+use crate::structs::GameObjective;
 
 /// Gets the objective IDs for a game token
 ///
@@ -52,4 +52,4 @@ pub fn assert_objective_exists<T, +crate::interface::IMinigameObjectives<T>>(
     if !objective_exists {
         panic!("Game: Objective ID {} does not exist", objective_id);
     }
-}
+} 

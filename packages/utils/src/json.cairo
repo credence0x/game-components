@@ -1,5 +1,5 @@
-use game_components_minigame::structs::settings::GameSetting;
-use game_components_minigame::structs::objectives::GameObjective;
+use game_components_minigame_settings::structs::GameSetting;
+use game_components_minigame_objectives::structs::GameObjective;
 use game_components_metagame::structs::context::GameContext;
 use graffiti::json::JsonImpl;
 
@@ -96,7 +96,8 @@ mod tests {
     use super::create_context_json;
     use super::create_json_array;
 
-    use game_components_minigame::models::settings::GameSetting;
+    use game_components_minigame_settings::structs::GameSetting;
+    use game_components_minigame_objectives::structs::GameObjective;
     use game_components_metagame::models::context::GameContext;
 
     #[test]

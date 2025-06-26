@@ -36,12 +36,16 @@ pub trait IMinigameStarknetMockInit<TContractState> {
 #[starknet::contract]
 pub mod minigame_starknet_mock {
     use game_components_minigame::interface::{
-        IMinigameTokenData, IMinigameDetails, IMinigameSettings, IMinigameObjectives,
+        IMinigameTokenData, IMinigameDetails,
     };
+    use game_components_minigame_objectives::interface::IMinigameObjectives;
+    use game_components_minigame_settings::interface::IMinigameSettings;
     use game_components_minigame::minigame::minigame_component;
+    use game_components_minigame_objectives::objectives::objectives_component;
+    use game_components_minigame_settings::settings::settings_component;
     use game_components_minigame::structs::game_details::GameDetail;
-    use game_components_minigame::structs::settings::{GameSetting, GameSettingDetails};
-    use game_components_minigame::structs::objectives::GameObjective;
+    use game_components_minigame_settings::structs::{GameSetting, GameSettingDetails};
+    use game_components_minigame_objectives::structs::GameObjective;
     use openzeppelin_introspection::src5::SRC5Component;
 
     use starknet::ContractAddress;
@@ -50,13 +54,15 @@ pub mod minigame_starknet_mock {
     };
 
     component!(path: minigame_component, storage: minigame, event: MinigameEvent);
+    component!(path: objectives_component, storage: objectives, event: ObjectivesEvent);
+    component!(path: settings_component, storage: settings, event: SettingsEvent);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
 
     #[abi(embed_v0)]
     impl MinigameImpl = minigame_component::MinigameImpl<ContractState>;
     impl MinigameInternalImpl = minigame_component::InternalImpl<ContractState>;
-    impl MinigameInternalObjectivesImpl = minigame_component::InternalObjectivesImpl<ContractState>;
-    impl MinigameInternalSettingsImpl = minigame_component::InternalSettingsImpl<ContractState>;
+    impl ObjectivesInternalImpl = objectives_component::InternalImpl<ContractState>;
+    impl SettingsInternalImpl = settings_component::InternalImpl<ContractState>;
 
     #[abi(embed_v0)]
     impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
@@ -65,6 +71,10 @@ pub mod minigame_starknet_mock {
     struct Storage {
         #[substorage(v0)]
         minigame: minigame_component::Storage,
+        #[substorage(v0)]
+        objectives: objectives_component::Storage,
+        #[substorage(v0)]
+        settings: settings_component::Storage,
         #[substorage(v0)]
         src5: SRC5Component::Storage,
         
@@ -92,6 +102,10 @@ pub mod minigame_starknet_mock {
     enum Event {
         #[flat]
         MinigameEvent: minigame_component::Event,
+        #[flat]
+        ObjectivesEvent: objectives_component::Event,
+        #[flat]
+        SettingsEvent: settings_component::Event,
         #[flat]
         SRC5Event: SRC5Component::Event,
     }
@@ -201,7 +215,7 @@ pub mod minigame_starknet_mock {
             self.objective_scores.write(new_objective_id, (score, true));
             self.objective_count.write(new_objective_id);
             
-            self.minigame.create_objective(
+            self.objectives.create_objective(
                 new_objective_id, 
                 "Score Target", 
                 format!("Score Above {}", score)
@@ -225,7 +239,7 @@ pub mod minigame_starknet_mock {
                 GameSetting { name: "Difficulty", value: format!("{}", difficulty) }
             ];
             
-            self.minigame.create_settings(
+            self.settings.create_settings(
                 new_settings_id, 
                 name, 
                 description, 
@@ -279,10 +293,10 @@ pub mod minigame_starknet_mock {
 
             // Initialize optional features - these will only compile if the contract implements the required traits
             if supports_settings {
-                self.minigame.initialize_settings();
+                self.settings.initializer(token_address);
             }
             if supports_objectives {
-                self.minigame.initialize_objectives();
+                self.objectives.initializer(token_address);
             }
         }
     }

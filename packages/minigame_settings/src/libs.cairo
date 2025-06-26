@@ -2,7 +2,7 @@ use game_components_minigame_token::interface::{
     IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait,
 };
 use starknet::ContractAddress;
-use crate::structs::settings::GameSetting;
+use crate::structs::GameSetting;
 
 /// Gets the settings ID for a game token
 ///
@@ -53,4 +53,4 @@ pub fn assert_setting_exists<T, +crate::interface::IMinigameSettings<T>>(
     if !setting_exists {
         panic!("Game: Setting ID {} does not exist", settings_id);
     }
-}
+} 
