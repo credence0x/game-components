@@ -42,7 +42,7 @@ pub fn create_objectives_json(objectives: Span<GameObjective>) -> ByteArray {
 }
 
 pub fn create_context_json(
-    name: ByteArray, description: ByteArray, contexts: Span<GameContext>,
+    name: ByteArray, description: ByteArray, context_id: Option<u32>, contexts: Span<GameContext>,
 ) -> ByteArray {
     let mut contexts_json = JsonImpl::new();
     let mut contexts_index = 0;
@@ -56,11 +56,20 @@ pub fn create_context_json(
     };
     let contexts_json = contexts_json.build();
 
-    let metadata = JsonImpl::new()
+    let mut metadata = JsonImpl::new()
         .add("Name", name)
-        .add("Description", description)
-        .add("Contexts", contexts_json)
-        .build();
+        .add("Description", description);
+
+    // Conditionally add Context Id if it exists
+    match context_id {
+        Option::Some(id) => {
+            metadata = metadata.add("Context Id", format!("{}", id));
+        },
+        Option::None => {},
+    };
+
+    // Add Contexts last
+    let metadata = metadata.add("Contexts", contexts_json).build();
 
     metadata
 }
