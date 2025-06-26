@@ -21,6 +21,8 @@ pub trait IMinigame<TState> {
         soulbound: bool,
     ) -> u64;
     fn minigame_token_address(self: @TState) -> ContractAddress;
+    fn settings_address(self: @TState) -> ContractAddress;
+    fn objectives_address(self: @TState) -> ContractAddress;
 }
 
 #[starknet::interface]

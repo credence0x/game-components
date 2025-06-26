@@ -109,6 +109,14 @@ pub mod minigame_component {
         fn minigame_token_address(self: @ComponentState<TContractState>) -> ContractAddress {
             self.minigame_token_address.read()
         }
+
+        fn settings_address(self: @ComponentState<TContractState>) -> ContractAddress {
+            self.settings_address.read()
+        }
+
+        fn objectives_address(self: @ComponentState<TContractState>) -> ContractAddress {
+            self.objectives_address.read()
+        }
     }
 
     #[generate_trait]

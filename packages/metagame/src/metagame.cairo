@@ -33,6 +33,10 @@ pub mod metagame_component {
         fn minigame_token_address(self: @ComponentState<TContractState>) -> ContractAddress {
             self.minigame_token_address.read()
         }
+
+        fn context_address(self: @ComponentState<TContractState>) -> ContractAddress {
+            self.context_address.read()
+        }
     }
 
     #[generate_trait]
