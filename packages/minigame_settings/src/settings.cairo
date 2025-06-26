@@ -17,10 +17,6 @@ pub mod settings_component {
         token_address: ContractAddress,
     }
 
-    #[event]
-    #[derive(Drop, starknet::Event)]
-    pub enum Event {}  // No events for now, but needed for component
-
     #[generate_trait]
     pub impl InternalImpl<
         TContractState,
