@@ -1,15 +1,12 @@
 [workspace]
 members = [
-    "packages/utils",
-    "packages/minigame",
-    "packages/minigame_objectives",
-    "packages/minigame_settings",
     "packages/metagame",
-    "packages/metagame_context",
-    "packages/minigame_token",
+    "packages/minigame",
+    "packages/token",
     # Test packages can be uncommented when needed
     # "packages/test_dojo",  # Excluded - must be built separately with sozo
     "packages/test_starknet",
+    "packages/utils",
 ]
 
 [package]
@@ -38,16 +35,12 @@ snforge_std = "0.45.0"
 [dependencies]
 starknet.workspace = true
 # Common packages
-game_components_utils = { path = "packages/utils" }
-game_components_minigame = { path = "packages/minigame" }
-game_components_minigame_objectives = { path = "packages/minigame_objectives" }
-game_components_minigame_settings = { path = "packages/minigame_settings" }
 game_components_metagame = { path = "packages/metagame" }
-game_components_metagame_context = { path = "packages/metagame_context" }
-game_components_minigame_token = { path = "packages/minigame_token" }
+game_components_minigame = { path = "packages/minigame" }
 # Test packages
 # game_components_test_dojo = { path = "packages/test_dojo" }  # Excluded - must be built separately
 game_components_test_starknet = { path = "packages/test_starknet" }
+game_components_utils = { path = "packages/utils" }
 
 [dev-dependencies]
 snforge_std.workspace = true

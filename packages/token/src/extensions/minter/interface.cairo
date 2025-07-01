@@ -1,0 +1,1 @@
+pub const IMINIGAME_TOKEN_MINTER_ID: felt252 = 0x0;

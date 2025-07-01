@@ -1,26 +1,12 @@
 use starknet::ContractAddress;
 use crate::structs::GameDetail;
-use game_components_metagame_context::structs::GameContextDetails;
 
 pub const IMINIGAME_ID: felt252 =
     0x02c0f9265d397c10970f24822e4b57cac7d8895f8c449b7c9caaa26910499704;
 
 #[starknet::interface]
 pub trait IMinigame<TState> {
-    fn mint(
-        ref self: TState,
-        player_name: Option<felt252>,
-        settings_id: Option<u32>,
-        start: Option<u64>,
-        end: Option<u64>,
-        objective_ids: Option<Span<u32>>,
-        context: Option<GameContextDetails>,
-        client_url: Option<ByteArray>,
-        renderer_address: Option<ContractAddress>,
-        to: ContractAddress,
-        soulbound: bool,
-    ) -> u64;
-    fn minigame_token_address(self: @TState) -> ContractAddress;
+    fn token_address(self: @TState) -> ContractAddress;
     fn settings_address(self: @TState) -> ContractAddress;
     fn objectives_address(self: @TState) -> ContractAddress;
 }
@@ -41,8 +27,6 @@ pub trait IMinigameDetails<TState> {
 pub trait IMinigameDetailsSVG<TState> {
     fn game_details_svg(self: @TState, token_id: u64) -> ByteArray;
 }
-
-
 
 #[starknet::interface]
 pub trait IMinigameTokenUri<TState> {

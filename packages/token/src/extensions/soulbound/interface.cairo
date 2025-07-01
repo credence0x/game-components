@@ -1,0 +1,1 @@
+pub const IMINIGAME_TOKEN_SOULBOUND_ID: felt252 = 0x0;

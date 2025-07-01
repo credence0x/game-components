@@ -194,7 +194,11 @@ mod minigame_mock {
                     @ScoreObjective { id: objective_count + 1, score, exists: true },
                 );
             store.set_objective_count(objective_count + 1);
-            self.minigame.create_objective(objective_count + 1, "Score Target", format!("Score Above {}", score));
+            self
+                .minigame
+                .create_objective(
+                    objective_count + 1, "Score Target", format!("Score Above {}", score),
+                );
         }
 
         fn create_settings_difficulty(
@@ -244,24 +248,27 @@ mod minigame_mock {
             supports_objectives: bool,
         ) {
             // Initialize the base minigame component
-            self.minigame.initializer(
-                game_creator,
-                game_name,
-                game_description,
-                game_developer,
-                game_publisher,
-                game_genre,
-                game_image,
-                game_color,
-                client_url,
-                renderer_address,
-                settings_address,
-                objectives_address,
-                game_namespace,
-                token_address,
-            );
+            self
+                .minigame
+                .initializer(
+                    game_creator,
+                    game_name,
+                    game_description,
+                    game_developer,
+                    game_publisher,
+                    game_genre,
+                    game_image,
+                    game_color,
+                    client_url,
+                    renderer_address,
+                    settings_address,
+                    objectives_address,
+                    game_namespace,
+                    token_address,
+                );
 
-            // Initialize optional features - these will only compile if the contract implements the required traits
+            // Initialize optional features - these will only compile if the contract implements the
+            // required traits
             if supports_settings {
                 self.minigame.initialize_settings();
             }
@@ -270,4 +277,4 @@ mod minigame_mock {
             }
         }
     }
-} 
+}

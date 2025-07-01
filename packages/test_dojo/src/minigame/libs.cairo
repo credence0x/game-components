@@ -1,1 +1,1 @@
-pub mod minigame_store; 
+pub mod minigame_store;

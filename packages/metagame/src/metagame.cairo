@@ -2,11 +2,11 @@
 /// Game Component
 ///
 #[starknet::component]
-pub mod metagame_component {
+pub mod MetagameComponent {
     use core::num::traits::Zero;
     use crate::interface::{IMetagame, IMETAGAME_ID};
-    use game_components_metagame_context::interface::{IMetagameContext, IMETAGAME_CONTEXT_ID};
-    use game_components_metagame_context::structs::GameContextDetails;
+    use game_components_metagame::extensions::context::interface::{IMetagameContext, IMETAGAME_CONTEXT_ID};
+    use game_components_metagame::extensions::context::structs::GameContextDetails;
     use crate::libs;
 
     use openzeppelin_introspection::src5::SRC5Component;
@@ -74,7 +74,7 @@ pub mod metagame_component {
         fn mint(
             ref self: ComponentState<TContractState>,
             game_address: Option<ContractAddress>,
-            player_name: Option<felt252>,
+            player_name: Option<ByteArray>,
             settings_id: Option<u32>,
             start: Option<u64>,
             end: Option<u64>,

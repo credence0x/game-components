@@ -1,1 +1,1 @@
-pub mod minigame; 
+pub mod minigame;

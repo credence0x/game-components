@@ -1,0 +1,29 @@
+use starknet::ContractAddress;
+use crate::extensions::multi_game::structs::GameMetadata;
+
+pub const IMINIGAME_TOKEN_MULTIGAME_ID: felt252 = 0x0;
+
+#[starknet::interface]
+pub trait IMinigameTokenMultiGame<TState> {
+    fn game_count(self: @TState) -> u64;
+    fn game_id_from_address(self: @TState, contract_address: ContractAddress) -> u64;
+    fn game_address_from_id(self: @TState, game_id: u64) -> ContractAddress;
+    fn game_metadata(self: @TState, game_id: u64) -> GameMetadata;
+    fn is_game_registered(self: @TState, contract_address: ContractAddress) -> bool;
+    fn game_address(self: @TState, token_id: u64) -> ContractAddress;
+    fn creator_token_id(self: @TState, game_id: u64) -> u64;
+    fn client_url(self: @TState, token_id: u64) -> ByteArray;
+    fn register_game(
+        ref self: TState,
+        creator_address: ContractAddress,
+        name: felt252,
+        description: ByteArray,
+        developer: felt252,
+        publisher: felt252,
+        genre: felt252,
+        image: ByteArray,
+        color: Option<ByteArray>,
+        client_url: Option<ByteArray>,
+        renderer_address: Option<ContractAddress>,
+    ) -> u64;
+}

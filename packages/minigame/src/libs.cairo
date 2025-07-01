@@ -1,7 +1,10 @@
-use game_components_minigame_token::interface::{
+use game_components_token::interface::{
     IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait,
 };
-use game_components_metagame_context::structs::GameContextDetails;
+use game_components_token::extensions::multi_game::interface::{
+    IMinigameTokenMultiGameDispatcher, IMinigameTokenMultiGameDispatcherTrait,
+};
+use game_components_metagame::extensions::context::structs::GameContextDetails;
 use starknet::ContractAddress;
 use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
 
@@ -48,7 +51,7 @@ pub fn assert_game_token_playable(minigame_token_address: ContractAddress, token
     let minigame_token_dispatcher = IMinigameTokenDispatcher {
         contract_address: minigame_token_address,
     };
-    let is_playable = minigame_token_dispatcher.is_game_token_playable(token_id);
+    let is_playable = minigame_token_dispatcher.is_playable(token_id);
     assert!(is_playable, "Game is not playable");
 }
 
@@ -77,10 +80,8 @@ pub fn register_game(
     color: Option<ByteArray>,
     client_url: Option<ByteArray>,
     renderer_address: Option<ContractAddress>,
-    settings_address: Option<ContractAddress>,
-    objectives_address: Option<ContractAddress>,
 ) {
-    let minigame_token_dispatcher = IMinigameTokenDispatcher {
+    let minigame_token_dispatcher = IMinigameTokenMultiGameDispatcher {
         contract_address: minigame_token_address,
     };
     minigame_token_dispatcher
@@ -95,8 +96,6 @@ pub fn register_game(
             color,
             client_url,
             renderer_address,
-            settings_address,
-            objectives_address,
         );
 }
 
@@ -121,7 +120,7 @@ pub fn register_game(
 pub fn mint(
     minigame_token_address: ContractAddress,
     game_address: ContractAddress,
-    player_name: Option<felt252>,
+    player_name: Option<ByteArray>,
     settings_id: Option<u32>,
     start: Option<u64>,
     end: Option<u64>,
@@ -159,7 +158,7 @@ pub fn mint(
 ///
 /// # Returns
 /// * `felt252` - The player name
-pub fn get_player_name(minigame_token_address: ContractAddress, token_id: u64) -> felt252 {
+pub fn get_player_name(minigame_token_address: ContractAddress, token_id: u64) -> ByteArray {
     let minigame_token_dispatcher = IMinigameTokenDispatcher {
         contract_address: minigame_token_address,
     };

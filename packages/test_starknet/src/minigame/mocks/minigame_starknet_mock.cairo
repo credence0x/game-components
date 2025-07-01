@@ -24,8 +24,8 @@ pub trait IMinigameStarknetMockInit<TContractState> {
         game_color: Option<ByteArray>,
         client_url: Option<ByteArray>,
         renderer_address: Option<ContractAddress>,
-        settings_address: Option<ContractAddress>,
-        objectives_address: Option<ContractAddress>,
+        settings_address: ContractAddress,
+        objectives_address: ContractAddress,
         minigame_token_address: ContractAddress,
         supports_settings: bool,
         supports_objectives: bool,
@@ -35,27 +35,27 @@ pub trait IMinigameStarknetMockInit<TContractState> {
 #[starknet::contract]
 pub mod minigame_starknet_mock {
     use game_components_minigame::interface::{IMinigameTokenData, IMinigameDetails};
-    use game_components_minigame_objectives::interface::IMinigameObjectives;
-    use game_components_minigame_settings::interface::IMinigameSettings;
-    use game_components_minigame::minigame::minigame_component;
-    use game_components_minigame_objectives::objectives::objectives_component;
-    use game_components_minigame_settings::settings::settings_component;
+    use game_components_minigame::extensions::objectives::interface::IMinigameObjectives;
+    use game_components_minigame::extensions::settings::interface::IMinigameSettings;
+    use game_components_minigame::minigame::MinigameComponent;
+    use game_components_minigame::extensions::objectives::objectives::objectives_component;
+    use game_components_minigame::extensions::settings::settings::settings_component;
     use game_components_minigame::structs::GameDetail;
-    use game_components_minigame_settings::structs::{GameSetting, GameSettingDetails};
-    use game_components_minigame_objectives::structs::GameObjective;
+    use game_components_minigame::extensions::settings::structs::{GameSetting, GameSettingDetails};
+    use game_components_minigame::extensions::objectives::structs::GameObjective;
     use openzeppelin_introspection::src5::SRC5Component;
 
     use starknet::ContractAddress;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, Map};
 
-    component!(path: minigame_component, storage: minigame, event: MinigameEvent);
+    component!(path: MinigameComponent, storage: minigame, event: MinigameEvent);
     component!(path: objectives_component, storage: objectives, event: ObjectivesEvent);
     component!(path: settings_component, storage: settings, event: SettingsEvent);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
 
     #[abi(embed_v0)]
-    impl MinigameImpl = minigame_component::MinigameImpl<ContractState>;
-    impl MinigameInternalImpl = minigame_component::InternalImpl<ContractState>;
+    impl MinigameImpl = MinigameComponent::MinigameImpl<ContractState>;
+    impl MinigameInternalImpl = MinigameComponent::InternalImpl<ContractState>;
     impl ObjectivesInternalImpl = objectives_component::InternalImpl<ContractState>;
     impl SettingsInternalImpl = settings_component::InternalImpl<ContractState>;
 
@@ -65,7 +65,7 @@ pub mod minigame_starknet_mock {
     #[storage]
     struct Storage {
         #[substorage(v0)]
-        minigame: minigame_component::Storage,
+        minigame: MinigameComponent::Storage,
         #[substorage(v0)]
         objectives: objectives_component::Storage,
         #[substorage(v0)]
@@ -93,7 +93,7 @@ pub mod minigame_starknet_mock {
     #[derive(Drop, starknet::Event)]
     enum Event {
         #[flat]
-        MinigameEvent: minigame_component::Event,
+        MinigameEvent: MinigameComponent::Event,
         #[flat]
         ObjectivesEvent: objectives_component::Event,
         #[flat]
@@ -131,7 +131,7 @@ pub mod minigame_starknet_mock {
 
     #[abi(embed_v0)]
     impl SettingsImpl of IMinigameSettings<ContractState> {
-        fn setting_exists(self: @ContractState, settings_id: u32) -> bool {
+        fn settings_exist(self: @ContractState, settings_id: u32) -> bool {
             let (_, _, exists) = self.settings_details.read(settings_id);
             exists
         }
@@ -195,7 +195,6 @@ pub mod minigame_starknet_mock {
         fn end_game(ref self: ContractState, token_id: u64, score: u32) {
             self.scores.write(token_id, score);
             self.game_over.write(token_id, true);
-            self.minigame.post_action(token_id);
         }
 
         fn create_objective_score(ref self: ContractState, score: u32) {
@@ -211,7 +210,7 @@ pub mod minigame_starknet_mock {
                     new_objective_id,
                     "Score Target",
                     format!("Score Above {}", score),
-                    self.minigame.minigame_token_address(),
+                    self.minigame.token_address(),
                 );
         }
 
@@ -236,7 +235,7 @@ pub mod minigame_starknet_mock {
                     name,
                     description,
                     settings.span(),
-                    self.minigame.minigame_token_address(),
+                    self.minigame.token_address(),
                 );
         }
     }
@@ -255,8 +254,8 @@ pub mod minigame_starknet_mock {
             game_color: Option<ByteArray>,
             client_url: Option<ByteArray>,
             renderer_address: Option<ContractAddress>,
-            settings_address: Option<ContractAddress>,
-            objectives_address: Option<ContractAddress>,
+            settings_address: ContractAddress,
+            objectives_address: ContractAddress,
             minigame_token_address: ContractAddress,
             supports_settings: bool,
             supports_objectives: bool,
@@ -311,5 +310,43 @@ pub mod minigame_starknet_mock {
                 i += 1;
             };
         }
+    }
+
+    #[constructor]
+    fn constructor(
+        ref self: ContractState,
+        creator_address: ContractAddress,
+        name: felt252,
+        description: ByteArray,
+        developer: felt252,
+        publisher: felt252,
+        genre: felt252,
+        image: ByteArray,
+        color: Option<ByteArray>,
+        client_url: Option<ByteArray>,
+        renderer_address: Option<ContractAddress>,
+        settings_address: ContractAddress,
+        objectives_address: ContractAddress,
+        token_address: ContractAddress,
+    ) {
+        self
+            .minigame
+            .initializer(
+                creator_address,
+                name,
+                description,
+                developer,
+                publisher,
+                genre,
+                image,
+                color,
+                client_url,
+                renderer_address,
+                settings_address,
+                objectives_address,
+                token_address,
+            );
+        self.settings.initializer();
+        self.objectives.initializer();
     }
 }

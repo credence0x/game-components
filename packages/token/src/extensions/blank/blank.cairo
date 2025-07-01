@@ -1,0 +1,1 @@
+const IMINIGAME_TOKEN_BLANK_ID: felt252 = 0x0;

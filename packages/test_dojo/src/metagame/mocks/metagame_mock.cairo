@@ -21,8 +21,8 @@ pub trait IMetagameMock<TContractState> {
 #[starknet::interface]
 pub trait IMetagameMockInit<TContractState> {
     fn initializer(
-        ref self: TContractState, 
-        namespace: ByteArray, 
+        ref self: TContractState,
+        namespace: ByteArray,
         minigame_token_address: ContractAddress,
         supports_context: bool,
     );
@@ -70,7 +70,7 @@ mod metagame_mock {
         fn has_context(self: @ContractState, token_id: u64) -> bool {
             true // For testing, assume all tokens have context
         }
-        
+
         fn context(self: @ContractState, token_id: u64) -> GameContextDetails {
             let context = array![
                 GameContext { name: "Player", value: "Test Player Name" },
@@ -79,9 +79,7 @@ mod metagame_mock {
                 GameContext { name: "Health", value: "100 HP" },
             ];
             GameContextDetails {
-                name: "Test App",
-                description: "Test App Description",
-                context: context.span()
+                name: "Test App", description: "Test App Description", context: context.span(),
             }
         }
     }
@@ -102,27 +100,29 @@ mod metagame_mock {
             to: ContractAddress,
             soulbound: bool,
         ) -> u64 {
-            self.metagame.mint(
-                game_address,
-                player_name,
-                settings_id,
-                start,
-                end,
-                objective_ids,
-                context,
-                client_url,
-                renderer_address,
-                to,
-                soulbound
-            )
+            self
+                .metagame
+                .mint(
+                    game_address,
+                    player_name,
+                    settings_id,
+                    start,
+                    end,
+                    objective_ids,
+                    context,
+                    client_url,
+                    renderer_address,
+                    to,
+                    soulbound,
+                )
         }
     }
 
     #[abi(embed_v0)]
     impl MetagameInitializerImpl of super::IMetagameMockInit<ContractState> {
         fn initializer(
-            ref self: ContractState, 
-            namespace: ByteArray, 
+            ref self: ContractState,
+            namespace: ByteArray,
             minigame_token_address: ContractAddress,
             supports_context: bool,
         ) {
@@ -132,4 +132,4 @@ mod metagame_mock {
             }
         }
     }
-} 
+}

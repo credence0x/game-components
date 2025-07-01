@@ -5,7 +5,7 @@ pub trait IMetagameStarknetMock<TContractState> {
     fn mint_game(
         ref self: TContractState,
         game_address: Option<ContractAddress>,
-        player_name: Option<felt252>,
+        player_name: Option<ByteArray>,
         settings_id: Option<u32>,
         start: Option<u64>,
         end: Option<u64>,
@@ -29,10 +29,11 @@ pub trait IMetagameStarknetMockInit<TContractState> {
 
 #[starknet::contract]
 pub mod metagame_starknet_mock {
-    use game_components_metagame_context::interface::IMetagameContext;
-    use game_components_metagame::metagame::metagame_component;
-    use game_components_metagame_context::context::context_component;
-    use game_components_metagame_context::structs::{GameContextDetails, GameContext};
+    use game_components_metagame::extensions::context::interface::IMetagameContext;
+    use game_components_metagame::metagame::MetagameComponent;
+    use game_components_metagame::metagame::MetagameComponent::InternalTrait as MetagameInternalTrait;
+    use game_components_metagame::extensions::context::context::ContextComponent;
+    use game_components_metagame::extensions::context::structs::{GameContextDetails, GameContext};
     use openzeppelin_introspection::src5::SRC5Component;
 
     use starknet::ContractAddress;
@@ -40,14 +41,14 @@ pub mod metagame_starknet_mock {
         StoragePointerWriteAccess, Map, StorageMapReadAccess, StorageMapWriteAccess,
     };
 
-    component!(path: metagame_component, storage: metagame, event: MetagameEvent);
-    component!(path: context_component, storage: context, event: ContextEvent);
+    component!(path: MetagameComponent, storage: metagame, event: MetagameEvent);
+    component!(path: ContextComponent, storage: context, event: ContextEvent);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
 
     #[abi(embed_v0)]
-    impl MetagameImpl = metagame_component::MetagameImpl<ContractState>;
-    impl MetagameInternalImpl = metagame_component::InternalImpl<ContractState>;
-    impl ContextInternalImpl = context_component::InternalImpl<ContractState>;
+    impl MetagameImpl = MetagameComponent::MetagameImpl<ContractState>;
+    impl MetagameInternalImpl = MetagameComponent::InternalImpl<ContractState>;
+    impl ContextInternalImpl = ContextComponent::InternalImpl<ContractState>;
 
     #[abi(embed_v0)]
     impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
@@ -55,9 +56,9 @@ pub mod metagame_starknet_mock {
     #[storage]
     struct Storage {
         #[substorage(v0)]
-        metagame: metagame_component::Storage,
+        metagame: MetagameComponent::Storage,
         #[substorage(v0)]
-        context: context_component::Storage,
+        context: ContextComponent::Storage,
         #[substorage(v0)]
         src5: SRC5Component::Storage,
         // Metagame storage
@@ -73,9 +74,9 @@ pub mod metagame_starknet_mock {
     #[derive(Drop, starknet::Event)]
     enum Event {
         #[flat]
-        MetagameEvent: metagame_component::Event,
+        MetagameEvent: MetagameComponent::Event,
         #[flat]
-        ContextEvent: context_component::Event,
+        ContextEvent: ContextComponent::Event,
         #[flat]
         SRC5Event: SRC5Component::Event,
     }
@@ -114,7 +115,7 @@ pub mod metagame_starknet_mock {
         fn mint_game(
             ref self: ContractState,
             game_address: Option<ContractAddress>,
-            player_name: Option<felt252>,
+            player_name: Option<ByteArray>,
             settings_id: Option<u32>,
             start: Option<u64>,
             end: Option<u64>,

@@ -1,1 +1,1 @@
-pub mod minigame_mock; 
+pub mod minigame_mock;
