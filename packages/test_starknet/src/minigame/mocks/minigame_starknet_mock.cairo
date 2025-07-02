@@ -2,6 +2,19 @@ use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait IMinigameStarknetMock<TContractState> {
+    fn mint(
+        ref self: TContractState,
+        player_name: Option<felt252>,
+        settings_id: Option<u32>,
+        start_time: Option<u64>,
+        end_time: Option<u64>,
+        objective_ids: Option<Span<u32>>,
+        context: Option<ByteArray>,
+        client_url: Option<ByteArray>,
+        renderer_address: Option<ContractAddress>,
+        player_address: ContractAddress,
+        soulbound: bool,
+    ) -> u64;
     fn start_game(ref self: TContractState, token_id: u64);
     fn end_game(ref self: TContractState, token_id: u64, score: u32);
     fn create_objective_score(ref self: TContractState, score: u32);
@@ -35,8 +48,8 @@ pub trait IMinigameStarknetMockInit<TContractState> {
 #[starknet::contract]
 pub mod minigame_starknet_mock {
     use game_components_minigame::interface::{IMinigameTokenData, IMinigameDetails};
-    use game_components_minigame::extensions::objectives::interface::IMinigameObjectives;
-    use game_components_minigame::extensions::settings::interface::IMinigameSettings;
+    use game_components_minigame::extensions::objectives::interface::{IMinigameObjectives, IMINIGAME_OBJECTIVES_ID};
+    use game_components_minigame::extensions::settings::interface::{IMinigameSettings, IMINIGAME_SETTINGS_ID};
     use game_components_minigame::minigame::MinigameComponent;
     use game_components_minigame::extensions::objectives::objectives::objectives_component;
     use game_components_minigame::extensions::settings::settings::settings_component;
@@ -86,7 +99,9 @@ pub mod minigame_starknet_mock {
         objective_scores: Map<u32, (u32, bool)>, // objective_id -> (target_score, exists)
         // Token objective mappings - using a simpler storage pattern
         token_objective_count: Map<u64, u32>, // token_id -> count of objectives
-        token_objective_at_index: Map<(u64, u32), u32> // (token_id, index) -> objective_id
+        token_objective_at_index: Map<(u64, u32), u32>, // (token_id, index) -> objective_id
+        // Token counter for minting
+        token_counter: u64,
     }
 
     #[event]
@@ -188,6 +203,44 @@ pub mod minigame_starknet_mock {
 
     #[abi(embed_v0)]
     impl GameMockImpl of super::IMinigameStarknetMock<ContractState> {
+        fn mint(
+            ref self: ContractState,
+            player_name: Option<felt252>,
+            settings_id: Option<u32>,
+            start_time: Option<u64>,
+            end_time: Option<u64>,
+            objective_ids: Option<Span<u32>>,
+            context: Option<ByteArray>,
+            client_url: Option<ByteArray>,
+            renderer_address: Option<ContractAddress>,
+            player_address: ContractAddress,
+            soulbound: bool,
+        ) -> u64 {
+            // Check if settings are supported when settings_id is provided
+            if settings_id.is_some() {
+                let supports_settings = self.src5.supports_interface(IMINIGAME_SETTINGS_ID);
+                assert!(supports_settings, "Settings not supported");
+            }
+
+            // Check if objectives are supported when objective_ids are provided
+            if objective_ids.is_some() {
+                let supports_objectives = self.src5.supports_interface(IMINIGAME_OBJECTIVES_ID);
+                assert!(supports_objectives, "Objectives not supported");
+            }
+
+            // Generate a simple token ID
+            let current_counter = self.token_counter.read();
+            let token_id = current_counter + 1;
+            self.token_counter.write(token_id);
+
+            // Store objectives if provided
+            if let Option::Some(obj_ids) = objective_ids {
+                self.store_token_objectives(token_id, obj_ids);
+            }
+
+            token_id
+        }
+
         fn start_game(ref self: ContractState, token_id: u64) {
             self.scores.entry(token_id).write(0);
         }
