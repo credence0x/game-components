@@ -28,11 +28,11 @@ pub trait IMinigameStarknetMockInit<TContractState> {
     fn initializer(
         ref self: TContractState,
         game_creator: ContractAddress,
-        game_name: felt252,
+        game_name: ByteArray,
         game_description: ByteArray,
-        game_developer: felt252,
-        game_publisher: felt252,
-        game_genre: felt252,
+        game_developer: ByteArray,
+        game_publisher: ByteArray,
+        game_genre: ByteArray,
         game_image: ByteArray,
         game_color: Option<ByteArray>,
         client_url: Option<ByteArray>,
@@ -298,11 +298,11 @@ pub mod minigame_starknet_mock {
         fn initializer(
             ref self: ContractState,
             game_creator: ContractAddress,
-            game_name: felt252,
+            game_name: ByteArray,
             game_description: ByteArray,
-            game_developer: felt252,
-            game_publisher: felt252,
-            game_genre: felt252,
+            game_developer: ByteArray,
+            game_publisher: ByteArray,
+            game_genre: ByteArray,
             game_image: ByteArray,
             game_color: Option<ByteArray>,
             client_url: Option<ByteArray>,
@@ -363,43 +363,5 @@ pub mod minigame_starknet_mock {
                 i += 1;
             };
         }
-    }
-
-    #[constructor]
-    fn constructor(
-        ref self: ContractState,
-        creator_address: ContractAddress,
-        name: felt252,
-        description: ByteArray,
-        developer: felt252,
-        publisher: felt252,
-        genre: felt252,
-        image: ByteArray,
-        color: Option<ByteArray>,
-        client_url: Option<ByteArray>,
-        renderer_address: Option<ContractAddress>,
-        settings_address: ContractAddress,
-        objectives_address: ContractAddress,
-        token_address: ContractAddress,
-    ) {
-        self
-            .minigame
-            .initializer(
-                creator_address,
-                name,
-                description,
-                developer,
-                publisher,
-                genre,
-                image,
-                color,
-                client_url,
-                renderer_address,
-                settings_address,
-                objectives_address,
-                token_address,
-            );
-        self.settings.initializer();
-        self.objectives.initializer();
     }
 }

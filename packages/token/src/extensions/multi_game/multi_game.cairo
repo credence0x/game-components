@@ -43,7 +43,7 @@ pub mod MultiGameComponent {
     pub struct GameRegistered {
         pub game_id: u64,
         pub contract_address: ContractAddress,
-        pub name: felt252,
+        pub name: ByteArray,
         pub creator_token_id: u64,
     }
 
@@ -104,11 +104,11 @@ pub mod MultiGameComponent {
         fn register_game(
             ref self: ComponentState<TContractState>,
             creator_address: ContractAddress,
-            name: felt252,
+            name: ByteArray,
             description: ByteArray,
-            developer: felt252,
-            publisher: felt252,
-            genre: felt252,
+            developer: ByteArray,
+            publisher: ByteArray,
+            genre: ByteArray,
             image: ByteArray,
             color: Option<ByteArray>,
             client_url: Option<ByteArray>,
@@ -167,7 +167,7 @@ pub mod MultiGameComponent {
             let metadata = GameMetadata {
                 creator_token_id,
                 contract_address: caller_address,
-                name,
+                name: name.clone(),
                 description,
                 developer,
                 publisher,
@@ -186,7 +186,7 @@ pub mod MultiGameComponent {
             self.emit(GameRegistered { 
                 game_id: new_game_id, 
                 contract_address: caller_address, 
-                name,
+                name: name.clone(),
                 creator_token_id 
             });
 
@@ -252,36 +252,6 @@ pub mod MultiGameComponent {
             if let Option::Some(url) = client_url {
                 self.set_token_client_url(token_id, url);
             }
-        }
-
-        fn update_game_metadata(
-            ref self: ComponentState<TContractState>,
-            game_id: u64,
-            name: Option<felt252>,
-            description: Option<ByteArray>,
-            image: Option<ByteArray>,
-            color: Option<ByteArray>,
-            client_url: Option<ByteArray>,
-        ) {
-            let mut metadata = self.game_metadata.entry(game_id).read();
-            
-            if let Option::Some(name) = name {
-                metadata.name = name;
-            }
-            if let Option::Some(description) = description {
-                metadata.description = description;
-            }
-            if let Option::Some(image) = image {
-                metadata.image = image;
-            }
-            if let Option::Some(color) = color {
-                metadata.color = color;
-            }
-            if let Option::Some(client_url) = client_url {
-                metadata.client_url = client_url;
-            }
-
-            self.game_metadata.entry(game_id).write(metadata);
         }
 
         fn get_game_count(self: @ComponentState<TContractState>) -> u64 {
