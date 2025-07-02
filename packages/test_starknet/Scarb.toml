@@ -1,7 +1,7 @@
 [package]
 name = "game_components_test_starknet"
-version = "1.5.1"
-edition = "2023_11"
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
 starknet.workspace = true
@@ -9,6 +9,9 @@ openzeppelin_introspection = "1.0.0"
 game_components_metagame = { path = "../metagame" }
 game_components_minigame = { path = "../minigame" }
 game_components_utils = { path = "../utils" }
+
+[scripts]
+test = "snforge test"
 
 [dev-dependencies]
 cairo_test = "2.10.1"

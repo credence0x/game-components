@@ -1,3 +1,4 @@
+
 use starknet::{ContractAddress, contract_address_const};
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 use core::serde::Serde;
@@ -11,9 +12,9 @@ use game_components_minigame::interface::{
     IMINIGAME_SETTINGS_ID, IMINIGAME_OBJECTIVES_ID,
 };
 use super::mocks::minigame_starknet_mock::{
-    IMinigameStarknetMock, IMinigameStarknetMockDispatcher, IMinigameStarknetMockDispatcherTrait,
-    IMinigameStarknetMockInit, IMinigameStarknetMockInitDispatcher,
-    IMinigameStarknetMockInitDispatcherTrait,
+    IMinigameStarknetMock, IMinigameStarknetMockDispatcher,
+    IMinigameStarknetMockDispatcherTrait, IMinigameStarknetMockInit,
+    IMinigameStarknetMockInitDispatcher, IMinigameStarknetMockInitDispatcherTrait,
 };
 use openzeppelin_introspection::src5::{
     SRC5Component::SRC5Impl, ISRC5Dispatcher, ISRC5DispatcherTrait,
@@ -151,7 +152,7 @@ fn test_mint_with_objectives_supported() {
 }
 
 #[test]
-#[should_panic]
+#[should_panic(expected: "Settings not supported")]
 fn test_mint_with_settings_not_supported() {
     let contract_address = deploy_minigame_starknet_mock(false, false);
     let minigame = IMinigameDispatcher { contract_address };
@@ -173,7 +174,7 @@ fn test_mint_with_settings_not_supported() {
 }
 
 #[test]
-#[should_panic]
+#[should_panic(expected: "Objectives not supported")]
 fn test_mint_with_objectives_not_supported() {
     let contract_address = deploy_minigame_starknet_mock(false, false);
     let minigame = IMinigameDispatcher { contract_address };
@@ -272,7 +273,8 @@ fn test_objectives_functionality() {
 
     // Test objective completion (should be false initially)
     assert!(
-        !objectives.completed_objective(token_id, 1), "Objective should not be completed initially",
+        !objectives.completed_objective(token_id, 1),
+        "Objective should not be completed initially",
     );
 }
 
@@ -313,7 +315,8 @@ fn test_score_functionality() {
 
     // Check if objective is completed
     assert!(
-        objectives.completed_objective(token_id, 1), "Objective should be completed with score 150",
+        objectives.completed_objective(token_id, 1),
+        "Objective should be completed with score 150",
     );
 }
 

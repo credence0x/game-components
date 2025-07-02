@@ -46,7 +46,7 @@ pub mod minigame_starknet_mock {
     use openzeppelin_introspection::src5::SRC5Component;
 
     use starknet::ContractAddress;
-    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, Map};
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, Map, StoragePathEntry};
 
     component!(path: MinigameComponent, storage: minigame, event: MinigameEvent);
     component!(path: objectives_component, storage: objectives, event: ObjectivesEvent);
@@ -105,11 +105,11 @@ pub mod minigame_starknet_mock {
     #[abi(embed_v0)]
     impl GameTokenDataImpl of IMinigameTokenData<ContractState> {
         fn score(self: @ContractState, token_id: u64) -> u32 {
-            self.scores.read(token_id)
+            self.scores.entry(token_id).read()
         }
 
         fn game_over(self: @ContractState, token_id: u64) -> bool {
-            self.game_over.read(token_id)
+            self.game_over.entry(token_id).read()
         }
     }
 
@@ -132,13 +132,13 @@ pub mod minigame_starknet_mock {
     #[abi(embed_v0)]
     impl SettingsImpl of IMinigameSettings<ContractState> {
         fn settings_exist(self: @ContractState, settings_id: u32) -> bool {
-            let (_, _, exists) = self.settings_details.read(settings_id);
+            let (_, _, exists) = self.settings_details.entry(settings_id).read();
             exists
         }
 
         fn settings(self: @ContractState, settings_id: u32) -> GameSettingDetails {
-            let (name, description, _) = self.settings_details.read(settings_id);
-            let difficulty = self.settings_difficulty.read(settings_id);
+            let (name, description, _) = self.settings_details.entry(settings_id).read();
+            let difficulty = self.settings_difficulty.entry(settings_id).read();
 
             GameSettingDetails {
                 name,
@@ -154,24 +154,24 @@ pub mod minigame_starknet_mock {
     #[abi(embed_v0)]
     impl ObjectivesImpl of IMinigameObjectives<ContractState> {
         fn objective_exists(self: @ContractState, objective_id: u32) -> bool {
-            let (_, exists) = self.objective_scores.read(objective_id);
+            let (_, exists) = self.objective_scores.entry(objective_id).read();
             exists
         }
 
         fn completed_objective(self: @ContractState, token_id: u64, objective_id: u32) -> bool {
-            let (target_score, _) = self.objective_scores.read(objective_id);
-            let player_score = self.scores.read(token_id);
+            let (target_score, _) = self.objective_scores.entry(objective_id).read();
+            let player_score = self.scores.entry(token_id).read();
             player_score >= target_score
         }
 
         fn objectives(self: @ContractState, token_id: u64) -> Span<GameObjective> {
-            let objective_count = self.token_objective_count.read(token_id);
+            let objective_count = self.token_objective_count.entry(token_id).read();
             let mut objectives = array![];
 
             let mut i = 0;
             while i < objective_count {
-                let objective_id = self.token_objective_at_index.read((token_id, i));
-                let (target_score, _) = self.objective_scores.read(objective_id);
+                let objective_id = self.token_objective_at_index.entry((token_id, i)).read();
+                let (target_score, _) = self.objective_scores.entry(objective_id).read();
 
                 objectives
                     .append(
@@ -189,19 +189,19 @@ pub mod minigame_starknet_mock {
     #[abi(embed_v0)]
     impl GameMockImpl of super::IMinigameStarknetMock<ContractState> {
         fn start_game(ref self: ContractState, token_id: u64) {
-            self.scores.write(token_id, 0);
+            self.scores.entry(token_id).write(0);
         }
 
         fn end_game(ref self: ContractState, token_id: u64, score: u32) {
-            self.scores.write(token_id, score);
-            self.game_over.write(token_id, true);
+            self.scores.entry(token_id).write(score);
+            self.game_over.entry(token_id).write(true);
         }
 
         fn create_objective_score(ref self: ContractState, score: u32) {
             let objective_count = self.objective_count.read();
             let new_objective_id = objective_count + 1;
 
-            self.objective_scores.write(new_objective_id, (score, true));
+            self.objective_scores.entry(new_objective_id).write((score, true));
             self.objective_count.write(new_objective_id);
 
             self
@@ -220,8 +220,8 @@ pub mod minigame_starknet_mock {
             let settings_count = self.settings_count.read();
             let new_settings_id = settings_count + 1;
 
-            self.settings_difficulty.write(new_settings_id, difficulty);
-            self.settings_details.write(new_settings_id, (name.clone(), description.clone(), true));
+            self.settings_difficulty.entry(new_settings_id).write(difficulty);
+            self.settings_details.entry(new_settings_id).write((name.clone(), description.clone(), true));
             self.settings_count.write(new_settings_id);
 
             let settings = array![
@@ -301,12 +301,12 @@ pub mod minigame_starknet_mock {
             ref self: ContractState, token_id: u64, objective_ids: Span<u32>,
         ) {
             let len: u32 = objective_ids.len().try_into().unwrap();
-            self.token_objective_count.write(token_id, len);
+            self.token_objective_count.entry(token_id).write(len);
 
             let mut i = 0;
             while i < len {
                 let objective_id: u32 = *objective_ids.at(i.into());
-                self.token_objective_at_index.write((token_id, i), objective_id);
+                self.token_objective_at_index.entry((token_id, i)).write(objective_id);
                 i += 1;
             };
         }
