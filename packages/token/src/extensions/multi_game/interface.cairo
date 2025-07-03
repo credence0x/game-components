@@ -1,7 +1,7 @@
 use starknet::ContractAddress;
 use crate::extensions::multi_game::structs::GameMetadata;
 
-pub const IMINIGAME_TOKEN_MULTIGAME_ID: felt252 = 0x0;
+pub const IMINIGAME_TOKEN_MULTIGAME_ID: felt252 = 0x014a8d6e4bf56a4bbf869257d1f846e5a2ac1e3508466147556f186143409be1;
 
 #[starknet::interface]
 pub trait IMinigameTokenMultiGame<TState> {
