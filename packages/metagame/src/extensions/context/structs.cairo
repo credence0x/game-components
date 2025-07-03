@@ -1,4 +1,4 @@
-#[derive(Drop, Serde)]
+#[derive(Drop, Serde, Clone)]
 pub struct GameContextDetails {
     pub name: ByteArray,
     pub description: ByteArray,
@@ -6,7 +6,7 @@ pub struct GameContextDetails {
     pub context: Span<GameContext>,
 }
 
-#[derive(Drop, Serde)]
+#[derive(Drop, Serde, Clone)]
 pub struct GameContext {
     pub name: ByteArray,
     pub value: ByteArray,
