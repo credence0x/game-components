@@ -3,10 +3,6 @@
 //! A comprehensive component that combines all token extensions into a single interface.
 //! This follows the OpenZeppelin pattern for mixin components.
 
-use crate::interface::IMinigameToken;
-use crate::extensions::multi_game::interface::IMinigameTokenMultiGame;
-use crate::extensions::objectives::interface::IMinigameTokenObjectives;
-
 // Interface re-exports for convenience
 pub use crate::interface::IMINIGAME_TOKEN_ID;
 pub use crate::extensions::multi_game::interface::IMINIGAME_TOKEN_MULTIGAME_ID;
