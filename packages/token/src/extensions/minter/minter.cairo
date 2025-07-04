@@ -48,9 +48,3 @@ pub mod MinterComponent {
     }
   }
 }
-      
-        // fn token_minted_by(self: @ComponentState<TContractState>, token_id: u64) -> u64 {
-        //     let metadata = self.token_metadata.read(token_id);
-        //     metadata.minted_by
-        // }
-        

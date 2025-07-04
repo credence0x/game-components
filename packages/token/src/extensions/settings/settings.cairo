@@ -3,10 +3,14 @@ pub mod TokenSettingsComponent {
     use starknet::{ContractAddress, get_caller_address};
     use crate::token::TokenComponent;
 
-    use crate::extensions::settings::interface::IMinigameTokenSettings;
+    use crate::extensions::settings::interface::{IMinigameTokenSettings, IMINIGAME_TOKEN_SETTINGS_ID};
 
     use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
     use game_components_minigame::extensions::settings::structs::GameSetting;
+
+    use openzeppelin_introspection::src5::SRC5Component;
+    use openzeppelin_introspection::src5::SRC5Component::InternalTrait as SRC5InternalTrait;
+    use openzeppelin_introspection::src5::SRC5Component::SRC5Impl;
 
     #[storage]
     pub struct Storage {}
@@ -63,6 +67,19 @@ pub mod TokenSettingsComponent {
                     description, 
                     settings_data,
             });
+        }
+    }
+
+    #[generate_trait]
+    pub impl InternalImpl<
+        TContractState,
+        +HasComponent<TContractState>,
+        impl SRC5: SRC5Component::HasComponent<TContractState>,
+        +Drop<TContractState>,
+    > of InternalTrait<TContractState> {
+        fn initializer(ref self: ComponentState<TContractState>) {
+            let mut src5_component = get_dep_component_mut!(ref self, SRC5);
+            src5_component.register_interface(IMINIGAME_TOKEN_SETTINGS_ID);
         }
     }
 }
