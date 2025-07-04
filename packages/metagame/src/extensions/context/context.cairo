@@ -27,4 +27,4 @@ pub mod ContextComponent {
             src5_component.register_interface(IMETAGAME_CONTEXT_ID);
         }
     }
-} 
+}

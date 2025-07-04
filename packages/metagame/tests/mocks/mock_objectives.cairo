@@ -1,11 +1,16 @@
 use openzeppelin_introspection::interface::ISRC5;
-use game_components_minigame::extensions::objectives::interface::{IMinigameObjectives, IMinigameObjectivesSVG, IMINIGAME_OBJECTIVES_ID};
+use game_components_minigame::extensions::objectives::interface::{
+    IMinigameObjectives, IMinigameObjectivesSVG, IMINIGAME_OBJECTIVES_ID,
+};
 use game_components_minigame::extensions::objectives::structs::GameObjective;
 
 #[starknet::contract]
 pub mod MockObjectives {
     use super::*;
-    use starknet::storage::{Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::storage::{
+        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+        StoragePointerWriteAccess,
+    };
 
     #[storage]
     struct Storage {
@@ -34,8 +39,9 @@ pub mod MockObjectives {
             array![
                 GameObjective { name: "Objective 1", value: "Complete level 1" },
                 GameObjective { name: "Objective 2", value: "Collect 100 coins" },
-                GameObjective { name: "Objective 3", value: "Defeat boss" }
-            ].span()
+                GameObjective { name: "Objective 3", value: "Defeat boss" },
+            ]
+                .span()
         }
     }
 
@@ -50,8 +56,8 @@ pub mod MockObjectives {
     impl SRC5Impl of ISRC5<ContractState> {
         fn supports_interface(self: @ContractState, interface_id: felt252) -> bool {
             if self.supports_objectives.read() {
-                interface_id == IMINIGAME_OBJECTIVES_ID ||
-                interface_id == openzeppelin_introspection::interface::ISRC5_ID
+                interface_id == IMINIGAME_OBJECTIVES_ID
+                    || interface_id == openzeppelin_introspection::interface::ISRC5_ID
             } else {
                 interface_id == openzeppelin_introspection::interface::ISRC5_ID
             }
@@ -65,7 +71,9 @@ pub mod MockObjectives {
             self.objectives_exists.write(objective_id, true);
         }
 
-        fn set_objective_completed(ref self: ContractState, token_id: u64, objective_id: u32, completed: bool) {
+        fn set_objective_completed(
+            ref self: ContractState, token_id: u64, objective_id: u32, completed: bool,
+        ) {
             self.token_objectives_completed.write((token_id, objective_id), completed);
         }
     }

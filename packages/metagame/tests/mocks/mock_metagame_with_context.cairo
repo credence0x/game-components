@@ -41,7 +41,7 @@ pub mod MockMetagameWithContext {
     fn constructor(
         ref self: ContractState,
         context_address: Option<ContractAddress>,
-        minigame_token_address: ContractAddress
+        minigame_token_address: ContractAddress,
     ) {
         self.metagame.initializer(context_address, minigame_token_address);
     }
@@ -61,7 +61,7 @@ pub mod MockMetagameWithContext {
             client_url: Option<ByteArray>,
             renderer_address: Option<ContractAddress>,
             to: ContractAddress,
-            soulbound: bool
+            soulbound: bool,
         ) -> u64;
     }
 
@@ -80,21 +80,23 @@ pub mod MockMetagameWithContext {
             client_url: Option<ByteArray>,
             renderer_address: Option<ContractAddress>,
             to: ContractAddress,
-            soulbound: bool
+            soulbound: bool,
         ) -> u64 {
-            self.metagame.mint(
-                game_address,
-                player_name,
-                settings_id,
-                start,
-                end,
-                objective_ids,
-                context,
-                client_url,
-                renderer_address,
-                to,
-                soulbound
-            )
+            self
+                .metagame
+                .mint(
+                    game_address,
+                    player_name,
+                    settings_id,
+                    start,
+                    end,
+                    objective_ids,
+                    context,
+                    client_url,
+                    renderer_address,
+                    to,
+                    soulbound,
+                )
         }
     }
-} 
+}

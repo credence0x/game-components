@@ -1,9 +1,13 @@
 #[starknet::component]
 pub mod TokenObjectivesComponent {
     use starknet::ContractAddress;
-    use starknet::storage::{StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess, Map};
+    use starknet::storage::{
+        StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess, Map,
+    };
 
-    use crate::extensions::objectives::interface::{IMINIGAME_TOKEN_OBJECTIVES_ID, IMinigameTokenObjectives};
+    use crate::extensions::objectives::interface::{
+        IMINIGAME_TOKEN_OBJECTIVES_ID, IMinigameTokenObjectives,
+    };
     use crate::extensions::objectives::structs::TokenObjective;
 
     use game_components_minigame::extensions::objectives::structs::GameObjective;
@@ -15,7 +19,9 @@ pub mod TokenObjectivesComponent {
     #[storage]
     pub struct Storage {
         token_objective_count: Map<u64, u32>, // storage of the number of objectives for a token
-        token_objectives: Map<(u64, u32), TokenObjective>, // storage of objective by token id and index
+        token_objectives: Map<
+            (u64, u32), TokenObjective,
+        > // storage of objective by token id and index
     }
 
     #[event]
@@ -47,15 +53,15 @@ pub mod TokenObjectivesComponent {
 
     #[embeddable_as(TokenObjectivesImpl)]
     impl TokenObjectives<
-        TContractState,
-        +HasComponent<TContractState>,
-        +Drop<TContractState>,
+        TContractState, +HasComponent<TContractState>, +Drop<TContractState>,
     > of IMinigameTokenObjectives<ComponentState<TContractState>> {
         fn objectives_count(self: @ComponentState<TContractState>, token_id: u64) -> u32 {
             self.token_objective_count.entry(token_id).read()
         }
 
-        fn objectives(self: @ComponentState<TContractState>, token_id: u64) -> Array<TokenObjective> {
+        fn objectives(
+            self: @ComponentState<TContractState>, token_id: u64,
+        ) -> Array<TokenObjective> {
             let count = self.token_objective_count.entry(token_id).read();
             let mut objectives = ArrayTrait::new();
             let mut index = 0;
@@ -101,14 +107,11 @@ pub mod TokenObjectivesComponent {
 
         fn create_objective(
             ref self: ComponentState<TContractState>,
-            game_address: ContractAddress, 
-            objective_id: u32, 
+            game_address: ContractAddress,
+            objective_id: u32,
             objective_data: GameObjective,
         ) {
-            self.emit(
-                ObjectiveCreated { 
-                    game_address, objective_id, objective_data }
-            );
+            self.emit(ObjectiveCreated { game_address, objective_id, objective_data });
         }
     }
 
@@ -119,17 +122,23 @@ pub mod TokenObjectivesComponent {
         impl SRC5: SRC5Component::HasComponent<TContractState>,
         +Drop<TContractState>,
     > of InternalTrait<TContractState> {
-        
         fn initializer(ref self: ComponentState<TContractState>) {
             let mut src5_component = get_dep_component_mut!(ref self, SRC5);
             src5_component.register_interface(IMINIGAME_TOKEN_OBJECTIVES_ID);
         }
 
-        fn get_objective(self: @ComponentState<TContractState>, token_id: u64, objective_index: u32) -> TokenObjective {
+        fn get_objective(
+            self: @ComponentState<TContractState>, token_id: u64, objective_index: u32,
+        ) -> TokenObjective {
             self.token_objectives.entry((token_id, objective_index)).read()
         }
 
-        fn set_objective(ref self: ComponentState<TContractState>, token_id: u64, objective_index: u32, objective: TokenObjective) {
+        fn set_objective(
+            ref self: ComponentState<TContractState>,
+            token_id: u64,
+            objective_index: u32,
+            objective: TokenObjective,
+        ) {
             self.token_objectives.entry((token_id, objective_index)).write(objective);
         }
     }

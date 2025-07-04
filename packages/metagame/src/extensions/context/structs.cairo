@@ -10,4 +10,4 @@ pub struct GameContextDetails {
 pub struct GameContext {
     pub name: ByteArray,
     pub value: ByteArray,
-} 
+}

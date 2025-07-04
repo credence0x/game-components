@@ -1,6 +1,4 @@
-use game_components_token::interface::{
-    IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait,
-};
+use game_components_token::interface::{IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait};
 use game_components_token::extensions::settings::interface::{
     IMinigameTokenSettingsDispatcher, IMinigameTokenSettingsDispatcherTrait,
 };
@@ -43,7 +41,6 @@ pub fn create_settings(
     minigame_token_dispatcher
         .create_settings(game_address, settings_id, name, description, settings);
 }
-
 // /// Asserts that a setting exists by checking the game contract
 // ///
 // /// # Arguments
@@ -54,4 +51,6 @@ pub fn create_settings(
 //     if !setting_exists {
 //         panic!("Game: Setting ID {} does not exist", settings_id);
 //     }
-// } 
+// }
+
+

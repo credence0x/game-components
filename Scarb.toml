@@ -37,6 +37,7 @@ starknet.workspace = true
 # Common packages
 game_components_metagame = { path = "packages/metagame" }
 game_components_minigame = { path = "packages/minigame" }
+game_components_token = { path = "packages/token" }
 # Test packages
 # game_components_test_dojo = { path = "packages/test_dojo" }  # Excluded - must be built separately
 game_components_test_starknet = { path = "packages/test_starknet" }

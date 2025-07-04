@@ -56,15 +56,11 @@ pub fn create_context_json(
     };
     let contexts_json = contexts_json.build();
 
-    let mut metadata = JsonImpl::new()
-        .add("Name", name)
-        .add("Description", description);
+    let mut metadata = JsonImpl::new().add("Name", name).add("Description", description);
 
     // Conditionally add Context Id if it exists
     match context_id {
-        Option::Some(id) => {
-            metadata = metadata.add("Context Id", format!("{}", id));
-        },
+        Option::Some(id) => { metadata = metadata.add("Context Id", format!("{}", id)); },
         Option::None => {},
     };
 

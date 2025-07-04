@@ -26,7 +26,9 @@ pub mod MockSRC5 {
     // Helper functions for testing
     #[generate_trait]
     impl InternalImpl of InternalTrait {
-        fn set_supported_interface(ref self: ContractState, interface_id: felt252, supported: bool) {
+        fn set_supported_interface(
+            ref self: ContractState, interface_id: felt252, supported: bool,
+        ) {
             self.supported_interfaces.write(interface_id, supported);
         }
     }

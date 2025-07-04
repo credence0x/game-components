@@ -13,4 +13,4 @@ pub trait IMinigameSettings<TState> {
 #[starknet::interface]
 pub trait IMinigameSettingsSVG<TState> {
     fn settings_svg(self: @TState, settings_id: u32) -> ByteArray;
-} 
+}

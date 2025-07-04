@@ -1,9 +1,13 @@
-use game_components_metagame::interface::{IMetagameDispatcher, IMetagameDispatcherTrait, IMETAGAME_ID};
+use game_components_metagame::interface::{
+    IMetagameDispatcher, IMetagameDispatcherTrait, IMETAGAME_ID,
+};
 use openzeppelin_introspection::interface::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use starknet::{ContractAddress, contract_address_const};
 use core::num::traits::Zero;
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
-use game_components_token::extensions::multi_game::interface::{IMinigameTokenMultiGameDispatcher, IMinigameTokenMultiGameDispatcherTrait};
+use game_components_token::extensions::multi_game::interface::{
+    IMinigameTokenMultiGameDispatcher, IMinigameTokenMultiGameDispatcherTrait,
+};
 
 // Interface for testing mint function
 #[starknet::interface]
@@ -20,7 +24,7 @@ trait IMockMetagame<TContractState> {
         client_url: Option<ByteArray>,
         renderer_address: Option<ContractAddress>,
         to: ContractAddress,
-        soulbound: bool
+        soulbound: bool,
     ) -> u64;
 }
 
@@ -38,7 +42,7 @@ fn test_initialization_with_both_addresses() {
     calldata.append(0);
     calldata.append(context_address.into());
     calldata.append(token_address.into());
-    
+
     let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
     let dispatcher = IMetagameDispatcher { contract_address };
@@ -64,7 +68,7 @@ fn test_initialization_with_token_only() {
     // Option::None variant (index 1 for None)
     calldata.append(1);
     calldata.append(token_address.into());
-    
+
     let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
     let dispatcher = IMetagameDispatcher { contract_address };
@@ -90,7 +94,7 @@ fn test_minigame_token_address_view() {
     calldata.append(0); // Some(context_address)
     calldata.append(context_address.into());
     calldata.append(token_address.into());
-    
+
     let (contract_address, _) = contract.deploy(@calldata).unwrap();
     let dispatcher = IMetagameDispatcher { contract_address };
 
@@ -110,7 +114,7 @@ fn test_context_address_view_when_set() {
     calldata.append(0); // Some(context_address)
     calldata.append(context_address.into());
     calldata.append(token_address.into());
-    
+
     let (contract_address, _) = contract.deploy(@calldata).unwrap();
     let dispatcher = IMetagameDispatcher { contract_address };
 
@@ -128,7 +132,7 @@ fn test_context_address_view_when_none() {
     let mut calldata = array![];
     calldata.append(1); // None
     calldata.append(token_address.into());
-    
+
     let (contract_address, _) = contract.deploy(@calldata).unwrap();
     let dispatcher = IMetagameDispatcher { contract_address };
 
@@ -142,26 +146,26 @@ fn test_assert_game_registered_success() {
     // Deploy mock token contract
     let token_contract = declare("MockMinigameToken").unwrap().contract_class();
     let (token_address, _) = token_contract.deploy(@array![]).unwrap();
-    
+
     // Register a game in the token contract
     let game_address = contract_address_const::<0x1234>();
     let token_dispatcher = IMinigameTokenMultiGameDispatcher { contract_address: token_address };
-    token_dispatcher.register_game(
-        game_address, 
-        "Test Game", 
-        "Test Description", 
-        "Test Developer", 
-        "Test Publisher", 
-        "Test Genre", 
-        "Test Image", 
-        Option::None, 
-        Option::None, 
-        Option::None
-    );
-    
+    token_dispatcher
+        .register_game(
+            game_address,
+            "Test Game",
+            "Test Description",
+            "Test Developer",
+            "Test Publisher",
+            "Test Genre",
+            "Test Image",
+            Option::None,
+            Option::None,
+            Option::None,
+        );
+
     // Call libs::assert_game_registered directly - should not panic
     game_components_metagame::libs::assert_game_registered(token_address, game_address);
-    
     // If we get here, the test passed (no panic occurred)
 }
 
@@ -172,18 +176,18 @@ fn test_assert_game_registered_fails_unregistered() {
     // Deploy mock token contract
     let token_contract = declare("MockMinigameToken").unwrap().contract_class();
     let (token_address, _) = token_contract.deploy(@array![]).unwrap();
-    
+
     // Deploy metagame contract
     let metagame_contract = declare("MockMetagameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(1); // None for context_address
     calldata.append(token_address.into());
-    
+
     let (_metagame_address, _) = metagame_contract.deploy(@calldata).unwrap();
-    
+
     // Try to assert an unregistered game - this should panic
     let unregistered_game = contract_address_const::<0x9999>();
-    
+
     // Call libs::assert_game_registered directly
     game_components_metagame::libs::assert_game_registered(token_address, unregistered_game);
 }
@@ -195,10 +199,10 @@ fn test_assert_game_registered_zero_address() {
     // Deploy mock token contract
     let token_contract = declare("MockMinigameToken").unwrap().contract_class();
     let (token_address, _) = token_contract.deploy(@array![]).unwrap();
-    
+
     // Try to assert with zero game address - this should panic
     let zero_address = contract_address_const::<0x0>();
-    
+
     // Call libs::assert_game_registered directly
     game_components_metagame::libs::assert_game_registered(token_address, zero_address);
 }
@@ -209,32 +213,33 @@ fn test_mint_minimal() {
     // Deploy mock token contract
     let token_contract = declare("MockMinigameToken").unwrap().contract_class();
     let (token_address, _) = token_contract.deploy(@array![]).unwrap();
-    
+
     // Deploy metagame contract
     let metagame_contract = declare("MockMetagameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(1); // None for context_address
     calldata.append(token_address.into());
-    
+
     let (metagame_address, _) = metagame_contract.deploy(@calldata).unwrap();
     let dispatcher = IMockMetagameDispatcher { contract_address: metagame_address };
-    
+
     // Mint with minimal parameters (only to address)
     let to_address = contract_address_const::<0x1234>();
-    let token_id = dispatcher.mint(
-        Option::None,    // game_address
-        Option::None,    // player_name
-        Option::None,    // settings_id
-        Option::None,    // start
-        Option::None,    // end
-        Option::None,    // objective_ids
-        Option::None,    // context
-        Option::None,    // client_url
-        Option::None,    // renderer_address
-        to_address,
-        false           // soulbound
-    );
-    
+    let token_id = dispatcher
+        .mint(
+            Option::None, // game_address
+            Option::None, // player_name
+            Option::None, // settings_id
+            Option::None, // start
+            Option::None, // end
+            Option::None, // objective_ids
+            Option::None, // context
+            Option::None, // client_url
+            Option::None, // renderer_address
+            to_address,
+            false // soulbound
+        );
+
     assert!(token_id == 1, "First token ID should be 1");
 }
 
@@ -244,35 +249,36 @@ fn test_mint_with_all_parameters() {
     // Deploy mock token contract
     let token_contract = declare("MockMinigameToken").unwrap().contract_class();
     let (token_address, _) = token_contract.deploy(@array![]).unwrap();
-    
+
     // Deploy metagame contract
     let metagame_contract = declare("MockMetagameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(1); // None for context_address
     calldata.append(token_address.into());
-    
+
     let (metagame_address, _) = metagame_contract.deploy(@calldata).unwrap();
     let dispatcher = IMockMetagameDispatcher { contract_address: metagame_address };
-    
+
     // Mint with all parameters (except context which requires special setup)
     let to_address = contract_address_const::<0x5678>();
     let game_address = contract_address_const::<0x9999>();
     let renderer_address = contract_address_const::<0xAAAA>();
-    
-    let token_id = dispatcher.mint(
-        Option::Some(game_address),
-        Option::Some("Player One"),
-        Option::Some(1),              // settings_id
-        Option::Some(1000),           // start
-        Option::Some(2000),           // end
-        Option::Some(array![1, 2, 3].span()), // objective_ids
-        Option::None,                 // context (requires special setup)
-        Option::Some("https://game.example.com"),
-        Option::Some(renderer_address),
-        to_address,
-        true                          // soulbound
-    );
-    
+
+    let token_id = dispatcher
+        .mint(
+            Option::Some(game_address),
+            Option::Some("Player One"),
+            Option::Some(1), // settings_id
+            Option::Some(1000), // start
+            Option::Some(2000), // end
+            Option::Some(array![1, 2, 3].span()), // objective_ids
+            Option::None, // context (requires special setup)
+            Option::Some("https://game.example.com"),
+            Option::Some(renderer_address),
+            to_address,
+            true // soulbound
+        );
+
     assert!(token_id > 0, "Token ID should be valid");
 }
 
@@ -282,21 +288,23 @@ fn test_mint_with_context_provider_set() {
     // Deploy mock token contract
     let token_contract = declare("MockMinigameToken").unwrap().contract_class();
     let (token_address, _) = token_contract.deploy(@array![]).unwrap();
-    
+
     // Deploy mock context provider
     let context_contract = declare("MockContext").unwrap().contract_class();
-    let (context_address, _) = context_contract.deploy(@array![1]).unwrap(); // supports_context = true
-    
+    let (context_address, _) = context_contract
+        .deploy(@array![1])
+        .unwrap(); // supports_context = true
+
     // Deploy metagame contract WITH context provider
     let metagame_contract = declare("MockMetagameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(0); // Some(context_address)
     calldata.append(context_address.into());
     calldata.append(token_address.into());
-    
+
     let (metagame_address, _) = metagame_contract.deploy(@calldata).unwrap();
     let dispatcher = IMockMetagameDispatcher { contract_address: metagame_address };
-    
+
     use game_components_metagame::extensions::context::structs::{GameContextDetails, GameContext};
     let context = GameContextDetails {
         name: "Test Tournament",
@@ -304,25 +312,27 @@ fn test_mint_with_context_provider_set() {
         id: Option::Some(42),
         context: array![
             GameContext { name: "Prize", value: "1000 USD" },
-            GameContext { name: "Duration", value: "7 days" }
-        ].span(),
+            GameContext { name: "Duration", value: "7 days" },
+        ]
+            .span(),
     };
-    
+
     let to_address = contract_address_const::<0x5678>();
-    let token_id = dispatcher.mint(
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::Some(context),
-        Option::None,
-        Option::None,
-        to_address,
-        false
-    );
-    
+    let token_id = dispatcher
+        .mint(
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::Some(context),
+            Option::None,
+            Option::None,
+            to_address,
+            false,
+        );
+
     assert!(token_id > 0, "Token ID should be valid with context");
 }
 
@@ -333,16 +343,16 @@ fn test_mint_with_context_no_provider() {
     // Deploy mock token contract
     let token_contract = declare("MockMinigameToken").unwrap().contract_class();
     let (token_address, _) = token_contract.deploy(@array![]).unwrap();
-    
+
     // Deploy metagame contract WITHOUT context provider
     let metagame_contract = declare("MockMetagameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(1); // None for context_address
     calldata.append(token_address.into());
-    
+
     let (metagame_address, _) = metagame_contract.deploy(@calldata).unwrap();
     let dispatcher = IMockMetagameDispatcher { contract_address: metagame_address };
-    
+
     // Try to mint with context when no provider is set
     use game_components_metagame::extensions::context::structs::{GameContextDetails, GameContext};
     let context = GameContextDetails {
@@ -351,21 +361,22 @@ fn test_mint_with_context_no_provider() {
         id: Option::Some(1),
         context: array![].span(),
     };
-    
+
     let to_address = contract_address_const::<0x1234>();
-    dispatcher.mint(
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::Some(context), // This should cause panic
-        Option::None,
-        Option::None,
-        to_address,
-        false
-    );
+    dispatcher
+        .mint(
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::Some(context), // This should cause panic
+            Option::None,
+            Option::None,
+            to_address,
+            false,
+        );
 }
 
 // Test MG-U-10: Mint with max objectives (255)
@@ -374,16 +385,16 @@ fn test_mint_with_max_objectives() {
     // Deploy mock token contract
     let token_contract = declare("MockMinigameToken").unwrap().contract_class();
     let (token_address, _) = token_contract.deploy(@array![]).unwrap();
-    
+
     // Deploy metagame contract
     let metagame_contract = declare("MockMetagameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(1); // None for context_address
     calldata.append(token_address.into());
-    
+
     let (metagame_address, _) = metagame_contract.deploy(@calldata).unwrap();
     let dispatcher = IMockMetagameDispatcher { contract_address: metagame_address };
-    
+
     // Create array with 255 objectives
     let mut objectives = array![];
     let mut i: u32 = 0;
@@ -394,22 +405,23 @@ fn test_mint_with_max_objectives() {
         objectives.append(i);
         i += 1;
     };
-    
+
     let to_address = contract_address_const::<0x1234>();
-    let token_id = dispatcher.mint(
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::Some(objectives.span()),
-        Option::None,
-        Option::None,
-        Option::None,
-        to_address,
-        false
-    );
-    
+    let token_id = dispatcher
+        .mint(
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::Some(objectives.span()),
+            Option::None,
+            Option::None,
+            Option::None,
+            to_address,
+            false,
+        );
+
     assert!(token_id > 0, "Token should be minted successfully");
 }
 
@@ -419,34 +431,35 @@ fn test_mint_with_instant_game() {
     // Deploy mock token contract
     let token_contract = declare("MockMinigameToken").unwrap().contract_class();
     let (token_address, _) = token_contract.deploy(@array![]).unwrap();
-    
+
     // Deploy metagame contract
     let metagame_contract = declare("MockMetagameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(1); // None for context_address
     calldata.append(token_address.into());
-    
+
     let (metagame_address, _) = metagame_contract.deploy(@calldata).unwrap();
     let dispatcher = IMockMetagameDispatcher { contract_address: metagame_address };
-    
+
     // Mint with start = end (instant game)
     let to_address = contract_address_const::<0x1234>();
     let timestamp = 1000_u64;
-    
-    let token_id = dispatcher.mint(
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::Some(timestamp), // start
-        Option::Some(timestamp), // end (same as start)
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        to_address,
-        false
-    );
-    
+
+    let token_id = dispatcher
+        .mint(
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::Some(timestamp), // start
+            Option::Some(timestamp), // end (same as start)
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            to_address,
+            false,
+        );
+
     assert!(token_id > 0, "Token should be minted successfully");
 }
 
@@ -491,7 +504,7 @@ mod MockMetagameContract {
     fn constructor(
         ref self: ContractState,
         context_address: Option<ContractAddress>,
-        minigame_token_address: ContractAddress
+        minigame_token_address: ContractAddress,
     ) {
         self.metagame.initializer(context_address, minigame_token_address);
     }
@@ -511,21 +524,23 @@ mod MockMetagameContract {
             client_url: Option<ByteArray>,
             renderer_address: Option<ContractAddress>,
             to: ContractAddress,
-            soulbound: bool
+            soulbound: bool,
         ) -> u64 {
-            self.metagame.mint(
-                game_address,
-                player_name,
-                settings_id,
-                start,
-                end,
-                objective_ids,
-                context,
-                client_url,
-                renderer_address,
-                to,
-                soulbound
-            )
+            self
+                .metagame
+                .mint(
+                    game_address,
+                    player_name,
+                    settings_id,
+                    start,
+                    end,
+                    objective_ids,
+                    context,
+                    client_url,
+                    renderer_address,
+                    to,
+                    soulbound,
+                )
         }
     }
 }

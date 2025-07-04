@@ -10,7 +10,7 @@ pub trait IMinigameToken<TContractState> {
     fn token_metadata(self: @TContractState, token_id: u64) -> TokenMetadata;
     fn is_playable(self: @TContractState, token_id: u64) -> bool;
     fn settings_id(self: @TContractState, token_id: u64) -> u32;
-    fn player_name(self: @TContractState, token_id: u64) ->  ByteArray;
+    fn player_name(self: @TContractState, token_id: u64) -> ByteArray;
 
     fn mint(
         ref self: TContractState,

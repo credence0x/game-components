@@ -40,7 +40,6 @@ pub fn create_objective(
     };
     minigame_token_dispatcher.create_objective(game_address, objective_id, objective);
 }
-
 // /// Asserts that an objective exists by checking the game contract
 // ///
 // /// # Arguments
@@ -53,4 +52,6 @@ pub fn create_objective(
 //     if !objective_exists {
 //         panic!("Game: Objective ID {} does not exist", objective_id);
 //     }
-// } 
+// }
+
+

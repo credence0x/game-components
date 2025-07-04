@@ -89,7 +89,9 @@ pub mod MetagameComponent {
                 Option::Some(_) => {
                     let context_address = self.context_address.read();
                     if !context_address.is_zero() {
-                        let context_src5_dispatcher = ISRC5Dispatcher { contract_address: context_address };
+                        let context_src5_dispatcher = ISRC5Dispatcher {
+                            contract_address: context_address,
+                        };
                         assert!(
                             context_src5_dispatcher.supports_interface(IMETAGAME_CONTEXT_ID),
                             "Metagame: Context contract does not support IMetagameContext",
@@ -106,18 +108,18 @@ pub mod MetagameComponent {
             }
             let minigame_token_address = self.minigame_token_address.read();
             libs::mint(
-                minigame_token_address, 
-                game_address, 
-                player_name, 
-                settings_id, 
-                start, 
-                end, 
-                objective_ids, 
-                context, 
-                client_url, 
-                renderer_address, 
-                to, 
-                soulbound
+                minigame_token_address,
+                game_address,
+                player_name,
+                settings_id,
+                start,
+                end,
+                objective_ids,
+                context,
+                client_url,
+                renderer_address,
+                to,
+                soulbound,
             )
         }
     }

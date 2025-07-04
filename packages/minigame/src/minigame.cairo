@@ -3,12 +3,11 @@
 ///
 #[starknet::component]
 pub mod MinigameComponent {
-    use crate::interface::{
-        IMinigame, IMinigameTokenData, IMINIGAME_ID,
-    };
+    use crate::interface::{IMinigame, IMinigameTokenData, IMINIGAME_ID};
     use crate::libs;
     use game_components_token::extensions::multi_game::interface::{
-        IMINIGAME_TOKEN_MULTIGAME_ID, IMinigameTokenMultiGameDispatcher, IMinigameTokenMultiGameDispatcherTrait,
+        IMINIGAME_TOKEN_MULTIGAME_ID, IMinigameTokenMultiGameDispatcher,
+        IMinigameTokenMultiGameDispatcherTrait,
     };
     use starknet::{ContractAddress};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
@@ -74,23 +73,25 @@ pub mod MinigameComponent {
             self.token_address.write(token_address.clone());
 
             let mut src5_component = get_dep_component_mut!(ref self, SRC5);
-            let supports_multi_game = src5_component.supports_interface(IMINIGAME_TOKEN_MULTIGAME_ID);
+            let supports_multi_game = src5_component
+                .supports_interface(IMINIGAME_TOKEN_MULTIGAME_ID);
             if supports_multi_game {
                 let minigame_token_multi_game_dispatcher = IMinigameTokenMultiGameDispatcher {
                     contract_address: token_address,
                 };
-                minigame_token_multi_game_dispatcher.register_game(
-                    creator_address,
-                    name,
-                    description,
-                    developer,
-                    publisher,
-                    genre,
-                    image,
-                    color,
-                    client_url,
-                    renderer_address,
-                );
+                minigame_token_multi_game_dispatcher
+                    .register_game(
+                        creator_address,
+                        name,
+                        description,
+                        developer,
+                        publisher,
+                        genre,
+                        image,
+                        color,
+                        client_url,
+                        renderer_address,
+                    );
             }
 
             // Store the settings and objectives addresses

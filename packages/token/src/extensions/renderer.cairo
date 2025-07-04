@@ -35,11 +35,8 @@ pub mod TokenRendererComponent {
 
     #[embeddable_as(TokenRendererImpl)]
     impl TokenRenderer<
-        TContractState,
-        +HasComponent<TContractState>,
-        +Drop<TContractState>,
+        TContractState, +HasComponent<TContractState>, +Drop<TContractState>,
     > of ITokenRenderer<ComponentState<TContractState>> {
-        
         fn get_renderer(self: @ComponentState<TContractState>, token_id: u64) -> ContractAddress {
             let renderer = self.token_renderers.read(token_id);
             if renderer.renderer_address.is_zero() {
@@ -61,14 +58,10 @@ pub mod TokenRendererComponent {
 
     #[generate_trait]
     pub impl InternalImpl<
-        TContractState,
-        +HasComponent<TContractState>,
-        +Drop<TContractState>,
+        TContractState, +HasComponent<TContractState>, +Drop<TContractState>,
     > of InternalTrait<TContractState> {
-        
         fn initializer(
-            ref self: ComponentState<TContractState>,
-            default_renderer: ContractAddress,
+            ref self: ComponentState<TContractState>, default_renderer: ContractAddress,
         ) {
             self.default_renderer.write(default_renderer);
         }
@@ -83,8 +76,7 @@ pub mod TokenRendererComponent {
         }
 
         fn set_default_renderer(
-            ref self: ComponentState<TContractState>,
-            renderer_address: ContractAddress,
+            ref self: ComponentState<TContractState>, renderer_address: ContractAddress,
         ) {
             self.default_renderer.write(renderer_address);
             self.emit(DefaultRendererSet { renderer_address });

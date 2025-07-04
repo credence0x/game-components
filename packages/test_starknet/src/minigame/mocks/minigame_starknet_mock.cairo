@@ -48,8 +48,12 @@ pub trait IMinigameStarknetMockInit<TContractState> {
 #[starknet::contract]
 pub mod minigame_starknet_mock {
     use game_components_minigame::interface::{IMinigameTokenData, IMinigameDetails};
-    use game_components_minigame::extensions::objectives::interface::{IMinigameObjectives, IMINIGAME_OBJECTIVES_ID};
-    use game_components_minigame::extensions::settings::interface::{IMinigameSettings, IMINIGAME_SETTINGS_ID};
+    use game_components_minigame::extensions::objectives::interface::{
+        IMinigameObjectives, IMINIGAME_OBJECTIVES_ID,
+    };
+    use game_components_minigame::extensions::settings::interface::{
+        IMinigameSettings, IMINIGAME_SETTINGS_ID,
+    };
     use game_components_minigame::minigame::MinigameComponent;
     use game_components_minigame::extensions::objectives::objectives::objectives_component;
     use game_components_minigame::extensions::settings::settings::settings_component;
@@ -59,7 +63,9 @@ pub mod minigame_starknet_mock {
     use openzeppelin_introspection::src5::SRC5Component;
 
     use starknet::ContractAddress;
-    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, Map, StoragePathEntry};
+    use starknet::storage::{
+        StoragePointerReadAccess, StoragePointerWriteAccess, Map, StoragePathEntry,
+    };
 
     component!(path: MinigameComponent, storage: minigame, event: MinigameEvent);
     component!(path: objectives_component, storage: objectives, event: ObjectivesEvent);
@@ -274,7 +280,10 @@ pub mod minigame_starknet_mock {
             let new_settings_id = settings_count + 1;
 
             self.settings_difficulty.entry(new_settings_id).write(difficulty);
-            self.settings_details.entry(new_settings_id).write((name.clone(), description.clone(), true));
+            self
+                .settings_details
+                .entry(new_settings_id)
+                .write((name.clone(), description.clone(), true));
             self.settings_count.write(new_settings_id);
 
             let settings = array![

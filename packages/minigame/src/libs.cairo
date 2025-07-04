@@ -1,6 +1,4 @@
-use game_components_token::interface::{
-    IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait,
-};
+use game_components_token::interface::{IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait};
 use game_components_token::extensions::multi_game::interface::{
     IMinigameTokenMultiGameDispatcher, IMinigameTokenMultiGameDispatcherTrait,
 };

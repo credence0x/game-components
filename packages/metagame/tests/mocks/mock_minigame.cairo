@@ -5,7 +5,10 @@ use openzeppelin_introspection::interface::ISRC5;
 #[starknet::contract]
 pub mod MockMinigame {
     use super::*;
-    use starknet::storage::{Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::storage::{
+        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+        StoragePointerWriteAccess,
+    };
 
     #[storage]
     struct Storage {
@@ -31,7 +34,7 @@ pub mod MockMinigame {
         ref self: ContractState,
         token_address: ContractAddress,
         settings_address: ContractAddress,
-        objectives_address: ContractAddress
+        objectives_address: ContractAddress,
     ) {
         self.token_address.write(token_address);
         self.settings_address.write(settings_address);
@@ -76,8 +79,8 @@ pub mod MockMinigame {
     #[abi(embed_v0)]
     impl SRC5Impl of ISRC5<ContractState> {
         fn supports_interface(self: @ContractState, interface_id: felt252) -> bool {
-            interface_id == IMINIGAME_ID ||
-            interface_id == openzeppelin_introspection::interface::ISRC5_ID
+            interface_id == IMINIGAME_ID
+                || interface_id == openzeppelin_introspection::interface::ISRC5_ID
         }
     }
 
@@ -103,7 +106,9 @@ pub mod MockMinigame {
     // Helper functions for testing
     #[generate_trait]
     impl InternalImpl of InternalTrait {
-        fn set_objective_completed(ref self: ContractState, token_id: u64, objective_id: u32, completed: bool) {
+        fn set_objective_completed(
+            ref self: ContractState, token_id: u64, objective_id: u32, completed: bool,
+        ) {
             self.objectives_completed.write((token_id, objective_id), completed);
         }
 

@@ -62,13 +62,13 @@ mod MockMinterContract {
 fn test_add_first_minter() {
     let contract = declare("MockMinterContract").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     let minter_contract = IMinterContract { contract_address };
     let minter_address = contract_address_const::<0x123>();
-    
+
     // Add first minter
     let minter_id = minter_contract.add_minter(minter_address);
-    
+
     assert!(minter_id == 1, "First minter should have ID 1");
     assert!(minter_contract.get_minter_count() == 1, "Minter count should be 1");
     assert!(minter_contract.get_minter_id(minter_address) == 1, "Minter ID lookup should return 1");
@@ -79,15 +79,15 @@ fn test_add_first_minter() {
 fn test_add_second_unique_minter() {
     let contract = declare("MockMinterContract").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     let minter_contract = IMinterContract { contract_address };
     let minter1 = contract_address_const::<0x123>();
     let minter2 = contract_address_const::<0x456>();
-    
+
     // Add first minter
     let id1 = minter_contract.add_minter(minter1);
     assert!(id1 == 1, "First minter should have ID 1");
-    
+
     // Add second minter
     let id2 = minter_contract.add_minter(minter2);
     assert!(id2 == 2, "Second minter should have ID 2");
@@ -99,14 +99,14 @@ fn test_add_second_unique_minter() {
 fn test_add_duplicate_minter() {
     let contract = declare("MockMinterContract").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     let minter_contract = IMinterContract { contract_address };
     let minter_address = contract_address_const::<0x789>();
-    
+
     // Add minter first time
     let id1 = minter_contract.add_minter(minter_address);
     assert!(id1 == 1, "First add should return ID 1");
-    
+
     // Add same minter again
     let id2 = minter_contract.add_minter(minter_address);
     assert!(id2 == 1, "Duplicate add should return same ID");
@@ -118,10 +118,10 @@ fn test_add_duplicate_minter() {
 fn test_add_zero_address_minter() {
     let contract = declare("MockMinterContract").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     let minter_contract = IMinterContract { contract_address };
     let zero_address = contract_address_const::<0x0>();
-    
+
     // Add zero address as minter
     let id = minter_contract.add_minter(zero_address);
     assert!(id == 1, "Zero address should get ID 1");
@@ -133,29 +133,29 @@ fn test_add_zero_address_minter() {
 fn test_add_many_unique_minters() {
     let contract = declare("MockMinterContract").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     let minter_contract = IMinterContract { contract_address };
-    
+
     // Add 100 minters (reduced from 1000 for test performance)
     let mut i: u32 = 1;
     loop {
         if i > 100 {
             break;
         }
-        
+
         let minter_address = contract_address_const::<0x1000>() + i.into();
         let id = minter_contract.add_minter(minter_address);
         assert!(id == i, "Minter ID should increment");
-        
+
         i += 1;
     };
-    
+
     assert!(minter_contract.get_minter_count() == 100, "Should have 100 minters");
-    
+
     // Verify some random lookups
     let addr50 = contract_address_const::<0x1000>() + 50.into();
     assert!(minter_contract.get_minter_id(addr50) == 50, "Minter 50 lookup failed");
-    
+
     let addr100 = contract_address_const::<0x1000>() + 100.into();
     assert!(minter_contract.get_minter_id(addr100) == 100, "Minter 100 lookup failed");
 }
@@ -165,22 +165,22 @@ fn test_add_many_unique_minters() {
 fn test_minter_count_tracking() {
     let contract = declare("MockMinterContract").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     let minter_contract = IMinterContract { contract_address };
-    
+
     // Initial count
     assert!(minter_contract.get_minter_count() == 0, "Initial count should be 0");
-    
+
     // Add minters and verify count
     minter_contract.add_minter(contract_address_const::<0x111>());
     assert!(minter_contract.get_minter_count() == 1, "Count should be 1");
-    
+
     minter_contract.add_minter(contract_address_const::<0x222>());
     assert!(minter_contract.get_minter_count() == 2, "Count should be 2");
-    
+
     minter_contract.add_minter(contract_address_const::<0x333>());
     assert!(minter_contract.get_minter_count() == 3, "Count should be 3");
-    
+
     // Add duplicate - count shouldn't increase
     minter_contract.add_minter(contract_address_const::<0x222>());
     assert!(minter_contract.get_minter_count() == 3, "Count should still be 3 after duplicate");
@@ -191,9 +191,12 @@ fn test_minter_count_tracking() {
 fn test_minter_interface_registered() {
     let contract = declare("MockMinterContract").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     let src5_dispatcher = ISRC5Dispatcher { contract_address };
-    assert!(src5_dispatcher.supports_interface(IMINIGAME_TOKEN_MINTER_ID), "Should support minter interface");
+    assert!(
+        src5_dispatcher.supports_interface(IMINIGAME_TOKEN_MINTER_ID),
+        "Should support minter interface",
+    );
 }
 
 // Helper interface for testing

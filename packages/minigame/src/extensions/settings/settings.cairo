@@ -26,7 +26,11 @@ pub mod settings_component {
             self.register_settings_interface();
         }
 
-        fn get_settings_id(self: @ComponentState<TContractState>, token_id: u64, minigame_token_address: ContractAddress) -> u32 {
+        fn get_settings_id(
+            self: @ComponentState<TContractState>,
+            token_id: u64,
+            minigame_token_address: ContractAddress,
+        ) -> u32 {
             libs::get_settings_id(minigame_token_address, token_id)
         }
 
@@ -44,8 +48,13 @@ pub mod settings_component {
             minigame_token_address: ContractAddress,
         ) {
             libs::create_settings(
-                minigame_token_address, get_contract_address(), settings_id, name, description, settings,
+                minigame_token_address,
+                get_contract_address(),
+                settings_id,
+                name,
+                description,
+                settings,
             );
         }
     }
-} 
+}

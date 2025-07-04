@@ -12,4 +12,4 @@ pub trait IMetagameContext<TState> {
 #[starknet::interface]
 pub trait IMetagameContextSVG<TState> {
     fn context_svg(self: @TState, token_id: u64) -> ByteArray;
-} 
+}

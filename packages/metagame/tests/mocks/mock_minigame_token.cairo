@@ -9,7 +9,10 @@ use openzeppelin_introspection::interface::ISRC5;
 #[starknet::contract]
 pub mod MockMinigameToken {
     use super::*;
-    use starknet::storage::{Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::storage::{
+        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+        StoragePointerWriteAccess,
+    };
 
     #[storage]
     struct Storage {
@@ -39,7 +42,7 @@ pub mod MockMinigameToken {
         fn token_metadata(self: @ContractState, token_id: u64) -> TokenMetadata {
             let game_address = self.token_game_address.read(token_id);
             let game_id = self.address_to_game_id.read(game_address);
-            
+
             TokenMetadata {
                 game_id: game_id.into(),
                 minted_at: 0,
@@ -81,7 +84,7 @@ pub mod MockMinigameToken {
             client_url: Option<ByteArray>,
             renderer_address: Option<ContractAddress>,
             to: ContractAddress,
-            soulbound: bool
+            soulbound: bool,
         ) -> u64 {
             if self.should_fail_mint.read() {
                 panic!("Mint failed");
@@ -94,17 +97,17 @@ pub mod MockMinigameToken {
             if let Option::Some(game_addr) = game_address {
                 self.token_game_address.write(token_id, game_addr);
             }
-            
+
             // Store player name
             if let Option::Some(name) = player_name {
                 self.token_player_names.write(token_id, name);
             }
-            
+
             // Store lifecycle data
             if let Option::Some(start_time) = start {
                 self.token_lifecycle_start.write(token_id, start_time);
             }
-            
+
             if let Option::Some(end_time) = end {
                 self.token_lifecycle_end.write(token_id, end_time);
             }
@@ -112,8 +115,7 @@ pub mod MockMinigameToken {
             token_id
         }
 
-        fn update_game(ref self: ContractState, token_id: u64) {
-            // Mock implementation - no-op
+        fn update_game(ref self: ContractState, token_id: u64) { // Mock implementation - no-op
         }
     }
 
@@ -190,9 +192,9 @@ pub mod MockMinigameToken {
     #[abi(embed_v0)]
     impl SRC5Impl of ISRC5<ContractState> {
         fn supports_interface(self: @ContractState, interface_id: felt252) -> bool {
-            interface_id == game_components_token::interface::IMINIGAME_TOKEN_ID ||
-            interface_id == game_components_token::extensions::multi_game::interface::IMINIGAME_TOKEN_MULTIGAME_ID ||
-            interface_id == openzeppelin_introspection::interface::ISRC5_ID
+            interface_id == game_components_token::interface::IMINIGAME_TOKEN_ID
+                || interface_id == game_components_token::extensions::multi_game::interface::IMINIGAME_TOKEN_MULTIGAME_ID
+                || interface_id == openzeppelin_introspection::interface::ISRC5_ID
         }
     }
 

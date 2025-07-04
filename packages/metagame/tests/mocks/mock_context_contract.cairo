@@ -1,4 +1,6 @@
-use game_components_metagame::extensions::context::interface::{IMetagameContext, IMETAGAME_CONTEXT_ID};
+use game_components_metagame::extensions::context::interface::{
+    IMetagameContext, IMETAGAME_CONTEXT_ID,
+};
 use game_components_metagame::extensions::context::structs::{GameContextDetails, GameContext};
 use openzeppelin_introspection::interface::ISRC5;
 
@@ -11,7 +13,10 @@ trait IContextSetter<TContractState> {
 #[starknet::contract]
 pub mod MockContextContract {
     use super::*;
-    use starknet::storage::{Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::storage::{
+        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+        StoragePointerWriteAccess,
+    };
 
     #[storage]
     struct Storage {
@@ -36,12 +41,12 @@ pub mod MockContextContract {
         fn has_context(self: @ContractState, token_id: u64) -> bool {
             self.has_context_map.read(token_id)
         }
-        
+
         fn context(self: @ContractState, token_id: u64) -> GameContextDetails {
             if !self.has_context_map.read(token_id) {
                 panic!("Context not found for token");
             }
-            
+
             // Return stored context data
             GameContextDetails {
                 name: self.context_name.read(),
@@ -49,8 +54,9 @@ pub mod MockContextContract {
                 id: self.context_id.read(),
                 context: array![
                     GameContext { name: "Round", value: "Qualifier Round" },
-                    GameContext { name: "Round", value: "Semi Finals" }
-                ].span()
+                    GameContext { name: "Round", value: "Semi Finals" },
+                ]
+                    .span(),
             }
         }
     }
@@ -69,11 +75,11 @@ pub mod MockContextContract {
     impl SRC5Impl of ISRC5<ContractState> {
         fn supports_interface(self: @ContractState, interface_id: felt252) -> bool {
             if self.supports_context.read() {
-                interface_id == IMETAGAME_CONTEXT_ID ||
-                interface_id == openzeppelin_introspection::interface::ISRC5_ID
+                interface_id == IMETAGAME_CONTEXT_ID
+                    || interface_id == openzeppelin_introspection::interface::ISRC5_ID
             } else {
                 interface_id == openzeppelin_introspection::interface::ISRC5_ID
             }
         }
     }
-} 
+}

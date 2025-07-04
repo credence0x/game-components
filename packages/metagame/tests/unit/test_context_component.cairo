@@ -1,4 +1,7 @@
-use game_components_metagame::extensions::context::interface::{IMetagameContextDispatcher, IMetagameContextDispatcherTrait, IMetagameContextSVGDispatcher, IMetagameContextSVGDispatcherTrait, IMETAGAME_CONTEXT_ID};
+use game_components_metagame::extensions::context::interface::{
+    IMetagameContextDispatcher, IMetagameContextDispatcherTrait, IMetagameContextSVGDispatcher,
+    IMetagameContextSVGDispatcherTrait, IMETAGAME_CONTEXT_ID,
+};
 use game_components_metagame::extensions::context::structs::{GameContextDetails, GameContext};
 use openzeppelin_introspection::interface::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
@@ -14,7 +17,9 @@ trait IContextSetter<TContractState> {
 #[starknet::contract]
 mod MockContextContract {
     use game_components_metagame::extensions::context::context::ContextComponent;
-    use game_components_metagame::extensions::context::interface::{IMetagameContext, IMetagameContextSVG};
+    use game_components_metagame::extensions::context::interface::{
+        IMetagameContext, IMetagameContextSVG,
+    };
     use game_components_metagame::extensions::context::structs::{GameContextDetails, GameContext};
     use openzeppelin_introspection::src5::SRC5Component;
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
@@ -24,7 +29,7 @@ mod MockContextContract {
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
 
     impl ContextInternalImpl = ContextComponent::InternalImpl<ContractState>;
-    
+
     #[abi(embed_v0)]
     impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
 
@@ -103,7 +108,7 @@ mod MockContextContract {
             if !self.has_context(token_id) {
                 panic!("Context not found for token");
             }
-            
+
             // Get stored context data
             let (name, description) = if token_id == 1 {
                 (self.stored_context_name_1.read(), self.stored_context_description_1.read())
@@ -124,21 +129,16 @@ mod MockContextContract {
                 let default_description: ByteArray = "Mock tournament for testing";
                 (default_name, default_description)
             };
-            
+
             GameContextDetails {
                 name: name,
                 description: description,
                 id: Option::Some(token_id.try_into().unwrap()),
                 context: array![
-                    GameContext {
-                        name: "Prize",
-                        value: "1000 USD"
-                    },
-                    GameContext {
-                        name: "Duration",
-                        value: "7 days"
-                    }
-                ].span()
+                    GameContext { name: "Prize", value: "1000 USD" },
+                    GameContext { name: "Duration", value: "7 days" },
+                ]
+                    .span(),
             }
         }
     }
@@ -180,7 +180,7 @@ mod MockContextContract {
                 self.stored_context_name_50.write(context.name);
                 self.stored_context_description_50.write(context.description);
             }
-            
+
             self.set_has_context(token_id, true);
         }
 
@@ -211,11 +211,16 @@ mod MockContextContract {
 fn test_initialize_context_component() {
     let contract = declare("MockContextContract").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     // Verify SRC5 interface is registered
     let src5_dispatcher = ISRC5Dispatcher { contract_address };
-    assert!(src5_dispatcher.supports_interface(IMETAGAME_CONTEXT_ID), "Should support IMetagameContext");
-    assert!(src5_dispatcher.supports_interface(openzeppelin_introspection::interface::ISRC5_ID), "Should support ISRC5");
+    assert!(
+        src5_dispatcher.supports_interface(IMETAGAME_CONTEXT_ID), "Should support IMetagameContext",
+    );
+    assert!(
+        src5_dispatcher.supports_interface(openzeppelin_introspection::interface::ISRC5_ID),
+        "Should support ISRC5",
+    );
 }
 
 // Test CTX-U-02: Mint with context, external provider
@@ -225,31 +230,26 @@ fn test_mint_with_context_external_provider() {
     // For unit test, we verify context storage works
     let contract = declare("MockContextContract").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     let context_details = GameContextDetails {
         name: "Tournament 2024",
         description: "Annual gaming tournament",
         id: Option::Some(1),
         context: array![
-            GameContext {
-                name: "Prize",
-                value: "1000 USD"
-            },
-            GameContext {
-                name: "Duration",
-                value: "7 days"
-            }
-        ].span()
+            GameContext { name: "Prize", value: "1000 USD" },
+            GameContext { name: "Duration", value: "7 days" },
+        ]
+            .span(),
     };
-    
+
     // Store context for token
     let setter = IContextSetterDispatcher { contract_address };
     setter.store_context(1, context_details);
-    
+
     // Verify context was stored
     let context_dispatcher = IMetagameContextDispatcher { contract_address };
     assert!(context_dispatcher.has_context(1), "Should have context");
-    
+
     let retrieved_context = context_dispatcher.context(1);
     assert!(retrieved_context.id == Option::Some(1), "Context ID mismatch");
     assert!(retrieved_context.name == "Tournament 2024", "Name mismatch");
@@ -261,17 +261,17 @@ fn test_mint_with_context_self_provider() {
     // Similar to CTX-U-02 but caller would be the context provider
     let contract = declare("MockContextContract").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     let context_details = GameContextDetails {
         name: "Solo Tournament",
         description: "Self-hosted tournament",
         id: Option::Some(2),
         context: array![].span() // Empty context array
     };
-    
+
     let setter = IContextSetterDispatcher { contract_address };
     setter.store_context(2, context_details);
-    
+
     let context_dispatcher = IMetagameContextDispatcher { contract_address };
     assert!(context_dispatcher.has_context(2), "Should have context");
 }
@@ -281,17 +281,14 @@ fn test_mint_with_context_self_provider() {
 fn test_has_context_valid_token() {
     let contract = declare("MockContextContract").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     let context_details = GameContextDetails {
-        name: "Test Context",
-        description: "Test",
-        id: Option::Some(10),
-        context: array![].span()
+        name: "Test Context", description: "Test", id: Option::Some(10), context: array![].span(),
     };
-    
+
     let setter = IContextSetterDispatcher { contract_address };
     setter.store_context(10, context_details);
-    
+
     let context_dispatcher = IMetagameContextDispatcher { contract_address };
     assert!(context_dispatcher.has_context(10), "Should have context");
 }
@@ -301,7 +298,7 @@ fn test_has_context_valid_token() {
 fn test_has_context_no_context() {
     let contract = declare("MockContextContract").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     let context_dispatcher = IMetagameContextDispatcher { contract_address };
     assert!(!context_dispatcher.has_context(999), "Should not have context");
 }
@@ -311,25 +308,20 @@ fn test_has_context_no_context() {
 fn test_get_context_valid_token() {
     let contract = declare("MockContextContract").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     let context_details = GameContextDetails {
         name: "Championship",
         description: "World Championship",
         id: Option::Some(20),
-        context: array![
-            GameContext {
-                name: "Stage",
-                value: "Qualifier"
-            }
-        ].span()
+        context: array![GameContext { name: "Stage", value: "Qualifier" }].span(),
     };
-    
+
     let setter = IContextSetterDispatcher { contract_address };
     setter.store_context(20, context_details);
-    
+
     let context_dispatcher = IMetagameContextDispatcher { contract_address };
     let retrieved = context_dispatcher.context(20);
-    
+
     assert!(retrieved.id == Option::Some(20), "Context ID mismatch");
     assert!(retrieved.name == "Championship", "Name mismatch");
     assert!(retrieved.description == "World Championship", "Description mismatch");
@@ -342,7 +334,7 @@ fn test_get_context_valid_token() {
 fn test_get_context_nonexistent_token() {
     let contract = declare("MockContextContract").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     let context_dispatcher = IMetagameContextDispatcher { contract_address };
     context_dispatcher.context(999); // Should panic
 }
@@ -352,17 +344,17 @@ fn test_get_context_nonexistent_token() {
 fn test_context_with_empty_array() {
     let contract = declare("MockContextContract").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     let context_details = GameContextDetails {
         name: "Empty Context",
         description: "Context with no items",
         id: Option::Some(30),
         context: array![].span() // Empty array
     };
-    
+
     let setter = IContextSetterDispatcher { contract_address };
     setter.store_context(30, context_details);
-    
+
     let context_dispatcher = IMetagameContextDispatcher { contract_address };
     let retrieved = context_dispatcher.context(30);
     assert!(retrieved.context.len() == 2, "Context array should have mock data");
@@ -373,7 +365,7 @@ fn test_context_with_empty_array() {
 fn test_context_with_100_items() {
     let contract = declare("MockContextContract").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
     // Create array with 100 items - using simple concatenation for string conversion
     let mut context_items = array![];
     let mut i: u32 = 0;
@@ -381,47 +373,45 @@ fn test_context_with_100_items() {
         if i >= 100 {
             break;
         }
-        context_items.append(GameContext {
-            name: "Item",
-            value: "Value"
-        });
+        context_items.append(GameContext { name: "Item", value: "Value" });
         i += 1;
     };
-    
+
     let context_details = GameContextDetails {
         name: "Large Context",
         description: "Context with 100 items",
         id: Option::Some(40),
-        context: context_items.span()
+        context: context_items.span(),
     };
-    
+
     let setter = IContextSetterDispatcher { contract_address };
     setter.store_context(40, context_details);
-    
+
     let context_dispatcher = IMetagameContextDispatcher { contract_address };
     let retrieved = context_dispatcher.context(40);
     assert!(retrieved.context.len() == 2, "Should have mock context items");
 }
-
 // // Test CTX-U-11: Context_svg implementation
 // #[test]
 // fn test_context_svg() {
 //     let contract = declare("MockContextContract").unwrap().contract_class();
 //     let (contract_address, _) = contract.deploy(@array![]).unwrap();
-    
+
 //     let context_details = GameContextDetails {
 //         name: "SVG Test",
 //         description: "Testing SVG generation",
 //         id: Option::Some(50),
 //         context: array![].span()
 //     };
-    
+
 //     let setter = IContextSetterDispatcher { contract_address };
 //     setter.store_context(50, context_details);
-    
+
 //     let context_svg_dispatcher = IMetagameContextSVGDispatcher { contract_address };
 //     let svg = context_svg_dispatcher.context_svg(50);
-    
+
 //     // Verify SVG contains expected content
 //     assert!(svg == "<svg><text>SVG Test</text></svg>", "SVG content mismatch");
 // }
+
+

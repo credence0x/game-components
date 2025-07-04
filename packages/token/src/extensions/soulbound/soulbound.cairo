@@ -1,6 +1,5 @@
 #[starknet::component]
 pub mod SoulboundComponent {
-
     use starknet::ContractAddress;
     use openzeppelin_token::erc721::ERC721Component;
 
@@ -11,7 +10,7 @@ pub mod SoulboundComponent {
     pub struct Storage {}
 
     impl SoulboundHooksImpl<
-        TContractState, 
+        TContractState,
         +HasComponent<TContractState>,
         impl Token: TokenComponent::HasComponent<TContractState>,
     > of ERC721Component::ERC721HooksTrait<ComponentState<TContractState>> {
@@ -24,7 +23,8 @@ pub mod SoulboundComponent {
             // Check if this is a transfer (not a mint) and if token is soulbound
             if !auth.is_zero() && !to.is_zero() { // This is a transfer, not a mint
                 let token_component = get_dep_component_mut!(ref self, Token);
-                let token_metadata: TokenMetadata = token_component.get_token_metadata(token_id.try_into().unwrap());
+                let token_metadata: TokenMetadata = token_component
+                    .get_token_metadata(token_id.try_into().unwrap());
 
                 assert!(
                     !token_metadata.soulbound,

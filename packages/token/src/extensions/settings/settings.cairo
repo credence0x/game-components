@@ -3,7 +3,9 @@ pub mod TokenSettingsComponent {
     use starknet::{ContractAddress, get_caller_address};
     use crate::token::TokenComponent;
 
-    use crate::extensions::settings::interface::{IMinigameTokenSettings, IMINIGAME_TOKEN_SETTINGS_ID};
+    use crate::extensions::settings::interface::{
+        IMinigameTokenSettings, IMINIGAME_TOKEN_SETTINGS_ID,
+    };
 
     use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
     use game_components_minigame::extensions::settings::structs::GameSetting;
@@ -46,9 +48,7 @@ pub mod TokenSettingsComponent {
             description: ByteArray,
             settings_data: Span<GameSetting>,
         ) {
-            let minigame_dispatcher = IMinigameDispatcher {
-                contract_address: game_address
-            };
+            let minigame_dispatcher = IMinigameDispatcher { contract_address: game_address };
             let settings_address = minigame_dispatcher.settings_address();
             let settings_address_display: felt252 = settings_address.into();
             let caller = get_caller_address();
@@ -58,15 +58,17 @@ pub mod TokenSettingsComponent {
                 settings_address_display,
             );
 
-            self.emit(
-                SettingsCreated { 
-                    game_address,
-                    settings_id, 
-                    created_by: caller,
-                    name, 
-                    description, 
-                    settings_data,
-            });
+            self
+                .emit(
+                    SettingsCreated {
+                        game_address,
+                        settings_id,
+                        created_by: caller,
+                        name,
+                        description,
+                        settings_data,
+                    },
+                );
         }
     }
 

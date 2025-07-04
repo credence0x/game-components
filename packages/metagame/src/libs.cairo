@@ -1,5 +1,7 @@
 use game_components_token::interface::{IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait};
-use game_components_token::extensions::multi_game::interface::{IMinigameTokenMultiGameDispatcher, IMinigameTokenMultiGameDispatcherTrait};
+use game_components_token::extensions::multi_game::interface::{
+    IMinigameTokenMultiGameDispatcher, IMinigameTokenMultiGameDispatcherTrait,
+};
 use game_components_metagame::extensions::context::structs::GameContextDetails;
 use starknet::ContractAddress;
 
@@ -11,7 +13,9 @@ use starknet::ContractAddress;
 pub fn assert_game_registered(
     minigame_token_address: ContractAddress, game_address: ContractAddress,
 ) {
-    let minigame_token_dispatcher = IMinigameTokenMultiGameDispatcher { contract_address: minigame_token_address };
+    let minigame_token_dispatcher = IMinigameTokenMultiGameDispatcher {
+        contract_address: minigame_token_address,
+    };
     let game_exists = minigame_token_dispatcher.is_game_registered(game_address);
     assert!(game_exists, "Game is not registered");
 }

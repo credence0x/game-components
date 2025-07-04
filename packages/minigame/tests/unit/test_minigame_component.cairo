@@ -1,10 +1,17 @@
-use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait, IMINIGAME_ID};
-use game_components_minigame::interface::{IMinigameTokenDataDispatcher, IMinigameTokenDataDispatcherTrait};
+use game_components_minigame::interface::{
+    IMinigameDispatcher, IMinigameDispatcherTrait, IMINIGAME_ID,
+};
+use game_components_minigame::interface::{
+    IMinigameTokenDataDispatcher, IMinigameTokenDataDispatcherTrait,
+};
 use game_components_token::interface::{IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait};
 use openzeppelin_introspection::interface::{ISRC5Dispatcher, ISRC5DispatcherTrait};
 use starknet::{contract_address_const, get_caller_address};
 use core::num::traits::Zero;
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address, stop_cheat_caller_address};
+use snforge_std::{
+    declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address,
+    stop_cheat_caller_address,
+};
 
 // Interface for testing internal functions
 #[starknet::interface]
@@ -21,22 +28,22 @@ fn test_initialize_with_all_addresses() {
     let token_address = contract_address_const::<0x123>();
     let settings_address = contract_address_const::<0x456>();
     let objectives_address = contract_address_const::<0x789>();
-    
+
     // Deploy the MockMinigameContract
     let contract = declare("MockMinigameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(token_address.into());
     calldata.append(settings_address.into());
     calldata.append(objectives_address.into());
-    
+
     let (contract_address, _) = contract.deploy(@calldata).unwrap();
     let dispatcher = IMinigameDispatcher { contract_address };
-    
+
     // Verify addresses are stored correctly
     assert!(dispatcher.token_address() == token_address, "Token address mismatch");
     assert!(dispatcher.settings_address() == settings_address, "Settings address mismatch");
     assert!(dispatcher.objectives_address() == objectives_address, "Objectives address mismatch");
-    
+
     // Verify SRC5 interface registration
     let src5_dispatcher = ISRC5Dispatcher { contract_address };
     assert!(src5_dispatcher.supports_interface(IMINIGAME_ID), "Should support IMinigame interface");
@@ -48,17 +55,17 @@ fn test_initialize_with_optional_zero() {
     let token_address = contract_address_const::<0xABC>();
     let settings_address = contract_address_const::<0x0>(); // Zero address
     let objectives_address = contract_address_const::<0x0>(); // Zero address
-    
+
     // Deploy the MockMinigameContract
     let contract = declare("MockMinigameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(token_address.into());
     calldata.append(settings_address.into());
     calldata.append(objectives_address.into());
-    
+
     let (contract_address, _) = contract.deploy(@calldata).unwrap();
     let dispatcher = IMinigameDispatcher { contract_address };
-    
+
     // Verify addresses
     assert!(dispatcher.token_address() == token_address, "Token address mismatch");
     assert!(dispatcher.settings_address().is_zero(), "Settings address should be zero");
@@ -69,17 +76,17 @@ fn test_initialize_with_optional_zero() {
 #[test]
 fn test_get_token_address() {
     let token_address = contract_address_const::<0x111>();
-    
+
     // Deploy the MockMinigameContract
     let contract = declare("MockMinigameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(token_address.into());
     calldata.append(contract_address_const::<0x0>().into());
     calldata.append(contract_address_const::<0x0>().into());
-    
+
     let (contract_address, _) = contract.deploy(@calldata).unwrap();
     let dispatcher = IMinigameDispatcher { contract_address };
-    
+
     // Verify token_address returns correct value
     assert!(dispatcher.token_address() == token_address, "Token address mismatch");
 }
@@ -88,17 +95,17 @@ fn test_get_token_address() {
 #[test]
 fn test_get_settings_address() {
     let settings_address = contract_address_const::<0x222>();
-    
+
     // Deploy the MockMinigameContract
     let contract = declare("MockMinigameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(contract_address_const::<0x111>().into());
     calldata.append(settings_address.into());
     calldata.append(contract_address_const::<0x0>().into());
-    
+
     let (contract_address, _) = contract.deploy(@calldata).unwrap();
     let dispatcher = IMinigameDispatcher { contract_address };
-    
+
     // Verify settings_address returns correct value
     assert!(dispatcher.settings_address() == settings_address, "Settings address mismatch");
 }
@@ -107,17 +114,17 @@ fn test_get_settings_address() {
 #[test]
 fn test_get_objectives_address() {
     let objectives_address = contract_address_const::<0x333>();
-    
+
     // Deploy the MockMinigameContract
     let contract = declare("MockMinigameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(contract_address_const::<0x111>().into());
     calldata.append(contract_address_const::<0x0>().into());
     calldata.append(objectives_address.into());
-    
+
     let (contract_address, _) = contract.deploy(@calldata).unwrap();
     let dispatcher = IMinigameDispatcher { contract_address };
-    
+
     // Verify objectives_address returns correct value
     assert!(dispatcher.objectives_address() == objectives_address, "Objectives address mismatch");
 }
@@ -128,38 +135,39 @@ fn test_pre_action_with_owned_token() {
     // Deploy mock token contract
     let token_contract = declare("MockMinigameToken").unwrap().contract_class();
     let (token_address, _) = token_contract.deploy(@array![]).unwrap();
-    
+
     // Deploy minigame contract
     let minigame_contract = declare("MockMinigameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(token_address.into());
     calldata.append(contract_address_const::<0x0>().into());
     calldata.append(contract_address_const::<0x0>().into());
-    
+
     let (minigame_address, _) = minigame_contract.deploy(@calldata).unwrap();
     let mock_dispatcher = IMockMinigameDispatcher { contract_address: minigame_address };
-    
+
     // Mint a token to ensure it exists and is playable
-    let token_dispatcher = game_components_token::interface::IMinigameTokenDispatcher { 
-        contract_address: token_address 
+    let token_dispatcher = game_components_token::interface::IMinigameTokenDispatcher {
+        contract_address: token_address,
     };
     let owner_address = get_caller_address(); // Get the current test caller
-    token_dispatcher.mint(
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        owner_address,
-        false
-    );
-    
+    token_dispatcher
+        .mint(
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            owner_address,
+            false,
+        );
+
     // No need to cheat caller address since we minted to the current caller
-    
+
     // Should succeed with owned token
     mock_dispatcher.pre_action(1);
 }
@@ -170,36 +178,37 @@ fn test_pre_action_with_unowned_but_playable_token() {
     // Deploy mock token contract
     let token_contract = declare("MockMinigameToken").unwrap().contract_class();
     let (token_address, _) = token_contract.deploy(@array![]).unwrap();
-    
+
     // Deploy minigame contract
     let minigame_contract = declare("MockMinigameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(token_address.into());
     calldata.append(contract_address_const::<0x0>().into());
     calldata.append(contract_address_const::<0x0>().into());
-    
+
     let (minigame_address, _) = minigame_contract.deploy(@calldata).unwrap();
     let mock_dispatcher = IMockMinigameDispatcher { contract_address: minigame_address };
-    
+
     // Mint a token to a different owner
-    let token_dispatcher = game_components_token::interface::IMinigameTokenDispatcher { 
-        contract_address: token_address 
+    let token_dispatcher = game_components_token::interface::IMinigameTokenDispatcher {
+        contract_address: token_address,
     };
     let other_owner = contract_address_const::<0x888>();
-    token_dispatcher.mint(
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        other_owner,
-        false
-    );
-    
+    token_dispatcher
+        .mint(
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            other_owner,
+            false,
+        );
+
     // pre_action only checks playability, not ownership - should succeed
     let different_caller = contract_address_const::<0x777>();
     start_cheat_caller_address(minigame_address, different_caller);
@@ -213,40 +222,41 @@ fn test_pre_action_with_unowned_but_playable_token() {
 fn test_pre_action_with_expired_token() {
     // This test would require a token that is expired
     // For now, we'll use a mock that returns false for is_playable
-    
+
     // Deploy mock token contract
     let token_contract = declare("MockMinigameTokenUnplayable").unwrap().contract_class();
     let (token_address, _) = token_contract.deploy(@array![]).unwrap();
-    
+
     // Deploy minigame contract
     let minigame_contract = declare("MockMinigameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(token_address.into());
     calldata.append(contract_address_const::<0x0>().into());
     calldata.append(contract_address_const::<0x0>().into());
-    
+
     let (minigame_address, _) = minigame_contract.deploy(@calldata).unwrap();
     let mock_dispatcher = IMockMinigameDispatcher { contract_address: minigame_address };
-    
+
     // Mint a token first - the MockMinigameTokenUnplayable always returns false for is_playable
-    let token_dispatcher = game_components_token::interface::IMinigameTokenDispatcher { 
-        contract_address: token_address 
+    let token_dispatcher = game_components_token::interface::IMinigameTokenDispatcher {
+        contract_address: token_address,
     };
     let owner_address = get_caller_address();
-    token_dispatcher.mint(
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        owner_address,
-        false
-    );
-    
+    token_dispatcher
+        .mint(
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            owner_address,
+            false,
+        );
+
     // Should panic because token is not playable
     mock_dispatcher.pre_action(1);
 }
@@ -257,40 +267,41 @@ fn test_pre_action_with_expired_token() {
 fn test_pre_action_with_game_over_token() {
     // This would require a token with game_over = true
     // Similar setup to expired token test
-    
+
     // Deploy mock token contract
     let token_contract = declare("MockMinigameTokenGameOver").unwrap().contract_class();
     let (token_address, _) = token_contract.deploy(@array![]).unwrap();
-    
+
     // Deploy minigame contract
     let minigame_contract = declare("MockMinigameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(token_address.into());
     calldata.append(contract_address_const::<0x0>().into());
     calldata.append(contract_address_const::<0x0>().into());
-    
+
     let (minigame_address, _) = minigame_contract.deploy(@calldata).unwrap();
     let mock_dispatcher = IMockMinigameDispatcher { contract_address: minigame_address };
-    
+
     // Mint a token first - the MockMinigameTokenGameOver has game_over = true
-    let token_dispatcher = game_components_token::interface::IMinigameTokenDispatcher { 
-        contract_address: token_address 
+    let token_dispatcher = game_components_token::interface::IMinigameTokenDispatcher {
+        contract_address: token_address,
     };
     let owner_address = get_caller_address();
-    token_dispatcher.mint(
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        Option::None,
-        owner_address,
-        false
-    );
-    
+    token_dispatcher
+        .mint(
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            owner_address,
+            false,
+        );
+
     // Should panic because game is over
     mock_dispatcher.pre_action(1);
 }
@@ -301,22 +312,21 @@ fn test_post_action_triggers_update() {
     // Deploy mock token contract
     let token_contract = declare("MockMinigameToken").unwrap().contract_class();
     let (token_address, _) = token_contract.deploy(@array![]).unwrap();
-    
+
     // Deploy minigame contract
     let minigame_contract = declare("MockMinigameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(token_address.into());
     calldata.append(contract_address_const::<0x0>().into());
     calldata.append(contract_address_const::<0x0>().into());
-    
+
     let (minigame_address, _) = minigame_contract.deploy(@calldata).unwrap();
     let mock_dispatcher = IMockMinigameDispatcher { contract_address: minigame_address };
-    
+
     // Call post_action - should trigger update_game on token
     mock_dispatcher.post_action(1);
-    
     // In a real test, we would verify that update_game was called
-    // For now, just verify no panic
+// For now, just verify no panic
 }
 
 // Test MN-U-11: get_player_name
@@ -325,20 +335,20 @@ fn test_get_player_name() {
     // Deploy mock token contract
     let token_contract = declare("MockMinigameToken").unwrap().contract_class();
     let (token_address, _) = token_contract.deploy(@array![]).unwrap();
-    
+
     // Deploy minigame contract
     let minigame_contract = declare("MockMinigameContract").unwrap().contract_class();
     let mut calldata = array![];
     calldata.append(token_address.into());
     calldata.append(contract_address_const::<0x0>().into());
     calldata.append(contract_address_const::<0x0>().into());
-    
+
     let (minigame_address, _) = minigame_contract.deploy(@calldata).unwrap();
     let mock_dispatcher = IMockMinigameDispatcher { contract_address: minigame_address };
-    
+
     // Get player name for token
     let name = mock_dispatcher.get_player_name(1);
-    
+
     // MockMinigameToken returns empty string
     assert!(name == "", "Player name should be empty");
 }
@@ -352,10 +362,10 @@ fn test_minigame_token_data_score() {
     calldata.append(contract_address_const::<0x111>().into());
     calldata.append(contract_address_const::<0x0>().into());
     calldata.append(contract_address_const::<0x0>().into());
-    
+
     let (minigame_address, _) = minigame_contract.deploy(@calldata).unwrap();
     let token_data_dispatcher = IMinigameTokenDataDispatcher { contract_address: minigame_address };
-    
+
     // Check score
     let score = token_data_dispatcher.score(1);
     assert!(score == 0, "Initial score should be 0");
@@ -369,10 +379,10 @@ fn test_minigame_token_data_game_over() {
     calldata.append(contract_address_const::<0x111>().into());
     calldata.append(contract_address_const::<0x0>().into());
     calldata.append(contract_address_const::<0x0>().into());
-    
+
     let (minigame_address, _) = minigame_contract.deploy(@calldata).unwrap();
     let token_data_dispatcher = IMinigameTokenDataDispatcher { contract_address: minigame_address };
-    
+
     // Check game over status
     let game_over = token_data_dispatcher.game_over(1);
     assert!(!game_over, "Initial game_over should be false");
@@ -402,7 +412,7 @@ mod MockMinigameContract {
         ref self: ContractState,
         token_address: ContractAddress,
         settings_address: ContractAddress,
-        objectives_address: ContractAddress
+        objectives_address: ContractAddress,
     ) {
         // Initialize with simplified parameters for testing
         self.token_address.write(token_address);
@@ -430,8 +440,8 @@ mod MockMinigameContract {
     #[abi(embed_v0)]
     impl SRC5Impl of ISRC5<ContractState> {
         fn supports_interface(self: @ContractState, interface_id: felt252) -> bool {
-            interface_id == IMINIGAME_ID ||
-            interface_id == openzeppelin_introspection::interface::ISRC5_ID
+            interface_id == IMINIGAME_ID
+                || interface_id == openzeppelin_introspection::interface::ISRC5_ID
         }
     }
 
@@ -473,7 +483,10 @@ mod MockMinigameContractWithScore {
     use game_components_minigame::interface::{IMinigame, IMinigameTokenData, IMINIGAME_ID};
     use openzeppelin_introspection::interface::ISRC5;
     use starknet::ContractAddress;
-    use starknet::storage::{Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess, StoragePointerWriteAccess};
+    use starknet::storage::{
+        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+        StoragePointerWriteAccess,
+    };
 
     #[storage]
     struct Storage {
@@ -494,7 +507,7 @@ mod MockMinigameContractWithScore {
         ref self: ContractState,
         token_address: ContractAddress,
         settings_address: ContractAddress,
-        objectives_address: ContractAddress
+        objectives_address: ContractAddress,
     ) {
         self.token_address.write(token_address);
         self.settings_address.write(settings_address);
@@ -521,8 +534,8 @@ mod MockMinigameContractWithScore {
     #[abi(embed_v0)]
     impl SRC5Impl of ISRC5<ContractState> {
         fn supports_interface(self: @ContractState, interface_id: felt252) -> bool {
-            interface_id == IMINIGAME_ID ||
-            interface_id == openzeppelin_introspection::interface::ISRC5_ID
+            interface_id == IMINIGAME_ID
+                || interface_id == openzeppelin_introspection::interface::ISRC5_ID
         }
     }
 
@@ -572,8 +585,12 @@ mod MockMinigameTokenUnplayable {
             false // Always return false for testing
         }
 
-        fn settings_id(self: @ContractState, token_id: u64) -> u32 { 0 }
-        fn player_name(self: @ContractState, token_id: u64) -> ByteArray { "" }
+        fn settings_id(self: @ContractState, token_id: u64) -> u32 {
+            0
+        }
+        fn player_name(self: @ContractState, token_id: u64) -> ByteArray {
+            ""
+        }
 
         fn mint(
             ref self: ContractState,
@@ -587,12 +604,14 @@ mod MockMinigameTokenUnplayable {
             client_url: Option<ByteArray>,
             renderer_address: Option<ContractAddress>,
             to: ContractAddress,
-            soulbound: bool
-        ) -> u64 { 1 }
+            soulbound: bool,
+        ) -> u64 {
+            1
+        }
 
         fn update_game(ref self: ContractState, token_id: u64) {}
     }
-    
+
     // Implement IERC721 for ownership checks
     #[abi(embed_v0)]
     impl ERC721Impl of IERC721<ContractState> {
@@ -605,17 +624,17 @@ mod MockMinigameTokenUnplayable {
             from: ContractAddress,
             to: ContractAddress,
             token_id: u256,
-            data: Span<felt252>
+            data: Span<felt252>,
         ) {}
 
         fn transfer_from(
-            ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256
+            ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256,
         ) {}
 
         fn approve(ref self: ContractState, to: ContractAddress, token_id: u256) {}
 
         fn set_approval_for_all(
-            ref self: ContractState, operator: ContractAddress, approved: bool
+            ref self: ContractState, operator: ContractAddress, approved: bool,
         ) {}
 
         fn get_approved(self: @ContractState, token_id: u256) -> ContractAddress {
@@ -623,7 +642,7 @@ mod MockMinigameTokenUnplayable {
         }
 
         fn is_approved_for_all(
-            self: @ContractState, owner: ContractAddress, operator: ContractAddress
+            self: @ContractState, owner: ContractAddress, operator: ContractAddress,
         ) -> bool {
             false
         }
@@ -667,8 +686,12 @@ mod MockMinigameTokenGameOver {
             false // Game over, not playable
         }
 
-        fn settings_id(self: @ContractState, token_id: u64) -> u32 { 0 }
-        fn player_name(self: @ContractState, token_id: u64) -> ByteArray { "" }
+        fn settings_id(self: @ContractState, token_id: u64) -> u32 {
+            0
+        }
+        fn player_name(self: @ContractState, token_id: u64) -> ByteArray {
+            ""
+        }
 
         fn mint(
             ref self: ContractState,
@@ -682,12 +705,14 @@ mod MockMinigameTokenGameOver {
             client_url: Option<ByteArray>,
             renderer_address: Option<ContractAddress>,
             to: ContractAddress,
-            soulbound: bool
-        ) -> u64 { 1 }
+            soulbound: bool,
+        ) -> u64 {
+            1
+        }
 
         fn update_game(ref self: ContractState, token_id: u64) {}
     }
-    
+
     // Implement IERC721 for ownership checks
     #[abi(embed_v0)]
     impl ERC721Impl of IERC721<ContractState> {
@@ -700,17 +725,17 @@ mod MockMinigameTokenGameOver {
             from: ContractAddress,
             to: ContractAddress,
             token_id: u256,
-            data: Span<felt252>
+            data: Span<felt252>,
         ) {}
 
         fn transfer_from(
-            ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256
+            ref self: ContractState, from: ContractAddress, to: ContractAddress, token_id: u256,
         ) {}
 
         fn approve(ref self: ContractState, to: ContractAddress, token_id: u256) {}
 
         fn set_approval_for_all(
-            ref self: ContractState, operator: ContractAddress, approved: bool
+            ref self: ContractState, operator: ContractAddress, approved: bool,
         ) {}
 
         fn get_approved(self: @ContractState, token_id: u256) -> ContractAddress {
@@ -718,7 +743,7 @@ mod MockMinigameTokenGameOver {
         }
 
         fn is_approved_for_all(
-            self: @ContractState, owner: ContractAddress, operator: ContractAddress
+            self: @ContractState, owner: ContractAddress, operator: ContractAddress,
         ) -> bool {
             false
         }

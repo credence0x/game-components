@@ -1,5 +1,5 @@
 //! Example implementations showing how to use the token mixin interface
-//! 
+//!
 //! This demonstrates two approaches:
 //! 1. Full Token Contract - implements the complete IMinigameTokenABI using component composition
 //! 2. Simple Token Contract - implements individual components separately
@@ -9,20 +9,22 @@
 #[starknet::contract]
 pub mod FullTokenContract {
     use starknet::{ContractAddress, get_caller_address};
-    
+
     // Import the mixin interface and components
     use game_components_token::mixin::{IMinigameTokenABI, TokenMixinInitParams};
     use game_components_token::mixin::{
-        TokenComponent, MultiGameComponent, TokenObjectivesComponent,
-        ERC721Component, SRC5Component,
-        IMINIGAME_TOKEN_ID, IMINIGAME_TOKEN_MULTIGAME_ID, IMINIGAME_TOKEN_OBJECTIVES_ID,
-        IMINIGAME_TOKEN_SETTINGS_ID, IMINIGAME_TOKEN_MINTER_ID, IMINIGAME_TOKEN_SOULBOUND_ID
+        TokenComponent, MultiGameComponent, TokenObjectivesComponent, ERC721Component,
+        SRC5Component, IMINIGAME_TOKEN_ID, IMINIGAME_TOKEN_MULTIGAME_ID,
+        IMINIGAME_TOKEN_OBJECTIVES_ID, IMINIGAME_TOKEN_SETTINGS_ID, IMINIGAME_TOKEN_MINTER_ID,
+        IMINIGAME_TOKEN_SOULBOUND_ID,
     };
 
     // Component declarations
     component!(path: TokenComponent, storage: token, event: TokenEvent);
     component!(path: MultiGameComponent, storage: multi_game, event: MultiGameEvent);
-    component!(path: TokenObjectivesComponent, storage: token_objectives, event: TokenObjectivesEvent);
+    component!(
+        path: TokenObjectivesComponent, storage: token_objectives, event: TokenObjectivesEvent,
+    );
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
     component!(path: ERC721Component, storage: erc721, event: ERC721Event);
 
@@ -32,7 +34,8 @@ pub mod FullTokenContract {
     #[abi(embed_v0)]
     impl MultiGameImpl = MultiGameComponent::MultiGameImpl<ContractState>;
     #[abi(embed_v0)]
-    impl TokenObjectivesImpl = TokenObjectivesComponent::TokenObjectivesImpl<ContractState>;
+    impl TokenObjectivesImpl =
+        TokenObjectivesComponent::TokenObjectivesImpl<ContractState>;
     #[abi(embed_v0)]
     impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
     #[abi(embed_v0)]
@@ -109,18 +112,16 @@ pub mod FullTokenContract {
             ref self: ERC721Component::ComponentState<ContractState>,
             to: ContractAddress,
             token_id: u256,
-            auth: ContractAddress
-        ) {
-            // Add any pre-transfer logic here
+            auth: ContractAddress,
+        ) { // Add any pre-transfer logic here
         }
 
         fn after_update(
             ref self: ERC721Component::ComponentState<ContractState>,
             to: ContractAddress,
             token_id: u256,
-            auth: ContractAddress
-        ) {
-            // Add any post-transfer logic here
+            auth: ContractAddress,
+        ) { // Add any post-transfer logic here
         }
     }
 }
@@ -130,7 +131,7 @@ pub mod FullTokenContract {
 #[starknet::contract]
 pub mod SimpleTokenContract {
     use starknet::{ContractAddress, get_caller_address};
-    
+
     // Core imports
     use game_components_token::token::TokenComponent;
     use game_components_token::extensions::objectives::objectives::TokenObjectivesComponent;
@@ -143,7 +144,9 @@ pub mod SimpleTokenContract {
 
     // Component declarations
     component!(path: TokenComponent, storage: token, event: TokenEvent);
-    component!(path: TokenObjectivesComponent, storage: token_objectives, event: TokenObjectivesEvent);
+    component!(
+        path: TokenObjectivesComponent, storage: token_objectives, event: TokenObjectivesEvent,
+    );
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
     component!(path: ERC721Component, storage: erc721, event: ERC721Event);
 
@@ -151,7 +154,8 @@ pub mod SimpleTokenContract {
     #[abi(embed_v0)]
     impl TokenImpl = TokenComponent::TokenImpl<ContractState>;
     #[abi(embed_v0)]
-    impl TokenObjectivesImpl = TokenObjectivesComponent::TokenObjectivesImpl<ContractState>;
+    impl TokenObjectivesImpl =
+        TokenObjectivesComponent::TokenObjectivesImpl<ContractState>;
     #[abi(embed_v0)]
     impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
     #[abi(embed_v0)]
@@ -201,9 +205,9 @@ pub mod SimpleTokenContract {
         // Initialize ERC721
         self.erc721.initializer(name, symbol, base_uri);
 
-        // Initialize token component  
+        // Initialize token component
         self.token.initializer(game_address);
-        
+
         // Initialize objectives component
         self.token_objectives.initializer();
     }
@@ -214,19 +218,17 @@ pub mod SimpleTokenContract {
             ref self: ERC721Component::ComponentState<ContractState>,
             to: ContractAddress,
             token_id: u256,
-            auth: ContractAddress
-        ) {
-            // Example: Add soulbound token validation here
-            // Check if token is soulbound and prevent transfers
+            auth: ContractAddress,
+        ) { // Example: Add soulbound token validation here
+        // Check if token is soulbound and prevent transfers
         }
 
         fn after_update(
             ref self: ERC721Component::ComponentState<ContractState>,
             to: ContractAddress,
             token_id: u256,
-            auth: ContractAddress
-        ) {
-            // Add any post-transfer logic here
+            auth: ContractAddress,
+        ) { // Add any post-transfer logic here
         }
     }
-} 
+}

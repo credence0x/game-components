@@ -13,4 +13,4 @@ pub trait IMinigameObjectives<TState> {
 #[starknet::interface]
 pub trait IMinigameObjectivesSVG<TState> {
     fn objectives_svg(self: @TState, token_id: u64) -> ByteArray;
-} 
+}
