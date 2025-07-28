@@ -37,11 +37,9 @@ pub trait IMinigameStarknetMockInit<TContractState> {
         game_color: Option<ByteArray>,
         client_url: Option<ByteArray>,
         renderer_address: Option<ContractAddress>,
-        settings_address: ContractAddress,
-        objectives_address: ContractAddress,
+        settings_address: Option<ContractAddress>,
+        objectives_address: Option<ContractAddress>,
         minigame_token_address: ContractAddress,
-        supports_settings: bool,
-        supports_objectives: bool,
     );
 }
 
@@ -55,28 +53,28 @@ pub mod minigame_starknet_mock {
         IMinigameSettings, IMINIGAME_SETTINGS_ID,
     };
     use game_components_minigame::minigame::MinigameComponent;
-    use game_components_minigame::extensions::objectives::objectives::objectives_component;
-    use game_components_minigame::extensions::settings::settings::settings_component;
+    use game_components_minigame::extensions::objectives::objectives::ObjectivesComponent;
+    use game_components_minigame::extensions::settings::settings::SettingsComponent;
     use game_components_minigame::structs::GameDetail;
     use game_components_minigame::extensions::settings::structs::{GameSetting, GameSettingDetails};
     use game_components_minigame::extensions::objectives::structs::GameObjective;
     use openzeppelin_introspection::src5::SRC5Component;
 
-    use starknet::ContractAddress;
+    use starknet::{ContractAddress, get_contract_address};
     use starknet::storage::{
         StoragePointerReadAccess, StoragePointerWriteAccess, Map, StoragePathEntry,
     };
 
     component!(path: MinigameComponent, storage: minigame, event: MinigameEvent);
-    component!(path: objectives_component, storage: objectives, event: ObjectivesEvent);
-    component!(path: settings_component, storage: settings, event: SettingsEvent);
+    component!(path: ObjectivesComponent, storage: objectives, event: ObjectivesEvent);
+    component!(path: SettingsComponent, storage: settings, event: SettingsEvent);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
 
     #[abi(embed_v0)]
     impl MinigameImpl = MinigameComponent::MinigameImpl<ContractState>;
     impl MinigameInternalImpl = MinigameComponent::InternalImpl<ContractState>;
-    impl ObjectivesInternalImpl = objectives_component::InternalImpl<ContractState>;
-    impl SettingsInternalImpl = settings_component::InternalImpl<ContractState>;
+    impl ObjectivesInternalImpl = ObjectivesComponent::InternalImpl<ContractState>;
+    impl SettingsInternalImpl = SettingsComponent::InternalImpl<ContractState>;
 
     #[abi(embed_v0)]
     impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
@@ -86,9 +84,9 @@ pub mod minigame_starknet_mock {
         #[substorage(v0)]
         minigame: MinigameComponent::Storage,
         #[substorage(v0)]
-        objectives: objectives_component::Storage,
+        objectives: ObjectivesComponent::Storage,
         #[substorage(v0)]
-        settings: settings_component::Storage,
+        settings: SettingsComponent::Storage,
         #[substorage(v0)]
         src5: SRC5Component::Storage,
         // Token data storage
@@ -116,9 +114,9 @@ pub mod minigame_starknet_mock {
         #[flat]
         MinigameEvent: MinigameComponent::Event,
         #[flat]
-        ObjectivesEvent: objectives_component::Event,
+        ObjectivesEvent: ObjectivesComponent::Event,
         #[flat]
-        SettingsEvent: settings_component::Event,
+        SettingsEvent: SettingsComponent::Event,
         #[flat]
         SRC5Event: SRC5Component::Event,
     }
@@ -316,15 +314,32 @@ pub mod minigame_starknet_mock {
             game_color: Option<ByteArray>,
             client_url: Option<ByteArray>,
             renderer_address: Option<ContractAddress>,
-            settings_address: ContractAddress,
-            objectives_address: ContractAddress,
+            settings_address: Option<ContractAddress>,
+            objectives_address: Option<ContractAddress>,
             minigame_token_address: ContractAddress,
-            supports_settings: bool,
-            supports_objectives: bool,
         ) {
-            // Initialize storage counters
-            self.settings_count.write(0);
-            self.objective_count.write(0);
+            // Initialize optional features - these will only compile if the contract implements the
+            // required traits
+            let settings_address = match settings_address {
+                Option::Some(address) => {
+                    self.settings.initializer();
+                    Option::Some(address)
+                },
+                Option::None => {
+                    self.settings.initializer();
+                    Option::Some(get_contract_address())
+                },
+            };
+            let objectives_address = match objectives_address {
+                Option::Some(address) => {
+                    self.objectives.initializer();
+                    Option::Some(address)
+                },
+                Option::None => {
+                    self.objectives.initializer();
+                    Option::Some(get_contract_address())
+                },
+            };
 
             // Initialize the base minigame component
             self
@@ -344,15 +359,6 @@ pub mod minigame_starknet_mock {
                     objectives_address,
                     minigame_token_address,
                 );
-
-            // Initialize optional features - these will only compile if the contract implements the
-            // required traits
-            if supports_settings {
-                self.settings.initializer();
-            }
-            if supports_objectives {
-                self.objectives.initializer();
-            }
         }
     }
 
