@@ -78,7 +78,7 @@ pub mod CoreTokenComponent {
 
     #[derive(Drop, starknet::Event)]
     pub struct MetadataUpdate {
-        pub token_id: u64,
+        pub token_id: u256,
     }
 
     #[derive(Drop, starknet::Event)]
@@ -627,7 +627,7 @@ pub mod CoreTokenComponent {
                             token_metadata.objectives_count,
                         );
                 }
-                self.emit_metadata_update(token_id);
+                self.emit_metadata_update(token_id.into());
             }
 
             // Always emit score update
@@ -777,7 +777,7 @@ pub mod CoreTokenComponent {
             }
         }
 
-        fn emit_metadata_update(ref self: ComponentState<TContractState>, token_id: u64) {
+        fn emit_metadata_update(ref self: ComponentState<TContractState>, token_id: u256) {
             self.emit(MetadataUpdate { token_id });
         }
 
