@@ -77,12 +77,15 @@ pub mod SettingsComponent {
                 contract_address: get_contract_address(),
             };
             let is_single_game = game_address == minigame_token_dispatcher.game_address();
+            let mut is_multi_game = false;
             let game_registry_address = minigame_token_dispatcher.game_registry_address();
-            let game_registry_dispatcher = IMinigameRegistryDispatcher {
-                contract_address: game_registry_address,
-            };
-            let game_id = game_registry_dispatcher.game_id_from_address(game_address);
-            let is_multi_game = game_id != 0;
+            if !game_registry_address.is_zero() {
+                let game_registry_dispatcher = IMinigameRegistryDispatcher {
+                    contract_address: game_registry_address,
+                };
+                let game_id = game_registry_dispatcher.game_id_from_address(game_address);
+                is_multi_game = game_id != 0;
+            }
             let game_address_display: felt252 = game_address.into();
             assert!(
                 is_single_game || is_multi_game,

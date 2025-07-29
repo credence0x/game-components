@@ -291,6 +291,7 @@ pub mod minigame_starknet_mock {
             self
                 .settings
                 .create_settings(
+                    get_contract_address(),
                     new_settings_id,
                     name,
                     description,

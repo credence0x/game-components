@@ -41,6 +41,7 @@ pub mod SettingsComponent {
 
         fn create_settings(
             self: @ComponentState<TContractState>,
+            game_address: ContractAddress,
             settings_id: u32,
             name: ByteArray,
             description: ByteArray,
@@ -49,7 +50,7 @@ pub mod SettingsComponent {
         ) {
             libs::create_settings(
                 minigame_token_address,
-                get_contract_address(),
+                game_address,
                 get_caller_address(),
                 settings_id,
                 name,
