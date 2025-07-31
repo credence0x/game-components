@@ -78,6 +78,7 @@ pub mod CoreTokenComponent {
 
     #[derive(Drop, starknet::Event)]
     pub struct MetadataUpdate {
+        #[key]
         pub token_id: u256,
     }
 

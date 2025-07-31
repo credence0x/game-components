@@ -1,3 +1,4 @@
+use core::num::traits::Zero;
 use game_components_token::core::interface::{
     IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait,
 };
@@ -27,6 +28,24 @@ pub fn post_action(minigame_token_address: ContractAddress, token_id: u64) {
         contract_address: minigame_token_address,
     };
     minigame_token_dispatcher.update_game(token_id);
+}
+
+/// Asserts that the specified token is owned by someone
+/// 
+/// # Arguments
+/// * `minigame_token_address` - The address of the minigame token contract
+/// * `token_id` - The token ID to check ownership for
+pub fn require_owned_token(
+    minigame_token_address: ContractAddress,
+    token_id: u64,
+) {
+    let erc721_dispatcher = IERC721Dispatcher { contract_address: minigame_token_address };
+    let token_owner = erc721_dispatcher.owner_of(token_id.into());
+    assert!(
+        !token_owner.is_zero(),
+        "Token {} does not exist or is not owned by anyone",
+        token_id,
+    );
 }
 
 /// Asserts that the caller owns the specified token

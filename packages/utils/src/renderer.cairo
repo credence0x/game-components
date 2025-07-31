@@ -5,6 +5,7 @@ use core::traits::Into;
 use core::num::traits::Zero;
 use crate::encoding::{U256BytesUsedTraitImpl, bytes_base64_encode};
 use graffiti::json::JsonImpl;
+use game_components_minigame::structs::GameDetail;
 
 fn logo(image: ByteArray) -> ByteArray {
     format!(
@@ -160,10 +161,71 @@ pub fn create_metadata(
     format!("data:application/json;base64,{}", bytes_base64_encode(metadata))
 }
 
+pub fn create_custom_metadata(
+    token_id: u64,
+    token_description: ByteArray,
+    game_name: ByteArray,
+    game_developer: ByteArray,
+    game_details_image: ByteArray,
+    game_details: Span<GameDetail>,
+    score: u32,
+    state: u8,
+    player_name: ByteArray,
+) -> ByteArray {
+    let _score = format!("{}", score);
+
+    let _game_id = format!("{}", token_id);
+
+    let mut metadata = JsonImpl::new()
+        .add("name", "Game" + " #" + _game_id)
+        .add("description", token_description)
+        .add("image", game_details_image);
+
+    let name: ByteArray = JsonImpl::new().add("trait", "Game").add("value", game_name).build();
+    let developer: ByteArray = JsonImpl::new()
+        .add("trait", "Developer")
+        .add("value", game_developer)
+        .build();
+    let score: ByteArray = JsonImpl::new().add("trait", "Score").add("value", _score).build();
+    let state: ByteArray = JsonImpl::new()
+        .add("trait", "State")
+        .add("value", game_state(state))
+        .build();
+    let player_name: ByteArray = JsonImpl::new()
+        .add("trait", "Player Name")
+        .add("value", player_name)
+        .build();
+
+    let mut attributes = array![name, developer, score, state];
+
+    if player_name.len() == 0 {
+        attributes.append(player_name);
+    }
+
+    let mut game_details_index = 0;
+    loop {
+        if game_details_index == game_details.len() {
+            break;
+        }
+
+        let game_detail = game_details.at(game_details_index);
+
+        let game_detail_trait: ByteArray = JsonImpl::new().add("trait", game_detail.name.clone()).add("value", game_detail.value.clone()).build();
+        attributes.append(game_detail_trait);
+
+        game_details_index += 1;
+    };
+
+    let metadata = metadata.add_array("attributes", attributes.span()).build();
+
+    format!("data:application/json;base64,{}", bytes_base64_encode(metadata))
+}
 
 #[cfg(test)]
 mod tests {
-    use super::create_metadata;
+    use super::{create_metadata, create_custom_metadata};
+
+    use game_components_minigame::structs::GameDetail;
 
     #[test]
     fn test_metadata() {
@@ -176,6 +238,32 @@ mod tests {
             100,
             1,
             'test Player',
+        );
+
+        println!("{}", _current_1);
+    }
+
+    #[test]
+    fn test_custom_metadata() {
+        let _current_1 = create_custom_metadata(
+            1000000,
+            "This is a test game token",
+            "zKube",
+            "zKorp",
+            "Test Image",
+            array![
+                GameDetail {
+                    name: "Test Detail 1",
+                    value: "Value 1",
+                },
+                GameDetail {
+                    name: "Test Detail 2",
+                    value: "Value 2",
+                },
+            ].span(),
+            100,
+            1,
+            "test Player",
         );
 
         println!("{}", _current_1);

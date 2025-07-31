@@ -19,23 +19,13 @@ echo "Detected starkli version: $STARKLI_VERSION"
 #     echo ""
 # fi
 
-# Load environment variables from .env file if it exists
-# Check in current directory first, then parent directories
-if [ -f .env ]; then
+# Find .env relative to script location
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/../.env" ]; then
     set -a
-    source .env
+    source "$SCRIPT_DIR/../.env"
     set +a
-    echo "Loaded environment variables from .env file"
-elif [ -f ../.env ]; then
-    set -a
-    source ../.env
-    set +a
-    echo "Loaded environment variables from ../.env file"
-elif [ -f ../../.env ]; then
-    set -a
-    source ../../.env
-    set +a
-    echo "Loaded environment variables from ../../.env file"
+    echo "Loaded environment variables from $SCRIPT_DIR/../.env"
 fi
 
 # Colors for output

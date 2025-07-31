@@ -24,6 +24,9 @@ use crate::examples::minigame_registry_contract::{
 
 use crate::interface::{ITokenEventRelayerDispatcher, ITokenEventRelayerDispatcherTrait};
 
+use game_components_minigame::structs::GameDetail;
+use game_components_utils::renderer::create_custom_metadata;
+
 
 #[starknet::contract]
 pub mod FullTokenContract {
@@ -174,23 +177,78 @@ pub mod FullTokenContract {
                 let game_address = game_registry_dispatcher
                     .game_address_from_id(token_metadata.game_id);
 
-                // Try to call the game contract's token_uri function
-                let selector = selector!("token_uri");
+                // Try to call the game contract's game_details_svg function
+                let score_selector = selector!("score");
+                let token_description_selector = selector!("token_description");
+                let details_svg_selector = selector!("game_details_svg");
+                let details_selector = selector!("game_details");
                 let mut calldata = array![];
                 calldata.append(token_id.low.into());
-                calldata.append(token_id.high.into());
 
-                match call_contract_syscall(game_address, selector, calldata.span()) {
+                let score = match call_contract_syscall(game_address, score_selector, calldata.span()) {
+                    Result::Ok(result) => {
+                        // Try to deserialize the result as u16
+                        let mut result_span = result;
+                        match Serde::<u32>::deserialize(ref result_span) {
+                            Option::Some(score) => score,
+                            Option::None => 0,
+                        }
+                    },
+                    Result::Err(_) => 0,
+                };
+
+                let token_description = match call_contract_syscall(game_address, token_description_selector, calldata.span()) {
                     Result::Ok(result) => {
                         // Try to deserialize the result as ByteArray
                         let mut result_span = result;
                         match Serde::<ByteArray>::deserialize(ref result_span) {
-                            Option::Some(game_uri) => game_uri,
+                            Option::Some(game_details_svg) => game_details_svg,
+                            Option::None => "An NFT representing ownership of an embeddable game.",
+                        }
+                    },
+                    Result::Err(_) => "An NFT representing ownership of an embeddable game.",
+                };
+
+                let game_details_svg = match call_contract_syscall(game_address, details_svg_selector, calldata.span()) {
+                    Result::Ok(result) => {
+                        // Try to deserialize the result as ByteArray
+                        let mut result_span = result;
+                        match Serde::<ByteArray>::deserialize(ref result_span) {
+                            Option::Some(game_details_svg) => game_details_svg,
                             Option::None => "https://denshokan.dev/game/1",
                         }
                     },
                     Result::Err(_) => "https://denshokan.dev/game/1",
-                }
+                };
+                let game_details = match call_contract_syscall(game_address, details_selector, calldata.span()) {
+                    Result::Ok(result) => {
+                        // Try to deserialize the result as ByteArray
+                        let mut result_span = result;
+                        match Serde::<Span<GameDetail>>::deserialize(ref result_span) {
+                            Option::Some(game_details) => game_details,
+                            Option::None => array![].span(),
+                        }
+                    },
+                    Result::Err(_) => array![].span(),
+                };
+                // Return the game details SVG or a default if not available
+                game_details_svg;
+                let game_metadata = game_registry_dispatcher.game_metadata(token_metadata.game_id);
+                let state = 0;
+                let player_name = self
+                    .core_token
+                    .player_name(token_id.try_into().unwrap());
+                create_custom_metadata(
+                    token_id.try_into().unwrap(),
+                    token_description,
+                    game_metadata.name,
+                    game_metadata.developer,
+                    game_details_svg,
+                    game_details,
+                    score,
+                    state,
+                    player_name,
+                )
             } else {
                 // return the blank NFT renderer
                 "https://denshokan.dev/game/1"
