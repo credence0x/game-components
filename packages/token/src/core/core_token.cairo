@@ -628,11 +628,13 @@ pub mod CoreTokenComponent {
                             token_metadata.objectives_count,
                         );
                 }
-                self.emit_metadata_update(token_id.into());
             }
 
             // Always emit score update
             self.emit_score_update(token_id, score.into());
+
+            // Always emit metadata update
+            self.emit_metadata_update(token_id.into());
 
             // Emit game updated event
             self
