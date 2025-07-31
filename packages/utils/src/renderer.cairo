@@ -196,10 +196,10 @@ pub fn create_custom_metadata(
         .add("value", player_name)
         .build();
 
-    let mut attributes = array![name, developer, score, state, player_name];
+    let mut attributes = array![name, developer, score, state, player_name.clone()];
 
-    if player_name.len() == 0 {
-        attributes.append(player_name);
+    if player_name.clone().len() == 0 {
+        attributes.append(player_name.clone());
     }
 
     let mut game_details_index = 0;
