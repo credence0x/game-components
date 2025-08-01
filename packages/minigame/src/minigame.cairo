@@ -166,6 +166,10 @@ pub mod MinigameComponent {
             libs::get_player_name(self.token_address.read(), token_id)
         }
 
+        fn require_owned_token(self: @ComponentState<TContractState>, token_id: u64) {
+            libs::require_owned_token(self.token_address.read(), token_id);
+        }
+
         fn assert_token_ownership(self: @ComponentState<TContractState>, token_id: u64) {
             libs::assert_token_ownership(self.token_address.read(), token_id);
         }

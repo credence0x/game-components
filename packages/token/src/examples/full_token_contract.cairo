@@ -184,7 +184,8 @@ pub mod FullTokenContract {
                 let mut calldata = array![];
                 calldata.append(token_id.low.into());
 
-                let score = match call_contract_syscall(game_address, score_selector, calldata.span()) {
+                let score =
+                    match call_contract_syscall(game_address, score_selector, calldata.span()) {
                     Result::Ok(result) => {
                         // Try to deserialize the result as u32
                         let mut result_span = result;
@@ -196,7 +197,10 @@ pub mod FullTokenContract {
                     Result::Err(_) => 0,
                 };
 
-                let token_description = match call_contract_syscall(game_address, token_description_selector, calldata.span()) {
+                let token_description =
+                    match call_contract_syscall(
+                        game_address, token_description_selector, calldata.span(),
+                    ) {
                     Result::Ok(result) => {
                         // Try to deserialize the result as ByteArray
                         let mut result_span = result;
@@ -208,7 +212,10 @@ pub mod FullTokenContract {
                     Result::Err(_) => "An NFT representing ownership of an embeddable game.",
                 };
 
-                let game_details_svg = match call_contract_syscall(game_address, details_svg_selector, calldata.span()) {
+                let game_details_svg =
+                    match call_contract_syscall(
+                        game_address, details_svg_selector, calldata.span(),
+                    ) {
                     Result::Ok(result) => {
                         // Try to deserialize the result as ByteArray
                         let mut result_span = result;
@@ -220,7 +227,8 @@ pub mod FullTokenContract {
                     Result::Err(_) => "https://denshokan.dev/game/1",
                 };
 
-                let game_details = match call_contract_syscall(game_address, details_selector, calldata.span()) {
+                let game_details =
+                    match call_contract_syscall(game_address, details_selector, calldata.span()) {
                     Result::Ok(result) => {
                         // Try to deserialize the result as Span<GameDetail>
                         let mut result_span = result;
@@ -233,9 +241,7 @@ pub mod FullTokenContract {
                 };
                 let game_metadata = game_registry_dispatcher.game_metadata(token_metadata.game_id);
                 let state = 0;
-                let player_name = self
-                    .core_token
-                    .player_name(token_id.try_into().unwrap());
+                let player_name = self.core_token.player_name(token_id.try_into().unwrap());
 
                 create_custom_metadata(
                     token_id.try_into().unwrap(),
@@ -311,7 +317,9 @@ pub mod FullTokenContract {
     ) {
         // Initialize core components
         self.erc721.initializer(name, symbol, base_uri);
-        self.core_token.initializer(Option::None, Option::None, game_registry_address, event_relayer_address);
+        self
+            .core_token
+            .initializer(Option::None, Option::None, game_registry_address, event_relayer_address);
 
         self.minter.initializer();
         self.objectives.initializer();

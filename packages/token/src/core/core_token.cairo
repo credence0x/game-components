@@ -687,10 +687,12 @@ pub mod CoreTokenComponent {
                 // If no game registry provided, then we know this is a single game token,
                 // so mint token 0 to the creator.
                 assert!(
-                    game_address.is_some(), "CoreToken: Game address must be provided for single game token",
+                    game_address.is_some(),
+                    "CoreToken: Game address must be provided for single game token",
                 );
                 assert!(
-                    creator_address.is_some(), "CoreToken: Creator address must be provided for single game token",
+                    creator_address.is_some(),
+                    "CoreToken: Creator address must be provided for single game token",
                 );
                 let mut contract = self.get_contract_mut();
                 let mut erc721_component = ERC721::get_component_mut(ref contract);

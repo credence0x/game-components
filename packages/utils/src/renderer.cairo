@@ -210,7 +210,10 @@ pub fn create_custom_metadata(
 
         let game_detail = game_details.at(game_details_index);
 
-        let game_detail_trait: ByteArray = JsonImpl::new().add("trait", game_detail.name.clone()).add("value", game_detail.value.clone()).build();
+        let game_detail_trait: ByteArray = JsonImpl::new()
+            .add("trait", game_detail.name.clone())
+            .add("value", game_detail.value.clone())
+            .build();
         attributes.append(game_detail_trait);
 
         game_details_index += 1;
@@ -252,15 +255,10 @@ mod tests {
             "zKorp",
             "Test Image",
             array![
-                GameDetail {
-                    name: "Test Detail 1",
-                    value: "Value 1",
-                },
-                GameDetail {
-                    name: "Test Detail 2",
-                    value: "Value 2",
-                },
-            ].span(),
+                GameDetail { name: "Test Detail 1", value: "Value 1" },
+                GameDetail { name: "Test Detail 2", value: "Value 2" },
+            ]
+                .span(),
             100,
             1,
             "test Player",

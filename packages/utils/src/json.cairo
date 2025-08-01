@@ -137,7 +137,9 @@ mod tests {
             GameContext { name: "Test Context 2", value: "Test Context 2 Value" },
         ]
             .span();
-        let _current_1 = create_context_json("Test App", "Test App Description", Option::Some(1), contexts);
+        let _current_1 = create_context_json(
+            "Test App", "Test App Description", Option::Some(1), contexts,
+        );
         println!("{}", _current_1);
     }
 
@@ -155,7 +157,9 @@ mod tests {
             GameContext { name: "Tournament Id", value: format!("{}", tournament_id) },
         ]
             .span();
-        let context_json = create_context_json("Budokan", "The onchain tournament system", Option::Some(1), context);
+        let context_json = create_context_json(
+            "Budokan", "The onchain tournament system", Option::Some(1), context,
+        );
         println!("Budokan context: {}", context_json);
     }
 
@@ -168,7 +172,10 @@ mod tests {
         ]
             .span();
         let context_json = create_context_json(
-            "Eternum", "Multiplayer Civilization with a real economy that never sleeps", Option::Some(1), context,
+            "Eternum",
+            "Multiplayer Civilization with a real economy that never sleeps",
+            Option::Some(1),
+            context,
         );
         println!("Eternum context: {}", context_json);
     }
