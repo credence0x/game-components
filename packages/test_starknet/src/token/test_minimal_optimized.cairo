@@ -7,11 +7,18 @@ use game_components_token::interface::{
 use openzeppelin_token::erc721::interface::{ERC721ABIDispatcher, ERC721ABIDispatcherTrait};
 
 // Import setup helpers
-use super::setup::{deploy_minimal_optimized_contract, ALICE, BOB};
+use super::setup::{deploy_mock_game, deploy_minimal_optimized_contract, ALICE, BOB};
 
 // Deploy helper
 fn deploy_minimal_token() -> (IMinigameTokenMixinDispatcher, ERC721ABIDispatcher) {
-    deploy_minimal_optimized_contract("MinimalToken", "MIN", "https://minimal.test/")
+    let (minigame_dispatcher, _, _) = deploy_mock_game();
+    deploy_minimal_optimized_contract(
+        "MinimalToken", 
+        "MIN", 
+        "https://minimal.test/",
+        Option::Some(minigame_dispatcher.contract_address), 
+        Option::Some(minigame_dispatcher.contract_address)
+    )
 }
 
 #[test]

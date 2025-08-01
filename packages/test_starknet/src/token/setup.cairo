@@ -204,7 +204,6 @@ pub fn deploy_full_token_contract(
     name: Option<ByteArray>,
     symbol: Option<ByteArray>,
     base_uri: Option<ByteArray>,
-    game_address: Option<ContractAddress>,
     game_registry_address: Option<ContractAddress>,
     event_relayer_address: Option<ContractAddress>,
 ) -> (IMinigameTokenMixinDispatcher, ERC721ABIDispatcher, ISRC5Dispatcher, ContractAddress) {
@@ -232,17 +231,6 @@ pub fn deploy_full_token_contract(
     token_name.serialize(ref constructor_calldata);
     token_symbol.serialize(ref constructor_calldata);
     token_base_uri.serialize(ref constructor_calldata);
-
-    // Serialize game_address Option
-    match game_address {
-        Option::Some(addr) => {
-            constructor_calldata.append(0); // Some variant
-            constructor_calldata.append(addr.into());
-        },
-        Option::None => {
-            constructor_calldata.append(1); // None variant
-        },
-    }
 
     // Serialize game_registry_address Option
     match game_registry_address {
@@ -284,7 +272,7 @@ pub fn deploy_optimized_token_default() -> (
     IMinigameTokenMixinDispatcher, ERC721ABIDispatcher, ISRC5Dispatcher, ContractAddress,
 ) {
     deploy_full_token_contract(
-        Option::None, Option::None, Option::None, Option::None, Option::None, Option::None,
+        Option::None, Option::None, Option::None, Option::None, Option::None,
     )
 }
 
@@ -296,7 +284,6 @@ pub fn deploy_optimized_token_with_game(
         Option::None,
         Option::None,
         Option::None,
-        Option::Some(game_address),
         Option::None,
         Option::None,
     )
@@ -310,7 +297,6 @@ pub fn deploy_optimized_token_with_game_and_registry(
         Option::None,
         Option::None,
         Option::None,
-        Option::Some(game_address),
         Option::Some(registry_address),
         Option::None,
     )
@@ -321,7 +307,6 @@ pub fn deploy_optimized_token_with_registry(
     registry_address: ContractAddress,
 ) -> (IMinigameTokenMixinDispatcher, ERC721ABIDispatcher, ISRC5Dispatcher, ContractAddress) {
     deploy_full_token_contract(
-        Option::None,
         Option::None,
         Option::None,
         Option::None,
@@ -340,7 +325,6 @@ pub fn deploy_optimized_token_custom_metadata(
         Option::Some(base_uri),
         Option::None,
         Option::None,
-        Option::None,
     )
 }
 
@@ -349,8 +333,7 @@ pub fn deploy_optimized_token_custom_metadata(
 // ================================================================================================
 
 /// Deploy test token contract with game - wrapper for backward compatibility
-pub fn deploy_test_token_contract_with_game(
-    game_address: Option<ContractAddress>,
+pub fn deploy_test_token_contract_with_game_registry(
     game_registry_address: Option<ContractAddress>,
     event_relay_address: Option<ContractAddress>,
 ) -> (IMinigameTokenMixinDispatcher, ERC721ABIDispatcher, ISRC5Dispatcher, ContractAddress) {
@@ -358,7 +341,6 @@ pub fn deploy_test_token_contract_with_game(
         Option::Some("TestToken"),
         Option::Some("TT"),
         Option::Some("https://test.com/token/"),
-        game_address,
         game_registry_address,
         event_relay_address,
     )
@@ -379,8 +361,7 @@ pub fn setup() -> TestContracts {
         deploy_mock_metagame_contract();
     let minigame_registry_dispatcher = deploy_minigame_registry_contract();
     let (test_token_dispatcher, erc721_dispatcher, src5_dispatcher, _) =
-        deploy_test_token_contract_with_game(
-        Option::Some(minigame_dispatcher.contract_address),
+        deploy_test_token_contract_with_game_registry(
         Option::Some(minigame_registry_dispatcher.contract_address),
         Option::None,
     );
@@ -428,8 +409,8 @@ pub fn setup() -> TestContracts {
 pub fn setup_multi_game() -> TestContracts {
     let minigame_registry_dispatcher = deploy_minigame_registry_contract();
     let (test_token_dispatcher, erc721_dispatcher, src5_dispatcher, _) =
-        deploy_test_token_contract_with_game(
-        Option::None, Option::Some(minigame_registry_dispatcher.contract_address), Option::None,
+        deploy_test_token_contract_with_game_registry(
+        Option::Some(minigame_registry_dispatcher.contract_address), Option::None,
     );
 
     // Deploy and register multiple games
@@ -514,7 +495,11 @@ pub fn deploy_token_with_settings(settings_address: ContractAddress) -> Contract
 
 /// Deploy MinimalOptimizedContract
 pub fn deploy_minimal_optimized_contract(
-    name: ByteArray, symbol: ByteArray, base_uri: ByteArray,
+    name: ByteArray, 
+    symbol: ByteArray, 
+    base_uri: ByteArray, 
+    game_address: Option<ContractAddress>, 
+    creator_address: Option<ContractAddress>,
 ) -> (IMinigameTokenMixinDispatcher, ERC721ABIDispatcher) {
     let contract = declare("MinimalOptimizedContract").unwrap().contract_class();
     let mut constructor_calldata = array![];
@@ -523,8 +508,27 @@ pub fn deploy_minimal_optimized_contract(
     symbol.serialize(ref constructor_calldata);
     base_uri.serialize(ref constructor_calldata);
 
-    // Serialize game_address Option (None for minimal contract)
-    constructor_calldata.append(1); // None variant
+    // Serialize game_address Option
+    match game_address {
+        Option::Some(addr) => {
+            constructor_calldata.append(0); // Some variant
+            constructor_calldata.append(addr.into());
+        },
+        Option::None => {
+            constructor_calldata.append(1); // None variant
+        },
+    }
+
+    // Serialize creator_address Option
+    match creator_address {
+        Option::Some(addr) => {
+            constructor_calldata.append(0); // Some variant
+            constructor_calldata.append(addr.into());
+        },
+        Option::None => {
+            constructor_calldata.append(1); // None variant
+        },
+    }
 
     let (contract_address, _) = contract.deploy(@constructor_calldata).unwrap();
 

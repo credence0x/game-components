@@ -306,7 +306,6 @@ fn test_achievement_hunt() {
         Option::Some("AchievementToken"),
         Option::Some("ACH"),
         Option::Some(""),
-        Option::Some(game.contract_address),
         Option::None,
         Option::None,
     );
@@ -711,7 +710,6 @@ fn test_registry_lookup_edge_cases() {
         Option::Some("Multi Game Token"),
         Option::Some("MGT"),
         Option::Some(""),
-        Option::None,
         Option::Some(registry_address),
         Option::None,
     );

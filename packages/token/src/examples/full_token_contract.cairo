@@ -177,7 +177,6 @@ pub mod FullTokenContract {
                 let game_address = game_registry_dispatcher
                     .game_address_from_id(token_metadata.game_id);
 
-                // Try to call the game contract's game_details_svg function
                 let score_selector = selector!("score");
                 let token_description_selector = selector!("token_description");
                 let details_svg_selector = selector!("game_details_svg");
@@ -187,7 +186,7 @@ pub mod FullTokenContract {
 
                 let score = match call_contract_syscall(game_address, score_selector, calldata.span()) {
                     Result::Ok(result) => {
-                        // Try to deserialize the result as u16
+                        // Try to deserialize the result as u32
                         let mut result_span = result;
                         match Serde::<u32>::deserialize(ref result_span) {
                             Option::Some(score) => score,
@@ -220,9 +219,10 @@ pub mod FullTokenContract {
                     },
                     Result::Err(_) => "https://denshokan.dev/game/1",
                 };
+
                 let game_details = match call_contract_syscall(game_address, details_selector, calldata.span()) {
                     Result::Ok(result) => {
-                        // Try to deserialize the result as ByteArray
+                        // Try to deserialize the result as Span<GameDetail>
                         let mut result_span = result;
                         match Serde::<Span<GameDetail>>::deserialize(ref result_span) {
                             Option::Some(game_details) => game_details,
@@ -231,13 +231,12 @@ pub mod FullTokenContract {
                     },
                     Result::Err(_) => array![].span(),
                 };
-                // Return the game details SVG or a default if not available
-                game_details_svg;
                 let game_metadata = game_registry_dispatcher.game_metadata(token_metadata.game_id);
                 let state = 0;
                 let player_name = self
                     .core_token
                     .player_name(token_id.try_into().unwrap());
+
                 create_custom_metadata(
                     token_id.try_into().unwrap(),
                     token_description,
@@ -307,13 +306,12 @@ pub mod FullTokenContract {
         name: ByteArray,
         symbol: ByteArray,
         base_uri: ByteArray,
-        game_address: Option<ContractAddress>,
         game_registry_address: Option<ContractAddress>,
         event_relayer_address: Option<ContractAddress>,
     ) {
         // Initialize core components
         self.erc721.initializer(name, symbol, base_uri);
-        self.core_token.initializer(game_address, game_registry_address, event_relayer_address);
+        self.core_token.initializer(Option::None, Option::None, game_registry_address, event_relayer_address);
 
         self.minter.initializer();
         self.objectives.initializer();

@@ -16,7 +16,7 @@ use super::mocks::mock_game::{IMockGameDispatcherTrait};
 // Import setup helpers
 use super::setup::{
     setup, setup_multi_game, deploy_mock_game, deploy_basic_mock_game,
-    deploy_test_token_contract_with_game, deploy_test_token_contract, ALICE, BOB, CHARLIE,
+    deploy_test_token_contract_with_game_registry, deploy_test_token_contract, ALICE, BOB, CHARLIE,
     ZERO_ADDRESS, RENDERER_ADDRESS, MAX_U64, PAST_TIME, CURRENT_TIME, FUTURE_TIME, FAR_FUTURE_TIME,
 };
 
@@ -112,14 +112,6 @@ fn test_mint_with_all_parameters() { // UT-MINT-002
 
     assert!(
         test_contracts.test_token.player_name(token_id) == "TestPlayer", "Player name mismatch",
-    );
-    assert!(
-        test_contracts
-            .test_token
-            .game_address() == test_contracts
-            .minigame
-            .contract_address,
-        "Game address mismatch",
     );
     assert!(test_contracts.test_token.is_soulbound(token_id) == true, "Should be soulbound");
     assert!(
@@ -592,8 +584,8 @@ fn test_sequential_mints_increment_counter() { // UT-MINT-B004
 fn test_update_game_with_state_changes() { // UT-UPDATE-001
     let (_, mock_game) = deploy_basic_mock_game();
 
-    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game(
-        Option::Some(mock_game.contract_address), Option::None, Option::None,
+    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game_registry(
+        Option::None, Option::None,
     );
 
     let token_id = token_dispatcher
@@ -627,8 +619,8 @@ fn test_update_game_with_state_changes() { // UT-UPDATE-001
 fn test_update_game_without_state_changes() { // UT-UPDATE-002
     let (_, mock_game) = deploy_basic_mock_game();
 
-    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game(
-        Option::Some(mock_game.contract_address), Option::None, Option::None,
+    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game_registry(
+        Option::None, Option::None,
     );
 
     let token_id = token_dispatcher
@@ -693,8 +685,8 @@ fn test_update_game_with_objectives_completion() { // UT-UPDATE-003
 fn test_update_game_with_game_over_transition() { // UT-UPDATE-004
     let (_, mock_game) = deploy_basic_mock_game();
 
-    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game(
-        Option::Some(mock_game.contract_address), Option::None, Option::None,
+    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game_registry(
+        Option::None, Option::None,
     );
 
     let token_id = token_dispatcher
@@ -772,8 +764,8 @@ fn test_update_game_with_blank_token() {
 fn test_game_over_false_to_true_transition() { // UT-UPDATE-S001
     let (_, mock_game) = deploy_basic_mock_game();
 
-    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game(
-        Option::Some(mock_game.contract_address), Option::None, Option::None,
+    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game_registry(
+        Option::None, Option::None,
     );
 
     let token_id = token_dispatcher
@@ -846,8 +838,8 @@ fn test_objectives_completion_progression() { // UT-UPDATE-S002
 fn test_idempotent_updates() { // UT-UPDATE-S003
     let (_, mock_game) = deploy_basic_mock_game();
 
-    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game(
-        Option::Some(mock_game.contract_address), Option::None, Option::None,
+    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game_registry(
+        Option::None, Option::None,
     );
 
     let token_id = token_dispatcher
@@ -980,8 +972,8 @@ fn test_is_playable_view() { // UT-VIEW-002
 
     // Test case 3: Token that's game over
     let (_, mock_game) = deploy_basic_mock_game();
-    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game(
-        Option::Some(mock_game.contract_address), Option::None, Option::None,
+    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game_registry(
+        Option::None, Option::None,
     );
 
     let token_id3 = token_dispatcher

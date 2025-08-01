@@ -663,6 +663,7 @@ pub mod CoreTokenComponent {
         fn initializer(
             ref self: ComponentState<TContractState>,
             game_address: Option<ContractAddress>,
+            creator_address: Option<ContractAddress>,
             game_registry_address: Option<ContractAddress>,
             event_relayer_address: Option<ContractAddress>,
         ) {
@@ -682,6 +683,18 @@ pub mod CoreTokenComponent {
                     !game_registry_address.is_zero(), "CoreToken: Game registry address is zero",
                 );
                 self.game_registry_address.write(game_registry_address);
+            } else {
+                // If no game registry provided, then we know this is a single game token,
+                // so mint token 0 to the creator.
+                assert!(
+                    game_address.is_some(), "CoreToken: Game address must be provided for single game token",
+                );
+                assert!(
+                    creator_address.is_some(), "CoreToken: Creator address must be provided for single game token",
+                );
+                let mut contract = self.get_contract_mut();
+                let mut erc721_component = ERC721::get_component_mut(ref contract);
+                erc721_component.mint(creator_address.unwrap(), 0);
             }
 
             if let Option::Some(event_relayer_address) = event_relayer_address {
