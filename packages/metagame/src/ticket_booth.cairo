@@ -27,7 +27,6 @@ pub mod TicketBoothComponent {
 
     #[starknet::interface]
     trait IERC20Burnable<TContractState> {
-        fn burn(ref self: TContractState, amount: u256);
         fn burn_from(ref self: TContractState, account: ContractAddress, amount: u256);
     }
 
@@ -136,9 +135,8 @@ pub mod TicketBoothComponent {
             // Handle payment (redeem the ticket)
             let payment_token = IERC20SafeDispatcher { contract_address: payment_token_address };
             if !ticket_receiver_address.is_zero() {
-                let _ = payment_token.transfer_from(caller, ticket_receiver_address, cost.into());
+                payment_token.transfer_from(caller, ticket_receiver_address, cost.into());
             } else {
-                // Try to burn tokens first using burn_from (most common)
                 let burnable_token = IERC20BurnableSafeDispatcher {
                     contract_address: payment_token_address,
                 };
@@ -150,7 +148,7 @@ pub mod TicketBoothComponent {
                     Result::Err(_) => {
                         // burn_from failed, fall back to zero address transfer
                         let zero_address: ContractAddress = starknet::contract_address_const::<0>();
-                        let _ = payment_token.transfer_from(caller, zero_address, cost.into());
+                        payment_token.transfer_from(caller, zero_address, cost.into());
                     },
                 }
             }
