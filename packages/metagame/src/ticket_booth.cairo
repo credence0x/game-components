@@ -59,7 +59,7 @@ pub mod TicketBoothComponent {
     pub struct GoldenPass {
         pub cooldown: u64, // Duration after which the pass can be used again, must be greater than 0
         pub game_expiration: GameExpiration, // Duration after which games minted with this pass expires
-        pub pass_expiration: u64, // timestamp when the pass expires (becoming unusable), 0 means no expiration
+        pub pass_expiration: u64 // timestamp when the pass expires (becoming unusable), 0 means no expiration
     }
 
     #[event]
@@ -149,7 +149,7 @@ pub mod TicketBoothComponent {
                     },
                     Result::Err(_) => {
                         // burn_from failed, fall back to zero address transfer
-                        let zero_address: ContractAddress = 0.try_into().unwrap();
+                        let zero_address: ContractAddress = starknet::contract_address_const::<0>();
                         let _ = payment_token.transfer_from(caller, zero_address, cost.into());
                     },
                 }
@@ -192,7 +192,8 @@ pub mod TicketBoothComponent {
             to: ContractAddress,
             soulbound: bool,
         ) -> u64 {
-            assert!(get_block_timestamp() >= self.opening_time.read(), "Game not open yet");
+            let current_time = get_block_timestamp();
+            assert!(current_time >= self.opening_time.read(), "Game not open yet");
 
             let caller = get_caller_address();
 
@@ -201,7 +202,6 @@ pub mod TicketBoothComponent {
             assert!(golden_pass_config.cooldown > 0_u64, "Golden pass not configured");
 
             // Check if the pass is expired
-            let current_time = get_block_timestamp();
             if golden_pass_config.pass_expiration > 0_u64 {
                 assert!(current_time < golden_pass_config.pass_expiration, "Golden pass expired");
             }
@@ -217,7 +217,6 @@ pub mod TicketBoothComponent {
             let last_used = self
                 .golden_pass_last_used
                 .read((golden_pass_address, golden_pass_token_id));
-            let current_time = get_block_timestamp();
 
             assert!(
                 current_time >= last_used + golden_pass_config.cooldown, "Golden pass on cooldown",
@@ -280,7 +279,7 @@ pub mod TicketBoothComponent {
         ) -> u64 {
             self.golden_pass_last_used.read((golden_pass_address, token_id))
         }
-        
+
         fn ticket_receiver_address(self: @ComponentState<TContractState>) -> ContractAddress {
             self.ticket_receiver_address.read()
         }
@@ -350,7 +349,7 @@ pub mod TicketBoothComponent {
             self.cost_to_play.write(cost_to_play);
             match game_address {
                 Option::Some(addr) => self.game_address.write(addr),
-                Option::None => self.game_address.write(0.try_into().unwrap()),
+                Option::None => self.game_address.write(starknet::contract_address_const::<0>()),
             };
             self.settings_id.write(settings_id);
             self.start_time.write(start_time);
@@ -369,7 +368,10 @@ pub mod TicketBoothComponent {
                             break;
                         }
                         let (address, config) = passes.at(i);
-                        assert!(*config.cooldown > 0_u64, "Golden pass cooldown must be greater than zero");
+                        assert!(
+                            *config.cooldown > 0_u64,
+                            "Golden pass cooldown must be greater than zero",
+                        );
                         self.golden_passes.write(*address, config.clone());
                         i += 1;
                     };
