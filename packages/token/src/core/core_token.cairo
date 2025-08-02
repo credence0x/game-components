@@ -156,7 +156,21 @@ pub mod CoreTokenComponent {
             let renderer = RendererOpt::get_token_renderer(contract_self, token_id);
             match renderer {
                 Option::Some(addr) => addr,
-                Option::None => contract_address_const::<0>(),
+                Option::None => {
+                    // If no renderer is set, check if it's a single game token
+                    let token_metadata = self.token_metadata(token_id);
+                    let game_registry_dispatcher = IMinigameRegistryDispatcher {
+                        contract_address: self.game_registry_address.read(),
+                    };
+                    let game_metadata =
+                        game_registry_dispatcher.game_metadata(token_metadata.game_id);
+                    let game_renderer_address = game_metadata.renderer_address;
+                    if !game_renderer_address.is_zero() {
+                        game_renderer_address
+                    } else {
+                        self.token_game_address(token_id)
+                    }
+                },
             }
         }
 

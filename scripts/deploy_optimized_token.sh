@@ -339,7 +339,6 @@ if [ "$DEPLOY_TO_SLOT" = "true" ]; then
         "$TOKEN_NAME_ARG" \
         "$TOKEN_SYMBOL_ARG" \
         "$TOKEN_BASE_URI_ARG" \
-        $(if [ -n "$GAME_ADDRESS" ]; then echo "0 $GAME_ADDRESS"; else echo "1"; fi) \
         $(if [ -n "$GAME_REGISTRY_ADDRESS" ]; then echo "0 $GAME_REGISTRY_ADDRESS"; else echo "1"; fi) \
         $(if [ -n "$RELAYER_ADDRESS" ]; then echo "0 $RELAYER_ADDRESS"; else echo "1"; fi) \
         2>&1 | tee >(cat >&2) | grep -oE '0x[0-9a-fA-F]{64}' | tail -1)
@@ -353,7 +352,6 @@ else
         "$TOKEN_NAME_ARG" \
         "$TOKEN_SYMBOL_ARG" \
         "$TOKEN_BASE_URI_ARG" \
-        $(if [ -n "$GAME_ADDRESS" ]; then echo "0 $GAME_ADDRESS"; else echo "1"; fi) \
         $(if [ -n "$GAME_REGISTRY_ADDRESS" ]; then echo "0 $GAME_REGISTRY_ADDRESS"; else echo "1"; fi) \
         $(if [ -n "$RELAYER_ADDRESS" ]; then echo "0 $RELAYER_ADDRESS"; else echo "1"; fi) \
         2>&1 | tee >(cat >&2) | grep -oE '0x[0-9a-fA-F]{64}' | tail -1)

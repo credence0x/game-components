@@ -174,8 +174,9 @@ pub mod FullTokenContract {
                 let game_registry_dispatcher = IMinigameRegistryDispatcher {
                     contract_address: game_registry_address,
                 };
-                let game_address = game_registry_dispatcher
-                    .game_address_from_id(token_metadata.game_id);
+                let game_metadata = game_registry_dispatcher.game_metadata(token_metadata.game_id);
+                let game_address = game_metadata.contract_address;
+                let renderer_address = self.core_token.renderer_address(token_id.try_into().unwrap());
 
                 let score_selector = selector!("score");
                 let token_description_selector = selector!("token_description");
@@ -199,7 +200,7 @@ pub mod FullTokenContract {
 
                 let token_description =
                     match call_contract_syscall(
-                        game_address, token_description_selector, calldata.span(),
+                        renderer_address, token_description_selector, calldata.span(),
                     ) {
                     Result::Ok(result) => {
                         // Try to deserialize the result as ByteArray
@@ -214,7 +215,7 @@ pub mod FullTokenContract {
 
                 let game_details_svg =
                     match call_contract_syscall(
-                        game_address, details_svg_selector, calldata.span(),
+                        renderer_address, details_svg_selector, calldata.span(),
                     ) {
                     Result::Ok(result) => {
                         // Try to deserialize the result as ByteArray
@@ -228,7 +229,9 @@ pub mod FullTokenContract {
                 };
 
                 let game_details =
-                    match call_contract_syscall(game_address, details_selector, calldata.span()) {
+                    match call_contract_syscall(
+                        renderer_address, details_selector, calldata.span(),
+                    ) {
                     Result::Ok(result) => {
                         // Try to deserialize the result as Span<GameDetail>
                         let mut result_span = result;
@@ -239,7 +242,6 @@ pub mod FullTokenContract {
                     },
                     Result::Err(_) => array![].span(),
                 };
-                let game_metadata = game_registry_dispatcher.game_metadata(token_metadata.game_id);
                 let state = 0;
                 let player_name = self.core_token.player_name(token_id.try_into().unwrap());
 
