@@ -40,7 +40,7 @@ pub mod TicketBoothComponent {
         ticket_receiver_address: ContractAddress,
         settings_id: Option<u32>,
         start_time: Option<u64>,
-        expiration_time: Option<u64>, // 0 means no expiration
+        expiration_time: Option<u64>,
         client_url: Option<ByteArray>,
         renderer_address: Option<ContractAddress>,
         golden_passes: Map<ContractAddress, GoldenPass>,
@@ -48,51 +48,51 @@ pub mod TicketBoothComponent {
     }
 
     #[derive(Drop, Serde, Clone, starknet::Store)]
-    #[allow(starknet::store_no_default_variant)]
     pub enum GameExpiration {
-        Fixed: u64,
-        Dynamic: u64,
+        #[default]
+        None,
+        Fixed: u64, // set to the exact timestamp
+        Dynamic: u64, // add duration to current time
     }
 
     #[derive(Drop, Serde, Clone, starknet::Store)]
     pub struct GoldenPass {
         pub cooldown: u64, // Duration after which the pass can be used again, must be greater than 0
-        pub game_expiration: GameExpiration, // Duration after which games minted with this pass expires
+        pub game_expiration: GameExpiration,
         pub pass_expiration: u64 // timestamp when the pass expires (becoming unusable), 0 means no expiration
+    }
+
+    #[derive(Drop, Serde, Clone)]
+    pub struct GoldenPassInfo {
+        pub address: ContractAddress,
+        pub token_id: u128,
+    }
+
+    #[derive(Drop, Serde, Clone)]
+    pub enum PaymentType {
+        Ticket,
+        GoldenPass: GoldenPassInfo,
     }
 
     #[event]
     #[derive(Drop, starknet::Event)]
     pub enum Event {
-        TicketRedeemed: TicketRedeemed,
-        GoldenPassRedeemed: GoldenPassRedeemed,
+        GameMinted: GameMinted,
     }
 
     #[derive(Drop, starknet::Event)]
-    pub struct TicketRedeemed {
+    pub struct GameMinted {
         #[key]
         pub player: ContractAddress,
         pub token_id: u64,
-        pub cost: u128,
-    }
-
-    #[derive(Drop, starknet::Event)]
-    pub struct GoldenPassRedeemed {
-        #[key]
-        pub player: ContractAddress,
-        pub token_id: u64,
-        pub golden_pass_token_id: u128,
+        pub payment_type: PaymentType,
     }
 
     #[starknet::interface]
     pub trait ITicketBooth<TContractState> {
         fn buy_game(
-            ref self: TContractState, player_name: ByteArray, to: ContractAddress, soulbound: bool,
-        ) -> u64;
-        fn use_golden_pass(
             ref self: TContractState,
-            golden_pass_address: ContractAddress,
-            golden_pass_token_id: u128,
+            payment_type: PaymentType,
             player_name: ByteArray,
             to: ContractAddress,
             soulbound: bool,
@@ -121,6 +121,7 @@ pub mod TicketBoothComponent {
     > of ITicketBooth<ComponentState<TContractState>> {
         fn buy_game(
             ref self: ComponentState<TContractState>,
+            payment_type: PaymentType,
             player_name: ByteArray,
             to: ContractAddress,
             soulbound: bool,
@@ -128,36 +129,29 @@ pub mod TicketBoothComponent {
             assert!(get_block_timestamp() >= self.opening_time.read(), "Game not open yet");
 
             let caller = get_caller_address();
-            let cost = self.cost_to_play.read();
-            let payment_token_address = self.payment_token.read();
-            let ticket_receiver_address = self.ticket_receiver_address.read();
-
-            // Handle payment (redeem the ticket)
-            let payment_token = IERC20SafeDispatcher { contract_address: payment_token_address };
-            if !ticket_receiver_address.is_zero() {
-                payment_token.transfer_from(caller, ticket_receiver_address, cost.into());
-            } else {
-                let burnable_token = IERC20BurnableSafeDispatcher {
-                    contract_address: payment_token_address,
-                };
-                let burn_from_result = burnable_token.burn_from(caller, cost.into());
-
-                match burn_from_result {
-                    Result::Ok(_) => { // burn_from was successful
-                    },
-                    Result::Err(_) => {
-                        // burn_from failed, fall back to zero address transfer
-                        let zero_address: ContractAddress = starknet::contract_address_const::<0>();
-                        payment_token.transfer_from(caller, zero_address, cost.into());
-                    },
-                }
-            }
-
-            // Calculate expiration by adding expiration_time to current_time
             let current_time = get_block_timestamp();
-            let expiration = match self.expiration_time.read() {
-                Option::Some(duration) => Option::Some(current_time + duration),
-                Option::None => Option::None,
+
+            // Handle payment based on type and get expiration
+            let expiration = match payment_type.clone() {
+                PaymentType::Ticket => {
+                    self.handle_ticket_payment(caller);
+
+                    // Calculate expiration by adding expiration_time to current_time
+                    match self.expiration_time.read() {
+                        Option::Some(duration) => Option::Some(current_time + duration),
+                        Option::None => Option::None,
+                    }
+                },
+                PaymentType::GoldenPass(golden_pass_info) => {
+                    self
+                        .handle_golden_pass_payment(
+                            caller,
+                            golden_pass_info.address,
+                            golden_pass_info.token_id,
+                            current_time,
+                            to,
+                        )
+                },
             };
 
             // Mint the game token with configured settings
@@ -176,84 +170,8 @@ pub mod TicketBoothComponent {
                 soulbound,
             );
 
-            // Emit event
-            self.emit(TicketRedeemed { player: to, token_id, cost });
-
-            token_id
-        }
-
-        fn use_golden_pass(
-            ref self: ComponentState<TContractState>,
-            golden_pass_address: ContractAddress,
-            golden_pass_token_id: u128,
-            player_name: ByteArray,
-            to: ContractAddress,
-            soulbound: bool,
-        ) -> u64 {
-            let current_time = get_block_timestamp();
-            assert!(current_time >= self.opening_time.read(), "Game not open yet");
-
-            let caller = get_caller_address();
-
-            // Get the golden pass configuration
-            let golden_pass_config = self.golden_passes.read(golden_pass_address);
-            assert!(golden_pass_config.cooldown > 0_u64, "Golden pass not configured");
-
-            // Check if the pass is expired
-            if golden_pass_config.pass_expiration > 0_u64 {
-                assert!(current_time < golden_pass_config.pass_expiration, "Golden pass expired");
-            }
-
-            // Check caller owns the golden pass
-            let golden_pass = IERC721Dispatcher { contract_address: golden_pass_address };
-            assert!(
-                golden_pass.owner_of(golden_pass_token_id.into()) == caller,
-                "Not owner of golden pass",
-            );
-
-            // Check cooldown
-            let last_used = self
-                .golden_pass_last_used
-                .read((golden_pass_address, golden_pass_token_id));
-
-            assert!(
-                current_time >= last_used + golden_pass_config.cooldown, "Golden pass on cooldown",
-            );
-
-            // Update last used timestamp
-            self
-                .golden_pass_last_used
-                .write((golden_pass_address, golden_pass_token_id), current_time);
-
-            // Calculate expiration based on GameExpiration enum
-            let expiration = match golden_pass_config.game_expiration {
-                GameExpiration::Fixed(expiration_time) => {
-                    // Fixed expiration: set to the exact timestamp
-                    Option::Some(expiration_time)
-                },
-                GameExpiration::Dynamic(duration) => {
-                    // Dynamic expiration: add duration to current_time
-                    Option::Some(current_time + duration)
-                },
-            };
-
-            let token_id = libs::mint(
-                self.game_token_address.read(),
-                Option::Some(self.game_address.read()),
-                Option::Some(player_name),
-                self.settings_id.read(),
-                self.start_time.read(),
-                expiration,
-                Option::None,
-                Option::None,
-                self.client_url.read(),
-                self.renderer_address.read(),
-                to,
-                soulbound,
-            );
-
-            // Emit event
-            self.emit(GoldenPassRedeemed { player: to, token_id, golden_pass_token_id });
+            // Emit the event
+            self.emit(GameMinted { player: to, token_id, payment_type });
 
             token_id
         }
@@ -376,6 +294,90 @@ pub mod TicketBoothComponent {
                 },
                 Option::None => {},
             };
+        }
+
+        fn handle_ticket_payment(
+            ref self: ComponentState<TContractState>, caller: ContractAddress,
+        ) {
+            let cost = self.cost_to_play.read();
+            let payment_token_address = self.payment_token.read();
+            let ticket_receiver_address = self.ticket_receiver_address.read();
+
+            // Handle payment (redeem the ticket)
+            let payment_token = IERC20SafeDispatcher { contract_address: payment_token_address };
+            if !ticket_receiver_address.is_zero() {
+                let _ = payment_token.transfer_from(caller, ticket_receiver_address, cost.into());
+            } else {
+                let burnable_token = IERC20BurnableSafeDispatcher {
+                    contract_address: payment_token_address,
+                };
+                let burn_from_result = burnable_token.burn_from(caller, cost.into());
+
+                match burn_from_result {
+                    Result::Ok(_) => { // burn_from was successful
+                    },
+                    Result::Err(_) => {
+                        // burn_from failed, fall back to zero address transfer
+                        let zero_address: ContractAddress = starknet::contract_address_const::<0>();
+                        let _ = payment_token.transfer_from(caller, zero_address, cost.into());
+                    },
+                }
+            }
+        }
+
+        fn handle_golden_pass_payment(
+            ref self: ComponentState<TContractState>,
+            caller: ContractAddress,
+            golden_pass_address: ContractAddress,
+            golden_pass_token_id: u128,
+            current_time: u64,
+            to: ContractAddress,
+        ) -> Option<u64> {
+            // Get the golden pass configuration
+            let golden_pass_config = self.golden_passes.read(golden_pass_address);
+            assert!(golden_pass_config.cooldown > 0_u64, "Golden pass not configured");
+
+            // Check if the pass is expired
+            if golden_pass_config.pass_expiration > 0_u64 {
+                assert!(current_time < golden_pass_config.pass_expiration, "Golden pass expired");
+            }
+
+            // Check caller owns the golden pass
+            let golden_pass = IERC721Dispatcher { contract_address: golden_pass_address };
+            assert!(
+                golden_pass.owner_of(golden_pass_token_id.into()) == caller,
+                "Not owner of golden pass",
+            );
+
+            // Check cooldown
+            let last_used = self
+                .golden_pass_last_used
+                .read((golden_pass_address, golden_pass_token_id));
+
+            assert!(
+                current_time >= last_used + golden_pass_config.cooldown, "Golden pass on cooldown",
+            );
+
+            // Update last used timestamp
+            self
+                .golden_pass_last_used
+                .write((golden_pass_address, golden_pass_token_id), current_time);
+
+            // Calculate expiration based on GameExpiration enum
+            match golden_pass_config.game_expiration {
+                GameExpiration::None => {
+                    // No expiration
+                    Option::None
+                },
+                GameExpiration::Fixed(expiration_time) => {
+                    // Fixed expiration: set to the exact timestamp
+                    Option::Some(expiration_time)
+                },
+                GameExpiration::Dynamic(duration) => {
+                    // Dynamic expiration: add duration to current_time
+                    Option::Some(current_time + duration)
+                },
+            }
         }
 
         fn assert_before_opening(ref self: ComponentState<TContractState>) {
