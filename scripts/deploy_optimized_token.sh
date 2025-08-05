@@ -153,7 +153,9 @@ fi
 # ============================
 
 print_info "Building contracts..."
+cd packages/token
 scarb build
+cd ../..
 
 if [ ! -f "target/dev/game_components_token_FullTokenContract.contract_class.json" ]; then
     print_error "Contract build failed or contract file not found"

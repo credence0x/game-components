@@ -582,13 +582,8 @@ fn test_sequential_mints_increment_counter() { // UT-MINT-B004
 
 #[test]
 fn test_update_game_with_state_changes() { // UT-UPDATE-001
-    let (_, mock_game) = deploy_basic_mock_game();
-
-    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game_registry(
-        Option::None, Option::None,
-    );
-
-    let token_id = token_dispatcher
+    let test_contracts = setup();
+    let token_id = test_contracts.test_token
         .mint(
             Option::None,
             Option::None,
@@ -604,26 +599,21 @@ fn test_update_game_with_state_changes() { // UT-UPDATE-001
         );
 
     // Set game state
-    mock_game.set_score(token_id, 100);
-    mock_game.set_game_over(token_id, true);
+    test_contracts.mock_minigame.end_game(token_id, 100);
 
     // Update token
-    token_dispatcher.update_game(token_id);
+    test_contracts.test_token.update_game(token_id);
 
-    let metadata = token_dispatcher.token_metadata(token_id);
+    let metadata = test_contracts.test_token.token_metadata(token_id);
     assert!(metadata.game_over == true, "Game should be over");
     // Score is stored in the game contract, not in token metadata
 }
 
 #[test]
 fn test_update_game_without_state_changes() { // UT-UPDATE-002
-    let (_, mock_game) = deploy_basic_mock_game();
+    let test_contracts = setup();
 
-    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game_registry(
-        Option::None, Option::None,
-    );
-
-    let token_id = token_dispatcher
+    let token_id = test_contracts.test_token
         .mint(
             Option::None,
             Option::None,
@@ -639,9 +629,9 @@ fn test_update_game_without_state_changes() { // UT-UPDATE-002
         );
 
     // Update without changing state
-    token_dispatcher.update_game(token_id);
+    test_contracts.test_token.update_game(token_id);
 
-    let metadata = token_dispatcher.token_metadata(token_id);
+    let metadata = test_contracts.test_token.token_metadata(token_id);
     assert!(metadata.game_over == false, "Game should not be over");
     // Score verification would be on the game contract side
 }
@@ -683,13 +673,8 @@ fn test_update_game_with_objectives_completion() { // UT-UPDATE-003
 
 #[test]
 fn test_update_game_with_game_over_transition() { // UT-UPDATE-004
-    let (_, mock_game) = deploy_basic_mock_game();
-
-    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game_registry(
-        Option::None, Option::None,
-    );
-
-    let token_id = token_dispatcher
+    let test_contracts = setup();
+    let token_id = test_contracts.test_token
         .mint(
             Option::None,
             Option::None,
@@ -705,17 +690,16 @@ fn test_update_game_with_game_over_transition() { // UT-UPDATE-004
         );
 
     // Verify initial state
-    let metadata_before = token_dispatcher.token_metadata(token_id);
+    let metadata_before = test_contracts.test_token.token_metadata(token_id);
     assert!(metadata_before.game_over == false, "Game should not be over initially");
 
     // Set game as over
-    mock_game.set_game_over(token_id, true);
-    mock_game.set_score(token_id, 42);
+    test_contracts.mock_minigame.end_game(token_id, 42);
 
     // Update token
-    token_dispatcher.update_game(token_id);
+    test_contracts.test_token.update_game(token_id);
 
-    let metadata_after = token_dispatcher.token_metadata(token_id);
+    let metadata_after = test_contracts.test_token.token_metadata(token_id);
     assert!(metadata_after.game_over == true, "Game should be over");
     // Score verification would be on the game contract side
 }
@@ -762,13 +746,9 @@ fn test_update_game_with_blank_token() {
 
 #[test]
 fn test_game_over_false_to_true_transition() { // UT-UPDATE-S001
-    let (_, mock_game) = deploy_basic_mock_game();
+    let test_contracts = setup();
 
-    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game_registry(
-        Option::None, Option::None,
-    );
-
-    let token_id = token_dispatcher
+    let token_id = test_contracts.test_token
         .mint(
             Option::None,
             Option::None,
@@ -784,21 +764,21 @@ fn test_game_over_false_to_true_transition() { // UT-UPDATE-S001
         );
 
     // Initial state
-    let metadata1 = token_dispatcher.token_metadata(token_id);
+    let metadata1 = test_contracts.test_token.token_metadata(token_id);
     assert!(metadata1.game_over == false, "Game should not be over initially");
 
     // Set game over
-    mock_game.set_game_over(token_id, true);
-    token_dispatcher.update_game(token_id);
+    test_contracts.mock_minigame.end_game(token_id, 42);
+    test_contracts.test_token.update_game(token_id);
 
-    let metadata2 = token_dispatcher.token_metadata(token_id);
+    let metadata2 = test_contracts.test_token.token_metadata(token_id);
     assert!(metadata2.game_over == true, "Game should be over");
 
     // Try to set back to false (should still be true - invariant)
-    mock_game.set_game_over(token_id, false);
-    token_dispatcher.update_game(token_id);
+    test_contracts.mock_minigame.start_game(token_id);
+    test_contracts.test_token.update_game(token_id);
 
-    let metadata3 = token_dispatcher.token_metadata(token_id);
+    let metadata3 = test_contracts.test_token.token_metadata(token_id);
     assert!(metadata3.game_over == true, "Game should still be over - state can't revert");
 }
 
@@ -836,13 +816,9 @@ fn test_objectives_completion_progression() { // UT-UPDATE-S002
 
 #[test]
 fn test_idempotent_updates() { // UT-UPDATE-S003
-    let (_, mock_game) = deploy_basic_mock_game();
+    let test_contracts = setup();
 
-    let (token_dispatcher, _, _, _) = deploy_test_token_contract_with_game_registry(
-        Option::None, Option::None,
-    );
-
-    let token_id = token_dispatcher
+    let token_id = test_contracts.test_token
         .mint(
             Option::None,
             Option::None,
@@ -858,20 +834,19 @@ fn test_idempotent_updates() { // UT-UPDATE-S003
         );
 
     // Set state
-    mock_game.set_score(token_id, 75);
-    mock_game.set_game_over(token_id, true);
+    test_contracts.mock_minigame.end_game(token_id, 75);
 
     // First update
-    token_dispatcher.update_game(token_id);
-    let metadata1 = token_dispatcher.token_metadata(token_id);
+    test_contracts.test_token.update_game(token_id);
+    let metadata1 = test_contracts.test_token.token_metadata(token_id);
 
     // Second update (idempotent)
-    token_dispatcher.update_game(token_id);
-    let metadata2 = token_dispatcher.token_metadata(token_id);
+    test_contracts.test_token.update_game(token_id);
+    let metadata2 = test_contracts.test_token.token_metadata(token_id);
 
     // Third update (idempotent)
-    token_dispatcher.update_game(token_id);
-    let metadata3 = token_dispatcher.token_metadata(token_id);
+    test_contracts.test_token.update_game(token_id);
+    let metadata3 = test_contracts.test_token.token_metadata(token_id);
 
     // All metadata should be identical
     assert!(metadata1.game_over == metadata2.game_over, "Game over state should be identical");

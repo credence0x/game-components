@@ -319,11 +319,12 @@ pub fn deploy_optimized_token_with_registry(
 pub fn deploy_optimized_token_custom_metadata(
     name: ByteArray, symbol: ByteArray, base_uri: ByteArray,
 ) -> (IMinigameTokenMixinDispatcher, ERC721ABIDispatcher, ISRC5Dispatcher, ContractAddress) {
+    let minigame_registry_dispatcher = deploy_minigame_registry_contract();
     deploy_full_token_contract(
         Option::Some(name),
         Option::Some(symbol),
         Option::Some(base_uri),
-        Option::None,
+        Option::Some(minigame_registry_dispatcher.contract_address),
         Option::None,
     )
 }

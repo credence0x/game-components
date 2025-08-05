@@ -247,6 +247,7 @@ pub mod minigame_starknet_mock {
 
         fn start_game(ref self: ContractState, token_id: u64) {
             self.scores.entry(token_id).write(0);
+            self.game_over.entry(token_id).write(false);
         }
 
         fn end_game(ref self: ContractState, token_id: u64, score: u32) {

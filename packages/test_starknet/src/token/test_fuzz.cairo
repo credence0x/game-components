@@ -12,35 +12,21 @@ use super::mocks::mock_game::{IMockGameDispatcher, IMockGameDispatcherTrait};
 use game_components_minigame::interface::{
     IMinigameTokenDataDispatcher, IMinigameTokenDataDispatcherTrait,
 };
-
+use game_components_test_starknet::minigame::mocks::minigame_starknet_mock::{
+    IMinigameStarknetMockDispatcherTrait,
+};
 // Import setup helpers
-use super::setup::{deploy_optimized_token_with_game, deploy_mock_game_standalone};
+use super::setup::{setup};
 
 // ================================================================================================
 // PROPERTY-BASED / FUZZ TESTS
 // ================================================================================================
 
-// Helper function to deploy test contracts
-fn deploy_test_token() -> (
-    IMinigameTokenMixinDispatcher, ERC721ABIDispatcher, IMockGameDispatcher,
-) {
-    // Deploy mock game
-    let game_address = deploy_mock_game_standalone();
-    let mock_game = IMockGameDispatcher { contract_address: game_address };
-
-    // Deploy token contract with game
-    let (token_dispatcher, erc721_dispatcher, _, _) = deploy_optimized_token_with_game(
-        game_address,
-    );
-
-    (token_dispatcher, erc721_dispatcher, mock_game)
-}
-
 // P-01: Token ID Monotonicity - Fuzz 1000 mints, verify each ID = previous + 1
 #[test]
 #[fuzzer(runs: 100)]
 fn test_token_id_monotonicity_fuzz(seed: felt252) {
-    let (token_dispatcher, _erc721_dispatcher, _) = deploy_test_token();
+    let test_contracts = setup();
 
     // Use seed to generate random addresses
     let mut addresses = array![];
@@ -68,7 +54,7 @@ fn test_token_id_monotonicity_fuzz(seed: felt252) {
     while j < 10 {
         let to_address = *addresses.at(j % addresses.len());
 
-        let token_id = token_dispatcher
+        let token_id = test_contracts.test_token
             .mint(
                 Option::None,
                 Option::None,
@@ -99,7 +85,7 @@ fn test_token_id_monotonicity_fuzz(seed: felt252) {
 #[test]
 #[fuzzer(runs: 50)]
 fn test_lifecycle_validity_fuzz(start_offset: u64, duration: u64) {
-    let (token_dispatcher, _, _) = deploy_test_token();
+    let test_contracts = setup();
 
     // Generate timestamps with constraints
     let current_time: u64 = 1000000;
@@ -111,9 +97,9 @@ fn test_lifecycle_validity_fuzz(start_offset: u64, duration: u64) {
     };
 
     // Set current time
-    start_cheat_block_timestamp(token_dispatcher.contract_address, current_time);
+    start_cheat_block_timestamp(test_contracts.test_token.contract_address, current_time);
 
-    let token_id = token_dispatcher
+    let token_id = test_contracts.test_token
         .mint(
             Option::None,
             Option::None,
@@ -129,35 +115,35 @@ fn test_lifecycle_validity_fuzz(start_offset: u64, duration: u64) {
         );
 
     // Test playability at different times
-    let is_playable_before = token_dispatcher.is_playable(token_id);
+    let is_playable_before = test_contracts.test_token.is_playable(token_id);
     if start > current_time {
         assert!(!is_playable_before, "Should not be playable before start");
     }
 
     // Move to start time
     if start > current_time {
-        start_cheat_block_timestamp(token_dispatcher.contract_address, start);
-        let is_playable_at_start = token_dispatcher.is_playable(token_id);
+        start_cheat_block_timestamp(test_contracts.test_token.contract_address, start);
+        let is_playable_at_start = test_contracts.test_token.is_playable(token_id);
         assert!(is_playable_at_start, "Should be playable at start");
     }
 
     // Move past end time
     if end > 0 && end < 18446744073709551615_u64 {
-        start_cheat_block_timestamp(token_dispatcher.contract_address, end + 1);
-        let is_playable_after_end = token_dispatcher.is_playable(token_id);
+        start_cheat_block_timestamp(test_contracts.test_token.contract_address, end + 1);
+        let is_playable_after_end = test_contracts.test_token.is_playable(token_id);
         assert!(!is_playable_after_end, "Should not be playable after end");
     }
 
-    stop_cheat_block_timestamp(token_dispatcher.contract_address);
+    stop_cheat_block_timestamp(test_contracts.test_token.contract_address);
 }
 
 // P-03: Score Monotonicity - Fuzz score updates, verify never decreases
 #[test]
 #[fuzzer(runs: 50)]
 fn test_score_monotonicity_fuzz(increment1: u32, increment2: u32, increment3: u32) {
-    let (token_dispatcher, _, mock_game) = deploy_test_token();
+    let test_contracts = setup();
 
-    let token_id = token_dispatcher
+    let token_id = test_contracts.test_token
         .mint(
             Option::None,
             Option::None,
@@ -181,14 +167,14 @@ fn test_score_monotonicity_fuzz(increment1: u32, increment2: u32, increment3: u3
         current_score += increment;
 
         // Set new score
-        mock_game.set_score(token_id, current_score);
+        test_contracts.mock_minigame.end_game(token_id, current_score);
 
         // Update game state
-        token_dispatcher.update_game(token_id);
+        test_contracts.test_token.update_game(token_id);
 
         // Verify score through mock game dispatcher
         let game_data = IMinigameTokenDataDispatcher {
-            contract_address: mock_game.contract_address,
+            contract_address: test_contracts.mock_minigame.contract_address,
         };
         let reported_score = game_data.score(token_id);
         assert!(reported_score >= current_score, "Score should never decrease");
@@ -201,13 +187,13 @@ fn test_score_monotonicity_fuzz(increment1: u32, increment2: u32, increment3: u3
 #[test]
 #[fuzzer(runs: 30)]
 fn test_objective_permanence_fuzz(obj_idx1: u32, obj_idx2: u32, obj_idx3: u32) {
-    let (token_dispatcher, _, mock_game) = deploy_test_token();
+    let test_contracts = setup();
 
     // MockGame doesn't have create_objective_score, so we skip objective creation
     // and just test basic objective tracking
     let obj_ids = array![1, 2, 3];
 
-    let token_id = token_dispatcher
+    let token_id = test_contracts.test_token
         .mint(
             Option::None,
             Option::None,
@@ -235,7 +221,7 @@ fn test_objective_permanence_fuzz(obj_idx1: u32, obj_idx2: u32, obj_idx3: u32) {
         // Mark as completed in our tracking
         if obj_index < completed.len() {
             // Check current state from token
-            let objectives = token_dispatcher.objectives(token_id);
+            let objectives = test_contracts.test_token.objectives(token_id);
             if objectives.len() > obj_index.into() {
                 let obj = objectives.at(obj_index.into());
 
@@ -247,8 +233,8 @@ fn test_objective_permanence_fuzz(obj_idx1: u32, obj_idx2: u32, obj_idx3: u32) {
                 // Complete the objective if not already done
                 if !(*obj.completed) && !(*completed.at(obj_index)) {
                     // Simulate completing objective by setting score
-                    mock_game.set_score(token_id, 100 * (obj_index.into() + 1));
-                    token_dispatcher.update_game(token_id);
+                    test_contracts.mock_minigame.end_game(token_id, 100 * (obj_index.into() + 1));
+                    test_contracts.test_token.update_game(token_id);
                 }
             }
         }
@@ -261,10 +247,10 @@ fn test_objective_permanence_fuzz(obj_idx1: u32, obj_idx2: u32, obj_idx3: u32) {
 #[test]
 #[fuzzer(runs: 20)]
 fn test_ownership_protection_fuzz(caller1: felt252, caller2: felt252, caller3: felt252) {
-    let (token_dispatcher, erc721_dispatcher, _) = deploy_test_token();
+    let test_contracts = setup();
 
     let owner = contract_address_const::<0x1>();
-    let token_id = token_dispatcher
+    let token_id = test_contracts.test_token
         .mint(
             Option::None,
             Option::None,
@@ -280,7 +266,7 @@ fn test_ownership_protection_fuzz(caller1: felt252, caller2: felt252, caller3: f
         );
 
     // Verify owner
-    assert!(erc721_dispatcher.owner_of(token_id.into()) == owner, "Owner mismatch");
+    assert!(test_contracts.erc721.owner_of(token_id.into()) == owner, "Owner mismatch");
 
     // Try transfers from non-owners (should revert)
     let random_callers = array![caller1, caller2, caller3];
@@ -295,7 +281,7 @@ fn test_ownership_protection_fuzz(caller1: felt252, caller2: felt252, caller3: f
             // This would panic if we actually tried to transfer without approval
             // For fuzz testing, we just verify the owner remains unchanged
             assert!(
-                erc721_dispatcher.owner_of(token_id.into()) == owner, "Owner should not change",
+                test_contracts.erc721.owner_of(token_id.into()) == owner, "Owner should not change",
             );
         }
         i += 1;
@@ -306,10 +292,10 @@ fn test_ownership_protection_fuzz(caller1: felt252, caller2: felt252, caller3: f
 #[test]
 #[fuzzer(runs: 30)]
 fn test_settings_immutability_fuzz(settings_id: u32, op1: u8, op2: u8, op3: u8) {
-    let (token_dispatcher, _, mock_game) = deploy_test_token();
+    let test_contracts = setup();
 
     // MockGame doesn't have settings support, so we'll mint without settings
-    let token_id = token_dispatcher
+    let token_id = test_contracts.test_token
         .mint(
             Option::None, // Use default game address from constructor
             Option::None,
@@ -325,7 +311,7 @@ fn test_settings_immutability_fuzz(settings_id: u32, op1: u8, op2: u8, op3: u8) 
         );
 
     // Get initial settings ID (should be 0 since no settings provided)
-    let initial_settings = token_dispatcher.settings_id(token_id);
+    let initial_settings = test_contracts.test_token.settings_id(token_id);
     assert!(initial_settings == 0, "Settings ID should be 0 when not provided");
 
     // Perform various operations
@@ -338,22 +324,22 @@ fn test_settings_immutability_fuzz(settings_id: u32, op1: u8, op2: u8, op3: u8) 
         match op {
             0 => {
                 // Update game
-                token_dispatcher.update_game(token_id);
+                test_contracts.test_token.update_game(token_id);
             },
             1 => {
-                // Change score
-                mock_game.set_score(token_id, 100 + i);
-                token_dispatcher.update_game(token_id);
+                // Change end
+                test_contracts.mock_minigame.end_game(token_id, 100 + i);
+                test_contracts.test_token.update_game(token_id);
             },
             _ => {
                 // Set game over
-                mock_game.set_game_over(token_id, true);
-                token_dispatcher.update_game(token_id);
+                test_contracts.mock_minigame.end_game(token_id, 1);
+                test_contracts.test_token.update_game(token_id);
             },
         }
 
         // Verify settings remain unchanged (should still be 0)
-        assert!(token_dispatcher.settings_id(token_id) == 0, "Settings should not change");
+        assert!(test_contracts.test_token.settings_id(token_id) == 0, "Settings should not change");
 
         i += 1;
     };
@@ -363,11 +349,11 @@ fn test_settings_immutability_fuzz(settings_id: u32, op1: u8, op2: u8, op3: u8) 
 #[test]
 #[fuzzer(runs: 20)]
 fn test_objective_completion_one_way_fuzz(seq1: u8, seq2: u8, seq3: u8) {
-    let (token_dispatcher, _, mock_game) = deploy_test_token();
+    let test_contracts = setup();
 
     // MockGame doesn't have create_objective_score
 
-    let token_id = token_dispatcher
+    let token_id = test_contracts.test_token
         .mint(
             Option::None,
             Option::None,
@@ -391,7 +377,7 @@ fn test_objective_completion_one_way_fuzz(seq1: u8, seq2: u8, seq3: u8) {
         let obj_idx = *completion_sequence.at(i);
 
         // Get current objectives state
-        let objectives = token_dispatcher.objectives(token_id);
+        let objectives = test_contracts.test_token.objectives(token_id);
 
         if obj_idx.into() < objectives.len() {
             let obj = objectives.at(obj_idx.into());
@@ -404,8 +390,8 @@ fn test_objective_completion_one_way_fuzz(seq1: u8, seq2: u8, seq3: u8) {
             // Mark as completed
             if !*completed.at(obj_idx.into()) {
                 // Simulate completion by reaching required score
-                mock_game.set_score(token_id, 50 + (obj_idx.into() + 1) * 50);
-                token_dispatcher.update_game(token_id);
+                test_contracts.mock_minigame.end_game(token_id, 50 + (obj_idx.into() + 1) * 50);
+                test_contracts.test_token.update_game(token_id);
                 // Update tracking (in real scenario, would check actual completion)
             }
         }
@@ -418,7 +404,7 @@ fn test_objective_completion_one_way_fuzz(seq1: u8, seq2: u8, seq3: u8) {
 #[test]
 #[fuzzer(runs: 50)]
 fn test_token_id_uniqueness_fuzz(mint_count: u8) {
-    let (token_dispatcher, _, _) = deploy_test_token();
+    let test_contracts = setup();
 
     // Limit mints to reasonable number (1-20)
     let num_mints = ((mint_count % 20) + 1).into();
@@ -429,7 +415,7 @@ fn test_token_id_uniqueness_fuzz(mint_count: u8) {
     // Mint multiple tokens
     let mut i: u32 = 0;
     while i < num_mints {
-        let token_id = token_dispatcher
+        let token_id = test_contracts.test_token
             .mint(
                 Option::None,
                 Option::None,
@@ -467,7 +453,7 @@ fn test_token_id_uniqueness_fuzz(mint_count: u8) {
 #[test]
 #[fuzzer(runs: 30)]
 fn test_minter_tracking_consistency_fuzz(mint_count: u8) {
-    let (token_dispatcher, _, _) = deploy_test_token();
+    let test_contracts = setup();
 
     // Test with different minters
     let minter1 = contract_address_const::<0x200>();
@@ -488,10 +474,10 @@ fn test_minter_tracking_consistency_fuzz(mint_count: u8) {
         let mut j: u32 = 0;
         while j < num_mints_per_minter {
             cheat_caller_address(
-                token_dispatcher.contract_address, minter, CheatSpan::TargetCalls(1),
+                test_contracts.test_token.contract_address, minter, CheatSpan::TargetCalls(1),
             );
 
-            let token_id = token_dispatcher
+            let token_id = test_contracts.test_token
                 .mint(
                     Option::None,
                     Option::None,
@@ -507,16 +493,16 @@ fn test_minter_tracking_consistency_fuzz(mint_count: u8) {
                 );
 
             // Verify minter tracking
-            let minter_id = token_dispatcher.minted_by(token_id);
+            let minter_id = test_contracts.test_token.minted_by(token_id);
             assert!(minter_id > 0, "Minter ID should be non-zero");
 
             // Verify bidirectional mapping
-            let retrieved_minter = token_dispatcher.get_minter_address(minter_id);
+            let retrieved_minter = test_contracts.test_token.get_minter_address(minter_id);
             assert!(retrieved_minter == minter, "Minter address mismatch");
 
             // Verify reverse lookup
-            assert!(token_dispatcher.minter_exists(minter), "Minter should exist");
-            let retrieved_id = token_dispatcher.get_minter_id(minter);
+            assert!(test_contracts.test_token.minter_exists(minter), "Minter should exist");
+            let retrieved_id = test_contracts.test_token.get_minter_id(minter);
             assert!(retrieved_id == minter_id, "Minter ID mismatch");
 
             // Track minter IDs for uniqueness check
@@ -548,7 +534,7 @@ fn test_minter_tracking_consistency_fuzz(mint_count: u8) {
     };
 
     // Verify total minter count
-    let total_minters = token_dispatcher.total_minters();
+    let total_minters = test_contracts.test_token.total_minters();
     assert!(total_minters >= minter_ids.len().into(), "Total minters count incorrect");
 }
 
@@ -556,12 +542,12 @@ fn test_minter_tracking_consistency_fuzz(mint_count: u8) {
 #[test]
 #[fuzzer(runs: 20)]
 fn test_soulbound_transfer_block_fuzz(attempt1: felt252, attempt2: felt252, attempt3: felt252) {
-    let (token_dispatcher, erc721_dispatcher, _) = deploy_test_token();
+    let test_contracts = setup();
 
     let owner = contract_address_const::<0x1>();
 
     // Mint soulbound token
-    let token_id = token_dispatcher
+    let token_id = test_contracts.test_token
         .mint(
             Option::None,
             Option::None,
@@ -577,7 +563,7 @@ fn test_soulbound_transfer_block_fuzz(attempt1: felt252, attempt2: felt252, atte
         );
 
     // Verify it's soulbound
-    assert!(token_dispatcher.is_soulbound(token_id), "Token should be soulbound");
+    assert!(test_contracts.test_token.is_soulbound(token_id), "Token should be soulbound");
 
     // Try various transfer attempts
     let transfer_attempts = array![attempt1, attempt2, attempt3];
@@ -591,7 +577,7 @@ fn test_soulbound_transfer_block_fuzz(attempt1: felt252, attempt2: felt252, atte
             // In real test, transfer would panic due to soulbound
             // Here we just verify token remains with original owner
             assert!(
-                erc721_dispatcher.owner_of(token_id.into()) == owner,
+                test_contracts.erc721.owner_of(token_id.into()) == owner,
                 "Soulbound token should not transfer",
             );
         }
@@ -607,13 +593,13 @@ fn test_soulbound_transfer_block_fuzz(attempt1: felt252, attempt2: felt252, atte
 #[should_panic]
 #[fuzzer(runs: 10)]
 fn test_mint_nonexistent_settings_fuzz(settings_offset: u32) {
-    let (token_dispatcher, _, _) = deploy_test_token();
+    let test_contracts = setup();
 
     // Generate settings ID in range [1000, 2000]
     let settings_id = 1000 + (settings_offset % 1000);
 
     // This should panic as settings don't exist
-    token_dispatcher
+    test_contracts.test_token
         .mint(
             Option::None,
             Option::None,
@@ -634,7 +620,7 @@ fn test_mint_nonexistent_settings_fuzz(settings_offset: u32) {
 #[should_panic(expected: "Lifecycle: Start time cannot be greater than end time")]
 #[fuzzer(runs: 10)]
 fn test_invalid_lifecycle_fuzz(start: u64, end_offset: u64) {
-    let (token_dispatcher, _, _) = deploy_test_token();
+    let test_contracts = setup();
 
     // Ensure start > end
     let start_time = if start == 0 {
@@ -649,7 +635,7 @@ fn test_invalid_lifecycle_fuzz(start: u64, end_offset: u64) {
     };
 
     // This should panic
-    token_dispatcher
+    test_contracts.test_token
         .mint(
             Option::None,
             Option::None,
@@ -669,13 +655,13 @@ fn test_invalid_lifecycle_fuzz(start: u64, end_offset: u64) {
 #[test]
 #[fuzzer(runs: 5)]
 fn test_soulbound_transfer_scenarios_fuzz(scenario: u8) {
-    let (token_dispatcher, erc721_dispatcher, _) = deploy_test_token();
+    let test_contracts = setup();
 
     let owner = contract_address_const::<0x1>();
     let _other = contract_address_const::<0x2>();
 
     // Mint soulbound token
-    let token_id = token_dispatcher
+    let token_id = test_contracts.test_token
         .mint(
             Option::None,
             Option::None,
@@ -696,25 +682,25 @@ fn test_soulbound_transfer_scenarios_fuzz(scenario: u8) {
             // Direct transfer - would panic in real implementation
             // Here we verify owner doesn't change
             assert!(
-                erc721_dispatcher.owner_of(token_id.into()) == owner, "Owner should not change",
+                test_contracts.erc721.owner_of(token_id.into()) == owner, "Owner should not change",
             );
         },
         1 => {
             // Approve and transfer - would panic
             assert!(
-                erc721_dispatcher.owner_of(token_id.into()) == owner, "Owner should not change",
+                test_contracts.erc721.owner_of(token_id.into()) == owner, "Owner should not change",
             );
         },
         2 => {
             // Safe transfer - would panic
             assert!(
-                erc721_dispatcher.owner_of(token_id.into()) == owner, "Owner should not change",
+                test_contracts.erc721.owner_of(token_id.into()) == owner, "Owner should not change",
             );
         },
         _ => {
             // Set approval for all - doesn't affect soulbound
             assert!(
-                erc721_dispatcher.owner_of(token_id.into()) == owner, "Owner should not change",
+                test_contracts.erc721.owner_of(token_id.into()) == owner, "Owner should not change",
             );
         },
     }

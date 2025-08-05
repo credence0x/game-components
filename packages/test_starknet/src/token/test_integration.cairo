@@ -244,17 +244,17 @@ fn test_multi_game_platform() {
 #[test]
 fn test_time_campaign() {
     // Deploy contracts
-    let (token_dispatcher, _, _) = deploy_simple_setup();
+    let test_contracts = setup();
 
     let current_time: u64 = 1000;
     let future_start: u64 = 2000;
     let campaign_end: u64 = 3000;
 
     // Set current time
-    start_cheat_block_timestamp(token_dispatcher.contract_address, current_time);
+    start_cheat_block_timestamp(test_contracts.test_token.contract_address, current_time);
 
     // Mint token with future start
-    let token_id = token_dispatcher
+    let token_id = test_contracts.test_token
         .mint(
             Option::None,
             Option::Some("TimePlayer"),
@@ -270,25 +270,25 @@ fn test_time_campaign() {
         );
 
     // 1. Verify not playable before start
-    assert!(!token_dispatcher.is_playable(token_id), "Should not be playable before start");
+    assert!(!test_contracts.test_token.is_playable(token_id), "Should not be playable before start");
 
     // 2. Move to exactly start time
-    start_cheat_block_timestamp(token_dispatcher.contract_address, future_start);
-    assert!(token_dispatcher.is_playable(token_id), "Should be playable at start time");
+    start_cheat_block_timestamp(test_contracts.test_token.contract_address, future_start);
+    assert!(test_contracts.test_token.is_playable(token_id), "Should be playable at start time");
 
     // 3. Play during campaign
-    start_cheat_block_timestamp(token_dispatcher.contract_address, future_start + 500);
-    assert!(token_dispatcher.is_playable(token_id), "Should be playable during campaign");
+    start_cheat_block_timestamp(test_contracts.test_token.contract_address, future_start + 500);
+    assert!(test_contracts.test_token.is_playable(token_id), "Should be playable during campaign");
 
     // 4. Move to exactly end time
-    start_cheat_block_timestamp(token_dispatcher.contract_address, campaign_end);
-    assert!(!token_dispatcher.is_playable(token_id), "Should not be playable at end time");
+    start_cheat_block_timestamp(test_contracts.test_token.contract_address, campaign_end);
+    assert!(!test_contracts.test_token.is_playable(token_id), "Should not be playable at end time");
 
     // 5. Verify unplayable after end
-    start_cheat_block_timestamp(token_dispatcher.contract_address, campaign_end + 1000);
-    assert!(!token_dispatcher.is_playable(token_id), "Should not be playable after campaign");
+    start_cheat_block_timestamp(test_contracts.test_token.contract_address, campaign_end + 1000);
+    assert!(!test_contracts.test_token.is_playable(token_id), "Should not be playable after campaign");
 
-    stop_cheat_block_timestamp(token_dispatcher.contract_address);
+    stop_cheat_block_timestamp(test_contracts.test_token.contract_address);
 }
 
 // ================================================================================================
@@ -299,34 +299,7 @@ fn test_time_campaign() {
 #[test] // Requires objectives extension implementation
 fn test_achievement_hunt() {
     // Deploy contracts with objectives support
-    let (game, game_init, mock_game) = deploy_mock_game();
-
-    // Deploy token with custom metadata and game address
-    let (token_dispatcher, _, _, token_address) = deploy_full_token_contract(
-        Option::Some("AchievementToken"),
-        Option::Some("ACH"),
-        Option::Some(""),
-        Option::None,
-        Option::None,
-    );
-
-    // Initialize game
-    game_init
-        .initializer(
-            ALICE(),
-            "AchievementGame",
-            "Hunt for achievements",
-            "Developer",
-            "Publisher",
-            "Adventure",
-            "Image",
-            Option::None,
-            Option::None,
-            Option::None,
-            Option::Some(game.contract_address),
-            Option::Some(game.contract_address),
-            token_address,
-        );
+    let test_contracts = setup();
 
     // Create 10 objectives
     let mut objective_ids = array![];
@@ -338,9 +311,9 @@ fn test_achievement_hunt() {
     };
 
     // Mint token with all objectives
-    let token_id = token_dispatcher
+    let token_id = test_contracts.test_token
         .mint(
-            Option::Some(game.contract_address),
+            Option::Some(test_contracts.minigame.contract_address),
             Option::Some("AchievementHunter"),
             Option::None,
             Option::None,
@@ -354,9 +327,9 @@ fn test_achievement_hunt() {
         );
 
     // Verify initial state
-    assert!(token_dispatcher.objectives_count(token_id) == 10, "Should have 10 objectives");
+    assert!(test_contracts.test_token.objectives_count(token_id) == 10, "Should have 10 objectives");
     assert!(
-        !token_dispatcher.all_objectives_completed(token_id), "Objectives should not be completed",
+        !test_contracts.test_token.all_objectives_completed(token_id), "Objectives should not be completed",
     );
 
     // Complete first 5 objectives
@@ -364,12 +337,12 @@ fn test_achievement_hunt() {
     while j < 5 {
         // Set score to complete objective
         // mock_game.set_score(token_id, (j + 1) * 100);
-        token_dispatcher.update_game(token_id);
+        test_contracts.test_token.update_game(token_id);
         j += 1;
     };
 
     // Verify partial completion
-    let objectives = token_dispatcher.objectives(token_id);
+    let objectives = test_contracts.test_token.objectives(token_id);
     let mut completed_count: u32 = 0;
     let mut k: u32 = 0;
     while k < objectives.len() {
@@ -387,16 +360,16 @@ fn test_achievement_hunt() {
     while l < 10 {
         // Set score to complete remaining objectives
         // mock_game.set_score(token_id, (l + 1) * 100);
-        token_dispatcher.update_game(token_id);
+        test_contracts.test_token.update_game(token_id);
         l += 1;
     };
 
     // Set final state
-    mock_game.end_game(token_id, 1000);
-    token_dispatcher.update_game(token_id);
+    test_contracts.mock_minigame.end_game(token_id, 1000);
+    test_contracts.test_token.update_game(token_id);
 
     // Verify completion
-    let metadata = token_dispatcher.token_metadata(token_id);
+    let metadata = test_contracts.test_token.token_metadata(token_id);
     assert!(metadata.completed_all_objectives, "All objectives should be completed");
     assert!(metadata.game_over, "Game should be over");
 }
@@ -407,10 +380,10 @@ fn test_achievement_hunt() {
 
 #[test]
 fn test_double_mint_attack() {
-    let (token_dispatcher, _, _) = deploy_simple_setup();
+    let test_contracts = setup();
 
     // First mint
-    let token_id_1 = token_dispatcher
+    let token_id_1 = test_contracts.test_token
         .mint(
             Option::None,
             Option::None,
@@ -426,7 +399,7 @@ fn test_double_mint_attack() {
         );
 
     // Second mint - should get different ID
-    let token_id_2 = token_dispatcher
+    let token_id_2 = test_contracts.test_token
         .mint(
             Option::None,
             Option::None,
