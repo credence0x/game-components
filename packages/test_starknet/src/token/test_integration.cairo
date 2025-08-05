@@ -683,6 +683,8 @@ fn test_registry_lookup_edge_cases() {
         Option::Some("Multi Game Token"),
         Option::Some("MGT"),
         Option::Some(""),
+        Option::None,
+        Option::None,
         Option::Some(registry_address),
         Option::None,
     );

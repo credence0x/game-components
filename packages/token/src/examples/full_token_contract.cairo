@@ -8,6 +8,7 @@ use starknet::storage::{StoragePointerReadAccess};
 // Core imports
 use openzeppelin_token::erc721::{ERC721Component, interface::IERC721Metadata};
 use openzeppelin_introspection::src5::SRC5Component;
+use openzeppelin_token::common::erc2981::erc2981::{DefaultConfig, ERC2981Component};
 
 // Game components imports
 use crate::core::core_token::CoreTokenComponent;
@@ -38,6 +39,7 @@ pub mod FullTokenContract {
 
     // Core components (always included)
     component!(path: ERC721Component, storage: erc721, event: ERC721Event);
+    component!(path: ERC2981Component, storage: erc721, event: ERC2981Event);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
     component!(path: CoreTokenComponent, storage: core_token, event: CoreTokenEvent);
 
@@ -57,6 +59,8 @@ pub mod FullTokenContract {
         // Core storage (always included)
         #[substorage(v0)]
         erc721: ERC721Component::Storage,
+        #[substorage(v0)]
+        erc2981: ERC2981Component::Storage,
         #[substorage(v0)]
         src5: SRC5Component::Storage,
         #[substorage(v0)]
@@ -84,6 +88,8 @@ pub mod FullTokenContract {
         #[flat]
         ERC721Event: ERC721Component::Event,
         #[flat]
+        ERC2981Event: ERC2981Component::Event,
+        #[flat]
         SRC5Event: SRC5Component::Event,
         #[flat]
         CoreTokenEvent: CoreTokenComponent::Event,
@@ -107,6 +113,10 @@ pub mod FullTokenContract {
     #[abi(embed_v0)]
     impl ERC721Impl = ERC721Component::ERC721Impl<ContractState>;
     #[abi(embed_v0)]
+    impl ERC2981Impl = ERC2981Component::ERC2981Impl<ContractState>;
+    #[abi(embed_v0)]
+    impl ERC2981InfoImpl = ERC2981Component::ERC2981InfoImpl<ContractState>;
+    #[abi(embed_v0)]
     impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
     #[abi(embed_v0)]
     impl CoreTokenImpl = CoreTokenComponent::CoreTokenImpl<ContractState>;
@@ -123,6 +133,7 @@ pub mod FullTokenContract {
 
     // Internal implementations
     impl ERC721InternalImpl = ERC721Component::InternalImpl<ContractState>;
+    impl ERC2981InternalImpl = ERC2981Component::InternalImpl<ContractState>;
     impl SRC5InternalImpl = SRC5Component::InternalImpl<ContractState>;
     impl CoreTokenInternalImpl = CoreTokenComponent::InternalImpl<ContractState>;
     impl MinterInternalImpl = MinterComponent::InternalImpl<ContractState>;
@@ -314,11 +325,14 @@ pub mod FullTokenContract {
         name: ByteArray,
         symbol: ByteArray,
         base_uri: ByteArray,
+        royalty_receiver: ContractAddress,
+        royalty_fraction: u128,
         game_registry_address: Option<ContractAddress>,
         event_relayer_address: Option<ContractAddress>,
     ) {
         // Initialize core components
         self.erc721.initializer(name, symbol, base_uri);
+        self.erc2981.initializer(royalty_receiver, royalty_fraction);
         self
             .core_token
             .initializer(Option::None, Option::None, game_registry_address, event_relayer_address);
