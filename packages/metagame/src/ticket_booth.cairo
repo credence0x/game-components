@@ -15,7 +15,7 @@ pub mod TicketBoothComponent {
     use core::num::traits::Zero;
     use core::byte_array::ByteArray;
     use crate::libs;
-    use openzeppelin_token::erc20::interface::{IERC20SafeDispatcher, IERC20SafeDispatcherTrait};
+    use openzeppelin_token::erc20::interface::{IERC20Dispatcher, IERC20DispatcherTrait};
     use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
 
     use starknet::contract_address::ContractAddress;
@@ -304,7 +304,7 @@ pub mod TicketBoothComponent {
             let ticket_receiver_address = self.ticket_receiver_address.read();
 
             // Handle payment (redeem the ticket)
-            let payment_token = IERC20SafeDispatcher { contract_address: payment_token_address };
+            let payment_token = IERC20Dispatcher { contract_address: payment_token_address };
             if !ticket_receiver_address.is_zero() {
                 let _ = payment_token.transfer_from(caller, ticket_receiver_address, cost.into());
             } else {
