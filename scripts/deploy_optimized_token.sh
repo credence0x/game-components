@@ -105,14 +105,18 @@ TOKEN_SYMBOL="${TOKEN_SYMBOL:-TGT}"
 TOKEN_BASE_URI="${TOKEN_BASE_URI:-https://api.game.com/token/}"
 
 # Registry Parameters
-REGISTRY_NAME="${REGISTRY_NAME:-GameRegistry}"
-REGISTRY_SYMBOL="${REGISTRY_SYMBOL:-GREG}"
+REGISTRY_NAME="${REGISTRY_NAME:-TestGameRegistry}"
+REGISTRY_SYMBOL="${REGISTRY_SYMBOL:-TGR}"
 REGISTRY_BASE_URI="${REGISTRY_BASE_URI:-https://api.game.com/registry/}"
 
 # Optional addresses (can be set via environment variables)
 GAME_ADDRESS="${GAME_ADDRESS:-}"
 GAME_REGISTRY_ADDRESS="${GAME_REGISTRY_ADDRESS:-}"
 RELAYER_ADDRESS="${RELAYER_ADDRESS:-}"
+
+# Royalty Parameters
+ROYALTY_ADDRESS="${ROYALTY_ADDRESS:-}"
+ROYALTY_FRACTION="${ROYALTY_FRACTION:-}"
 
 # ============================
 # DISPLAY CONFIGURATION
@@ -137,6 +141,10 @@ echo "  Optional Addresses:"
 echo "    Game Address: ${GAME_ADDRESS:-<not set>}"
 echo "    Game Registry Address: ${GAME_REGISTRY_ADDRESS:-<not set>}"
 echo "    Relayer Address: ${RELAYER_ADDRESS:-<not set>}"
+echo ""
+echo "  Royalty Parameters:"
+echo "    Royalty Address: ${ROYALTY_ADDRESS:-<not set>}"
+echo "    Royalty Fraction: ${ROYALTY_FRACTION:-<not set>}"
 
 # Confirm deployment
 if [ "${SKIP_CONFIRMATION:-false}" != "true" ]; then
@@ -293,12 +301,14 @@ fi
 
 print_info "Preparing constructor arguments..."
 
-# Constructor parameters for OptimizedTokenContract:
+# Constructor parameters for FullTokenContract:
 # - name: ByteArray
 # - symbol: ByteArray  
 # - base_uri: ByteArray
-# - game_address: Option<ContractAddress>
+# - royalty_receiver: ContractAddress
+# - royalty_fraction: u128
 # - game_registry_address: Option<ContractAddress>
+# - event_relayer_address: Option<ContractAddress>
 
 # Using starkli's built-in bytearray conversion
 TOKEN_NAME_ARG="bytearray:str:$TOKEN_NAME"
@@ -308,6 +318,18 @@ TOKEN_BASE_URI_ARG="bytearray:str:$TOKEN_BASE_URI"
 print_info "Token name: '$TOKEN_NAME' -> $TOKEN_NAME_ARG"
 print_info "Token symbol: '$TOKEN_SYMBOL' -> $TOKEN_SYMBOL_ARG" 
 print_info "Base URI: '$TOKEN_BASE_URI' -> $TOKEN_BASE_URI_ARG"
+
+# Check if royalty parameters are set
+if [ -z "$ROYALTY_ADDRESS" ] || [ -z "$ROYALTY_FRACTION" ]; then
+    print_error "ROYALTY_ADDRESS and ROYALTY_FRACTION must be set"
+    print_error "Please set these environment variables:"
+    print_error "  export ROYALTY_ADDRESS=0x..."
+    print_error "  export ROYALTY_FRACTION=<fraction in basis points, e.g., 250 for 2.5%>"
+    exit 1
+fi
+
+print_info "Royalty receiver: $ROYALTY_ADDRESS"
+print_info "Royalty fraction: $ROYALTY_FRACTION (basis points)"
 
 # ============================
 # DEPLOY CONTRACT
@@ -341,6 +363,8 @@ if [ "$DEPLOY_TO_SLOT" = "true" ]; then
         "$TOKEN_NAME_ARG" \
         "$TOKEN_SYMBOL_ARG" \
         "$TOKEN_BASE_URI_ARG" \
+        $ROYALTY_ADDRESS \
+        $ROYALTY_FRACTION \
         $(if [ -n "$GAME_REGISTRY_ADDRESS" ]; then echo "0 $GAME_REGISTRY_ADDRESS"; else echo "1"; fi) \
         $(if [ -n "$RELAYER_ADDRESS" ]; then echo "0 $RELAYER_ADDRESS"; else echo "1"; fi) \
         2>&1 | tee >(cat >&2) | grep -oE '0x[0-9a-fA-F]{64}' | tail -1)
@@ -354,6 +378,8 @@ else
         "$TOKEN_NAME_ARG" \
         "$TOKEN_SYMBOL_ARG" \
         "$TOKEN_BASE_URI_ARG" \
+        $ROYALTY_ADDRESS \
+        $ROYALTY_FRACTION \
         $(if [ -n "$GAME_REGISTRY_ADDRESS" ]; then echo "0 $GAME_REGISTRY_ADDRESS"; else echo "1"; fi) \
         $(if [ -n "$RELAYER_ADDRESS" ]; then echo "0 $RELAYER_ADDRESS"; else echo "1"; fi) \
         2>&1 | tee >(cat >&2) | grep -oE '0x[0-9a-fA-F]{64}' | tail -1)
@@ -384,6 +410,8 @@ cat > "$DEPLOYMENT_FILE" << EOF
       "name": "$TOKEN_NAME",
       "symbol": "$TOKEN_SYMBOL",
       "base_uri": "$TOKEN_BASE_URI",
+      "royalty_receiver": "${ROYALTY_ADDRESS:-null}",
+      "royalty_fraction": "${ROYALTY_FRACTION:-null}",
       "game_address": "${GAME_ADDRESS:-null}",
       "game_registry_address": "${GAME_REGISTRY_ADDRESS:-null}",
       "relayer_address": "${RELAYER_ADDRESS:-null}"
@@ -423,6 +451,8 @@ echo "  Class Hash: $CLASS_HASH"
 echo "  Token Name: $TOKEN_NAME"
 echo "  Token Symbol: $TOKEN_SYMBOL"
 echo "  Base URI: $TOKEN_BASE_URI"
+echo "  Royalty Receiver: $ROYALTY_ADDRESS"
+echo "  Royalty Fraction: $ROYALTY_FRACTION basis points"
 echo
 
 echo "Next steps:"
