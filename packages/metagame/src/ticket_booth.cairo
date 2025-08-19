@@ -15,7 +15,7 @@ pub mod TicketBoothComponent {
     use core::num::traits::Zero;
     use core::byte_array::ByteArray;
     use crate::libs;
-    use openzeppelin_token::erc20::interface::{IERC20SafeDispatcher, IERC20SafeDispatcherTrait};
+    use openzeppelin_token::erc20::interface::{IERC20Dispatcher, IERC20DispatcherTrait};
     use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
 
     use starknet::contract_address::ContractAddress;
@@ -111,6 +111,9 @@ pub mod TicketBoothComponent {
         fn golden_pass_last_used(
             self: @TContractState, golden_pass_address: ContractAddress, token_id: u128,
         ) -> u64;
+        fn is_golden_pass_usable(
+            self: @TContractState, golden_pass_address: ContractAddress, token_id: u128,
+        ) -> bool;
         fn ticket_receiver_address(self: @TContractState) -> ContractAddress;
         fn opening_time(self: @TContractState) -> u64;
     }
@@ -194,6 +197,29 @@ pub mod TicketBoothComponent {
             token_id: u128,
         ) -> u64 {
             self.golden_pass_last_used.read((golden_pass_address, token_id))
+        }
+
+        fn is_golden_pass_usable(
+            self: @ComponentState<TContractState>,
+            golden_pass_address: ContractAddress,
+            token_id: u128,
+        ) -> bool {
+            let golden_pass_config = self.golden_passes.read(golden_pass_address);
+            if golden_pass_config.cooldown == 0_u64 {
+                return false;
+            }
+
+            let current_time = get_block_timestamp();
+
+            // Check if the pass is expired
+            if golden_pass_config.pass_expiration > 0_u64
+                && current_time >= golden_pass_config.pass_expiration {
+                return false;
+            }
+
+            // Check cooldown
+            let last_used = self.golden_pass_last_used.read((golden_pass_address, token_id));
+            current_time >= last_used + golden_pass_config.cooldown
         }
 
         fn ticket_receiver_address(self: @ComponentState<TContractState>) -> ContractAddress {
@@ -304,7 +330,7 @@ pub mod TicketBoothComponent {
             let ticket_receiver_address = self.ticket_receiver_address.read();
 
             // Handle payment (redeem the ticket)
-            let payment_token = IERC20SafeDispatcher { contract_address: payment_token_address };
+            let payment_token = IERC20Dispatcher { contract_address: payment_token_address };
             if !ticket_receiver_address.is_zero() {
                 let _ = payment_token.transfer_from(caller, ticket_receiver_address, cost.into());
             } else {
