@@ -22,7 +22,7 @@ trait IMockMetagame<TContractState> {
     fn mint(
         ref self: TContractState,
         game_address: Option<ContractAddress>,
-        player_name: Option<ByteArray>,
+        player_name: Option<felt252>,
         settings_id: Option<u32>,
         start: Option<u64>,
         end: Option<u64>,
@@ -292,7 +292,7 @@ fn test_mint_with_all_parameters() {
     let token_id = dispatcher
         .mint(
             Option::Some(game_dispatcher.contract_address),
-            Option::Some("Player One"),
+            Option::Some('Player One'),
             Option::None, // settings_id - None since game doesn't have settings support
             Option::Some(1000), // start
             Option::Some(2000), // end
@@ -585,7 +585,7 @@ mod MockMetagameContract {
         fn mint(
             ref self: ContractState,
             game_address: Option<ContractAddress>,
-            player_name: Option<ByteArray>,
+            player_name: Option<felt252>,
             settings_id: Option<u32>,
             start: Option<u64>,
             end: Option<u64>,

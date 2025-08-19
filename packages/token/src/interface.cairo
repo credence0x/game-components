@@ -13,7 +13,7 @@ pub trait IMinigameTokenMixin<TState> {
     fn token_metadata(self: @TState, token_id: u64) -> TokenMetadata;
     fn is_playable(self: @TState, token_id: u64) -> bool;
     fn settings_id(self: @TState, token_id: u64) -> u32;
-    fn player_name(self: @TState, token_id: u64) -> ByteArray;
+    fn player_name(self: @TState, token_id: u64) -> felt252;
     fn objectives_count(self: @TState, token_id: u64) -> u32;
     fn minted_by(self: @TState, token_id: u64) -> u64;
     fn game_address(self: @TState) -> ContractAddress;
@@ -25,7 +25,7 @@ pub trait IMinigameTokenMixin<TState> {
     fn mint(
         ref self: TState,
         game_address: Option<ContractAddress>,
-        player_name: Option<ByteArray>,
+        player_name: Option<felt252>,
         settings_id: Option<u32>,
         start: Option<u64>,
         end: Option<u64>,
@@ -40,7 +40,7 @@ pub trait IMinigameTokenMixin<TState> {
         ref self: TState,
         token_id: u64,
         game_address: ContractAddress,
-        player_name: Option<ByteArray>,
+        player_name: Option<felt252>,
         settings_id: Option<u32>,
         start: Option<u64>,
         end: Option<u64>,
@@ -104,8 +104,7 @@ pub trait ITokenEventRelayer<TContractState> {
         has_context: bool,
         objectives_count: u8,
     );
-    fn emit_token_counter_update(ref self: TContractState, counter: u64);
-    fn emit_token_player_name_update(ref self: TContractState, id: u64, player_name: ByteArray);
+    fn emit_token_player_name_update(ref self: TContractState, id: u64, player_name: felt252);
     fn emit_token_client_url_update(ref self: TContractState, id: u64, client_url: ByteArray);
     fn emit_token_score_update(ref self: TContractState, id: u64, score: u64);
 
@@ -134,7 +133,6 @@ pub trait ITokenEventRelayer<TContractState> {
     fn emit_minter_registry_update(
         ref self: TContractState, id: u64, minter_address: ContractAddress,
     );
-    fn emit_minter_counter_update(ref self: TContractState, counter: u64);
 
     // Context extension events
     fn emit_token_context_update(ref self: TContractState, id: u64, context_data: ByteArray);
@@ -145,7 +143,6 @@ pub trait ITokenEventRelayer<TContractState> {
     );
 
     // MinigameRegistry events
-    fn emit_game_counter_update(ref self: TContractState, counter: u64);
     fn emit_game_metadata_update(
         ref self: TContractState,
         id: u64,

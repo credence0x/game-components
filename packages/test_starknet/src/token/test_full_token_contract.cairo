@@ -30,7 +30,7 @@ use super::setup::{
 
 #[test]
 fn test_mint_minimal_parameters() { // UT-MINT-001
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     let token_id = test_contracts
         .test_token
@@ -65,7 +65,7 @@ fn test_mint_minimal_parameters() { // UT-MINT-001
 #[test]
 // #[ignore] // TODO: Fix ENTRYPOINT_NOT_FOUND error with objectives/settings
 fn test_mint_with_all_parameters() { // UT-MINT-002
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // TODO: Fix objective creation - currently causing ENTRYPOINT_NOT_FOUND
     test_contracts.mock_minigame.create_objective_score(100);
@@ -86,7 +86,7 @@ fn test_mint_with_all_parameters() { // UT-MINT-002
         .test_token
         .mint(
             Option::Some(test_contracts.minigame.contract_address),
-            Option::Some("TestPlayer"),
+            Option::Some('TestPlayer'),
             Option::Some(1), // Option::Some(1), // settings_id - disabled for now
             Option::Some(CURRENT_TIME),
             Option::Some(FUTURE_TIME),
@@ -111,7 +111,7 @@ fn test_mint_with_all_parameters() { // UT-MINT-002
     assert!(metadata.game_id != 0, "Game ID should not be 0");
 
     assert!(
-        test_contracts.test_token.player_name(token_id) == "TestPlayer", "Player name mismatch",
+        test_contracts.test_token.player_name(token_id) == 'TestPlayer', "Player name mismatch",
     );
     assert!(test_contracts.test_token.is_soulbound(token_id) == true, "Should be soulbound");
     assert!(
@@ -122,7 +122,7 @@ fn test_mint_with_all_parameters() { // UT-MINT-002
 
 #[test]
 fn test_mint_soulbound_token() { // UT-MINT-003
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     let token_id = test_contracts
         .test_token
@@ -146,7 +146,7 @@ fn test_mint_soulbound_token() { // UT-MINT-003
 
 #[test]
 fn test_mint_with_lifecycle_constraints() { // UT-MINT-004
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
     let contract_address = test_contracts.test_token.contract_address;
 
     // Set current time
@@ -183,7 +183,7 @@ fn test_mint_with_lifecycle_constraints() { // UT-MINT-004
 
 #[test]
 fn test_mint_with_objectives() { // UT-MINT-005
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Create objectives
     test_contracts.mock_minigame.create_objective_score(50);
@@ -223,7 +223,7 @@ fn test_mint_with_objectives() { // UT-MINT-005
 
 #[test]
 fn test_mint_with_custom_renderer() { // UT-MINT-006
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     let token_id = test_contracts
         .test_token
@@ -256,7 +256,7 @@ fn test_mint_with_custom_renderer() { // UT-MINT-006
 #[test]
 #[should_panic]
 fn test_mint_to_zero_address() { // UT-MINT-R001
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     test_contracts
         .test_token
@@ -276,9 +276,9 @@ fn test_mint_to_zero_address() { // UT-MINT-R001
 }
 
 #[test]
-#[should_panic(expected: "CoreToken: Game address is zero")]
+#[should_panic(expected: "MinigameToken: Game address is zero")]
 fn test_mint_with_invalid_game_address() { // UT-MINT-R002
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     test_contracts
         .test_token
@@ -300,7 +300,7 @@ fn test_mint_with_invalid_game_address() { // UT-MINT-R002
 #[test]
 #[should_panic]
 fn test_mint_with_non_minigame_contract() { // UT-MINT-R003
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Use the token contract address as a non-minigame contract
     test_contracts
@@ -323,7 +323,7 @@ fn test_mint_with_non_minigame_contract() { // UT-MINT-R003
 #[test]
 #[should_panic]
 fn test_mint_with_invalid_settings_id() { // UT-MINT-R004
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Try to use settings_id that doesn't exist
     test_contracts
@@ -346,7 +346,7 @@ fn test_mint_with_invalid_settings_id() { // UT-MINT-R004
 #[test]
 #[should_panic(expected: "MinigameTokenObjectives: Objective ID does not exist")]
 fn test_mint_with_invalid_objective_ids() { // UT-MINT-R005
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Create only 2 objectives
     test_contracts.mock_minigame.create_objective_score(50);
@@ -375,7 +375,7 @@ fn test_mint_with_invalid_objective_ids() { // UT-MINT-R005
 #[test]
 #[should_panic(expected: "Lifecycle: Start time cannot be greater than end time")]
 fn test_mint_with_start_greater_than_end() { // UT-MINT-R006
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     test_contracts
         .test_token
@@ -395,7 +395,7 @@ fn test_mint_with_start_greater_than_end() { // UT-MINT-R006
 }
 
 #[test]
-#[should_panic(expected: "CoreToken: Game address does not support IMinigame interface")]
+#[should_panic(expected: "MinigameToken: Game address does not support IMinigame interface")]
 fn test_mint_when_game_registry_lookup_fails() { // UT-MINT-R007
     let test_contracts = setup_multi_game();
 
@@ -424,7 +424,7 @@ fn test_mint_when_game_registry_lookup_fails() { // UT-MINT-R007
 
 #[test]
 fn test_mint_with_max_timestamps() { // UT-MINT-B001
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     let token_id = test_contracts
         .test_token
@@ -449,7 +449,7 @@ fn test_mint_with_max_timestamps() { // UT-MINT-B001
 
 #[test]
 fn test_mint_with_empty_objective_array() { // UT-MINT-B002
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     let empty_objectives = array![].span();
 
@@ -475,7 +475,7 @@ fn test_mint_with_empty_objective_array() { // UT-MINT-B002
 #[test]
 // #[ignore] // TODO: Fix objective creation
 fn test_mint_with_maximum_objectives() { // UT-MINT-B003
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Create 100 objectives
     let mut i: u32 = 0;
@@ -515,7 +515,7 @@ fn test_mint_with_maximum_objectives() { // UT-MINT-B003
 
 #[test]
 fn test_sequential_mints_increment_counter() { // UT-MINT-B004
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     let token_id_1 = test_contracts
         .test_token
@@ -582,7 +582,7 @@ fn test_sequential_mints_increment_counter() { // UT-MINT-B004
 
 #[test]
 fn test_update_game_with_state_changes() { // UT-UPDATE-001
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
     let token_id = test_contracts.test_token
         .mint(
             Option::None,
@@ -611,7 +611,7 @@ fn test_update_game_with_state_changes() { // UT-UPDATE-001
 
 #[test]
 fn test_update_game_without_state_changes() { // UT-UPDATE-002
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     let token_id = test_contracts.test_token
         .mint(
@@ -638,7 +638,7 @@ fn test_update_game_without_state_changes() { // UT-UPDATE-002
 
 #[test]
 fn test_update_game_with_objectives_completion() { // UT-UPDATE-003
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Create objectives
     test_contracts.mock_minigame.create_objective_score(50);
@@ -673,7 +673,7 @@ fn test_update_game_with_objectives_completion() { // UT-UPDATE-003
 
 #[test]
 fn test_update_game_with_game_over_transition() { // UT-UPDATE-004
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
     let token_id = test_contracts.test_token
         .mint(
             Option::None,
@@ -709,7 +709,7 @@ fn test_update_game_with_game_over_transition() { // UT-UPDATE-004
 #[test]
 #[should_panic]
 fn test_update_nonexistent_token() { // UT-UPDATE-R001
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Try to update a token that doesn't exist
     test_contracts.test_token.update_game(999);
@@ -746,7 +746,7 @@ fn test_update_game_with_blank_token() {
 
 #[test]
 fn test_game_over_false_to_true_transition() { // UT-UPDATE-S001
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     let token_id = test_contracts.test_token
         .mint(
@@ -787,7 +787,7 @@ fn test_game_over_false_to_true_transition() { // UT-UPDATE-S001
 fn test_objectives_completion_progression() { // UT-UPDATE-S002
     // TODO: Implement once objective completion logic is available
     // For now, just verify update doesn't break with objectives
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     test_contracts.mock_minigame.create_objective_score(50);
     let objective_ids = array![1].span();
@@ -816,7 +816,7 @@ fn test_objectives_completion_progression() { // UT-UPDATE-S002
 
 #[test]
 fn test_idempotent_updates() { // UT-UPDATE-S003
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     let token_id = test_contracts.test_token
         .mint(
@@ -860,7 +860,7 @@ fn test_idempotent_updates() { // UT-UPDATE-S003
 
 #[test]
 fn test_token_metadata_view() { // UT-VIEW-001
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Set a timestamp so minted_at has a value
     start_cheat_block_timestamp(test_contracts.test_token.contract_address, CURRENT_TIME);
@@ -900,7 +900,7 @@ fn test_token_metadata_view() { // UT-VIEW-001
 
 #[test]
 fn test_is_playable_view() { // UT-VIEW-002
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Test case 1: Token with no lifecycle constraints
     let token_id1 = test_contracts
@@ -979,7 +979,7 @@ fn test_is_playable_view() { // UT-VIEW-002
 
 #[test]
 fn test_settings_id_view() { // UT-VIEW-003
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Test with no settings
     let token_id1 = test_contracts
@@ -1005,7 +1005,7 @@ fn test_settings_id_view() { // UT-VIEW-003
 
 #[test]
 fn test_player_name_view() { // UT-VIEW-004
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Test with no player name
     let token_id1 = test_contracts
@@ -1024,14 +1024,14 @@ fn test_player_name_view() { // UT-VIEW-004
             false,
         );
 
-    assert!(test_contracts.test_token.player_name(token_id1) == "", "Player name should be empty");
+    assert!(test_contracts.test_token.player_name(token_id1) == '', "Player name should be empty");
 
     // Test with player name
     let token_id2 = test_contracts
         .test_token
         .mint(
             Option::None,
-            Option::Some("AliceWonderland"),
+            Option::Some('AliceWonderland'),
             Option::None,
             Option::None,
             Option::None,
@@ -1044,14 +1044,14 @@ fn test_player_name_view() { // UT-VIEW-004
         );
 
     assert!(
-        test_contracts.test_token.player_name(token_id2) == "AliceWonderland",
+        test_contracts.test_token.player_name(token_id2) == 'AliceWonderland',
         "Player name mismatch",
     );
 }
 
 #[test]
 fn test_objectives_count_view() { // UT-VIEW-005
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Test with no objectives
     let token_id1 = test_contracts
@@ -1077,7 +1077,7 @@ fn test_objectives_count_view() { // UT-VIEW-005
 
 #[test]
 fn test_minted_by_view() { // UT-VIEW-006
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     let token_id = test_contracts
         .test_token
@@ -1101,7 +1101,7 @@ fn test_minted_by_view() { // UT-VIEW-006
 
 #[test]
 fn test_game_address_view() { // UT-VIEW-007
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Single game token
     let token_id = test_contracts
@@ -1139,7 +1139,7 @@ fn test_game_registry_address_view() { // UT-VIEW-008
 
 #[test]
 fn test_is_soulbound_view() { // UT-VIEW-009
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Non-soulbound token
     let token_id1 = test_contracts
@@ -1182,7 +1182,7 @@ fn test_is_soulbound_view() { // UT-VIEW-009
 
 #[test]
 fn test_renderer_address_view() { // UT-VIEW-010
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // No custom renderer
     let token_id1 = test_contracts
@@ -1235,7 +1235,7 @@ fn test_renderer_address_view() { // UT-VIEW-010
 
 #[test]
 fn test_get_minter_address() { // UT-EXT-001
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Set ALICE as the caller
     cheat_caller_address(
@@ -1273,7 +1273,7 @@ fn test_get_minter_address() { // UT-EXT-001
 
 #[test]
 fn test_minter_tracking() { // UT-EXT-002
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Check initial state
     assert!(test_contracts.test_token.total_minters() == 0, "Should have 0 minters initially");
@@ -1363,7 +1363,7 @@ fn test_minter_tracking() { // UT-EXT-002
 
 #[test]
 fn test_has_custom_renderer() { // UT-EXT-003
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Token without renderer
     let token_id1 = test_contracts
@@ -1424,7 +1424,7 @@ fn test_has_custom_renderer() { // UT-EXT-003
 
 #[test]
 fn test_set_token_metadata_basic() {
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // First mint a blank token (no game address)
     let token_id = test_contracts
@@ -1453,7 +1453,7 @@ fn test_set_token_metadata_basic() {
         .set_token_metadata(
             token_id,
             test_contracts.minigame.contract_address,
-            Option::Some("Player1"),
+            Option::Some('Player1'),
             Option::None,
             Option::None,
             Option::None,
@@ -1465,14 +1465,14 @@ fn test_set_token_metadata_basic() {
     let updated_metadata = test_contracts.test_token.token_metadata(token_id);
     assert!(updated_metadata.game_id == 1, "Game ID should be set");
     assert!(
-        test_contracts.test_token.player_name(token_id) == "Player1", "Player name should be set",
+        test_contracts.test_token.player_name(token_id) == '', "Player name should be set",
     );
 }
 
 #[test]
 #[should_panic(expected: "Token id 1 not minted")]
 fn test_set_token_metadata_nonexistent_token() {
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Try to set metadata on non-existent token
     test_contracts
@@ -1492,7 +1492,7 @@ fn test_set_token_metadata_nonexistent_token() {
 #[test]
 #[should_panic(expected: "Token id 1 not blank")]
 fn test_set_token_metadata_already_set() {
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Mint a token with game address
     let token_id = test_contracts
@@ -1528,7 +1528,7 @@ fn test_set_token_metadata_already_set() {
 
 #[test]
 fn test_set_token_metadata_with_lifecycle() {
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Mint blank token
     let token_id = test_contracts
@@ -1553,7 +1553,7 @@ fn test_set_token_metadata_with_lifecycle() {
         .set_token_metadata(
             token_id,
             test_contracts.minigame.contract_address,
-            Option::Some("TimedPlayer"),
+            Option::Some('TimedPlayer'),
             Option::None,
             Option::Some(1000),
             Option::Some(2000),
@@ -1570,7 +1570,7 @@ fn test_set_token_metadata_with_lifecycle() {
 #[test]
 #[should_panic(expected: "Lifecycle: Start time cannot be greater than end time")]
 fn test_set_token_metadata_invalid_lifecycle() {
-    let test_contracts = setup();
+    let test_contracts = setup_multi_game();
 
     // Mint blank token
     let token_id = test_contracts

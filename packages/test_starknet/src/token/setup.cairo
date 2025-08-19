@@ -401,20 +401,20 @@ pub fn deploy_optimized_token_default() -> (
     )
 }
 
-/// Deploy FullTokenContract with game address for single-game scenario
+/// Deploy SingleGameTokenContract with game address for single-game scenario
 pub fn deploy_optimized_token_with_game(
     game_address: ContractAddress,
 ) -> (IMinigameTokenMixinDispatcher, ERC721ABIDispatcher, ISRC5Dispatcher, ContractAddress) {
-    // For single-game token, we need a registry to satisfy the FullTokenContract requirements
-    // But the token will primarily use the game_address for single-game operations
-    let registry = deploy_minigame_registry_contract();
-    deploy_full_token_contract(
+    // For single-game token scenarios, use SingleGameTokenContract which supports 
+    // direct game address without requiring a registry
+    deploy_single_game_token_contract(
         Option::None,
         Option::None,
         Option::None,
         Option::None,
         Option::None,
-        Option::Some(registry.contract_address),
+        game_address,
+        OWNER(),
         Option::None,
     )
 }

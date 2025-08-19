@@ -29,7 +29,7 @@ fn test_optimized_contract_with_renderer() {
         .test_token
         .mint(
             Option::Some(test_contracts.minigame.contract_address),
-            Option::Some("RendererPlayer"),
+            Option::Some('RendererPlayer'),
             Option::None,
             Option::None,
             Option::None,
@@ -89,7 +89,7 @@ fn test_optimized_contract_context_operations() {
         .metagame_mock
         .mint_game(
             Option::Some(test_contracts.minigame.contract_address),
-            Option::Some("ContextPlayer"),
+            Option::Some('ContextPlayer'),
             Option::None, // settings_id
             Option::None, // start
             Option::None, // end
@@ -168,7 +168,7 @@ fn test_optimized_contract_game_integration() {
     let token_id = token_dispatcher
         .mint(
             Option::None,
-            Option::Some("GamePlayer"),
+            Option::Some('GamePlayer'),
             Option::None,
             Option::None,
             Option::None,

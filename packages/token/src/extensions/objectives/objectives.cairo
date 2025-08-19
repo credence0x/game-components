@@ -1,7 +1,7 @@
 #[starknet::component]
 pub mod ObjectivesComponent {
     use core::num::traits::Zero;
-    use starknet::{ContractAddress, get_caller_address, get_contract_address, get_block_timestamp};
+    use starknet::{ContractAddress, get_caller_address, get_contract_address};
     use starknet::storage::{
         StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess, Map,
     };
@@ -38,36 +38,27 @@ pub mod ObjectivesComponent {
     #[event]
     #[derive(Drop, starknet::Event)]
     pub enum Event {
-        ObjectiveSet: ObjectiveSet,
-        ObjectiveCompleted: ObjectiveCompleted,
         ObjectiveCreated: ObjectiveCreated,
-        AllObjectivesCompleted: AllObjectivesCompleted,
-    }
-
-    #[derive(Drop, starknet::Event)]
-    pub struct ObjectiveSet {
-        token_id: u64,
-        objective_id: u32,
-        game_address: ContractAddress,
-    }
-
-    #[derive(Drop, starknet::Event)]
-    pub struct ObjectiveCompleted {
-        token_id: u64,
-        objective_id: u32,
-        completion_timestamp: u64,
+        ObjectiveUpdate: ObjectiveUpdate,
     }
 
     #[derive(Drop, starknet::Event)]
     pub struct ObjectiveCreated {
+        #[key]
         pub game_address: ContractAddress,
+        #[key]
         pub objective_id: u32,
+        pub creator_address: ContractAddress,
         pub objective_data: ByteArray,
     }
 
     #[derive(Drop, starknet::Event)]
-    pub struct AllObjectivesCompleted {
+    pub struct ObjectiveUpdate {
+        #[key]
         pub token_id: u64,
+        #[key]
+        pub objective_id: u32,
+        pub completed: bool,
     }
 
     #[embeddable_as(ObjectivesImpl)]
@@ -157,12 +148,6 @@ pub mod ObjectivesComponent {
             );
 
             let objective_data_json = create_objectives_json(array![objective_data].span());
-            self
-                .emit(
-                    ObjectiveCreated {
-                        game_address, objective_id, objective_data: objective_data_json.clone(),
-                    },
-                );
             let event_relayer_address = minigame_token_dispatcher.event_relayer_address();
             if !event_relayer_address.is_zero() {
                 let event_relayer_dispatcher = ITokenEventRelayerDispatcher {
@@ -171,6 +156,16 @@ pub mod ObjectivesComponent {
                 event_relayer_dispatcher
                     .emit_objective_created(
                         game_address, creator_address, objective_id, objective_data_json.clone(),
+                    );
+            } else {
+                self
+                    .emit(
+                        ObjectiveCreated {
+                            game_address,
+                            creator_address,
+                            objective_id,
+                            objective_data: objective_data_json.clone(),
+                        },
                     );
             }
         }
@@ -243,17 +238,11 @@ pub mod ObjectivesComponent {
 
                 component.token_objectives.entry(token_id).entry(i).write(_objective);
 
-                component
-                    .emit(
-                        ObjectiveSet {
-                            token_id,
-                            objective_id,
-                            game_address: starknet::contract_address_const::<0>(),
-                        },
-                    );
-
-                if let Option::Some(event_relayer) = event_relayer {
-                    event_relayer.emit_objective_update(token_id, objective_id, false);
+                match event_relayer {
+                    Option::Some(relayer) => relayer
+                        .emit_objective_update(token_id, objective_id, false),
+                    Option::None => component
+                        .emit(ObjectiveUpdate { token_id, objective_id, completed: false }),
                 }
 
                 i += 1;
@@ -297,17 +286,16 @@ pub mod ObjectivesComponent {
                                 objective_id: objective.objective_id, completed: true,
                             },
                         );
-                    component
-                        .emit(
-                            ObjectiveCompleted {
-                                token_id,
-                                objective_id: objective.objective_id,
-                                completion_timestamp: get_block_timestamp(),
-                            },
-                        );
 
-                    if let Option::Some(event_relayer) = event_relayer {
-                        event_relayer.emit_objective_update(token_id, objective.objective_id, true);
+                    match event_relayer {
+                        Option::Some(relayer) => relayer
+                            .emit_objective_update(token_id, objective.objective_id, true),
+                        Option::None => component
+                            .emit(
+                                ObjectiveUpdate {
+                                    token_id, objective_id: objective.objective_id, completed: true,
+                                },
+                            ),
                     }
 
                     completed_count += 1;

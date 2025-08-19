@@ -5,7 +5,7 @@ pub trait IMetagameStarknetMock<TContractState> {
     fn mint_game(
         ref self: TContractState,
         game_address: Option<ContractAddress>,
-        player_name: Option<ByteArray>,
+        player_name: Option<felt252>,
         settings_id: Option<u32>,
         start: Option<u64>,
         end: Option<u64>,
@@ -115,7 +115,7 @@ pub mod metagame_starknet_mock {
         fn mint_game(
             ref self: ContractState,
             game_address: Option<ContractAddress>,
-            player_name: Option<ByteArray>,
+            player_name: Option<felt252>,
             settings_id: Option<u32>,
             start: Option<u64>,
             end: Option<u64>,

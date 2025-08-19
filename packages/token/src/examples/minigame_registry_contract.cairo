@@ -90,29 +90,31 @@ pub mod MinigameRegistryContract {
         ERC721Event: ERC721Component::Event,
         #[flat]
         SRC5Event: SRC5Component::Event,
-        GameRegistered: GameRegistered,
-        ClientUrlSet: ClientUrlSet,
-        CreatorTokenMinted: CreatorTokenMinted,
+        GameMetadataUpdate: GameMetadataUpdate,
+        GameRegistryUpdate: GameRegistryUpdate,
     }
 
     #[derive(Drop, starknet::Event)]
-    pub struct GameRegistered {
-        pub game_id: u64,
+    pub struct GameMetadataUpdate {
+        #[key]
+        pub id: u64,
         pub contract_address: ContractAddress,
         pub name: ByteArray,
-        pub creator_token_id: u64,
-    }
-
-    #[derive(Drop, starknet::Event)]
-    pub struct ClientUrlSet {
-        pub token_id: u64,
+        pub description: ByteArray,
+        pub developer: ByteArray,
+        pub publisher: ByteArray,
+        pub genre: ByteArray,
+        pub image: ByteArray,
+        pub color: ByteArray,
         pub client_url: ByteArray,
+        pub renderer_address: ContractAddress,
     }
 
     #[derive(Drop, starknet::Event)]
-    pub struct CreatorTokenMinted {
-        pub token_id: u64,
-        pub creator_address: ContractAddress,
+    pub struct GameRegistryUpdate {
+        #[key]
+        pub id: u64,
+        pub contract_address: ContractAddress,
     }
 
     #[constructor]
@@ -186,8 +188,11 @@ pub mod MinigameRegistryContract {
             self.game_id_by_address.entry(caller_address).write(new_game_id);
 
             // Emit relayer event for game ID mapping
-            if let Option::Some(relayer) = self.get_event_relayer() {
-                relayer.emit_game_registry_update(new_game_id, caller_address);
+            match self.get_event_relayer() {
+                Option::Some(relayer) => relayer
+                    .emit_game_registry_update(new_game_id, caller_address),
+                Option::None => self
+                    .emit(GameRegistryUpdate { id: new_game_id, contract_address: caller_address }),
             }
 
             // Mint creator token
@@ -226,10 +231,9 @@ pub mod MinigameRegistryContract {
             self.game_metadata.entry(new_game_id).write(metadata);
             self.game_counter.write(new_game_id);
 
-            // Emit relayer events for storage updates
-            if let Option::Some(relayer) = self.get_event_relayer() {
-                // Emit game metadata update
-                relayer
+            // Emit events
+            match self.get_event_relayer() {
+                Option::Some(relayer) => relayer
                     .emit_game_metadata_update(
                         new_game_id,
                         caller_address,
@@ -242,21 +246,24 @@ pub mod MinigameRegistryContract {
                         final_color.clone(),
                         final_client_url.clone(),
                         final_renderer_address,
-                    );
-
-                // Emit game counter update
-                relayer.emit_game_counter_update(new_game_id);
+                    ),
+                Option::None => self
+                    .emit(
+                        GameMetadataUpdate {
+                            id: new_game_id,
+                            contract_address: caller_address,
+                            name: name.clone(),
+                            description,
+                            developer,
+                            publisher,
+                            genre,
+                            image,
+                            color: final_color.clone(),
+                            client_url: final_client_url.clone(),
+                            renderer_address: final_renderer_address,
+                        },
+                    ),
             }
-
-            self
-                .emit(
-                    GameRegistered {
-                        game_id: new_game_id,
-                        contract_address: caller_address,
-                        name: name.clone(),
-                        creator_token_id: new_game_id,
-                    },
-                );
 
             new_game_id
         }
@@ -269,8 +276,6 @@ pub mod MinigameRegistryContract {
         ) {
             // Mint the ERC721 token to the creator
             self.erc721.mint(creator_address, game_id.into());
-
-            self.emit(CreatorTokenMinted { token_id: game_id, creator_address });
         }
 
         fn get_event_relayer(self: @ContractState) -> Option<ITokenEventRelayerDispatcher> {

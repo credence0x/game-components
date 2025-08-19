@@ -93,7 +93,7 @@ pub mod TicketBoothComponent {
         fn buy_game(
             ref self: TContractState,
             payment_type: PaymentType,
-            player_name: ByteArray,
+            player_name: felt252,
             to: ContractAddress,
             soulbound: bool,
         ) -> u64;
@@ -125,7 +125,7 @@ pub mod TicketBoothComponent {
         fn buy_game(
             ref self: ComponentState<TContractState>,
             payment_type: PaymentType,
-            player_name: ByteArray,
+            player_name: felt252,
             to: ContractAddress,
             soulbound: bool,
         ) -> u64 {

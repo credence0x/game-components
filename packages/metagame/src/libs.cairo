@@ -48,7 +48,7 @@ pub fn assert_game_registered(game_address: ContractAddress) {
 pub fn mint(
     default_token_address: ContractAddress,
     game_address: Option<ContractAddress>,
-    player_name: Option<ByteArray>,
+    player_name: Option<felt252>,
     settings_id: Option<u32>,
     start: Option<u64>,
     end: Option<u64>,

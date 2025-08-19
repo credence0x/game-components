@@ -25,7 +25,7 @@ fn test_core_token_edge_case_minting() {
         .test_token
         .mint(
             Option::Some(test_contracts.minigame.contract_address),
-            Option::Some("MaxPlayer"),
+            Option::Some('MaxPlayer'),
             Option::None,
             Option::Some(0),
             Option::Some(max_u64),
@@ -55,7 +55,7 @@ fn test_core_token_batch_operations() {
             .test_token
             .mint(
                 Option::Some(test_contracts.minigame.contract_address),
-                Option::Some("BatchPlayer"),
+                Option::Some('BatchPlayer'),
                 Option::None,
                 Option::None,
                 Option::None,
@@ -282,7 +282,7 @@ fn test_core_token_blank_token_operations() {
         .set_token_metadata(
             blank_token_id,
             test_contracts.minigame.contract_address,
-            Option::Some("UpdatedPlayer"),
+            Option::Some('UpdatedPlayer'),
             Option::Some(42),
             Option::Some(2000),
             Option::Some(3000),
@@ -299,7 +299,7 @@ fn test_core_token_blank_token_operations() {
 
     // Verify view functions
     assert!(
-        test_contracts.test_token.player_name(blank_token_id) == "UpdatedPlayer",
+        test_contracts.test_token.player_name(blank_token_id) == 'UpdatedPlayer',
         "Player name should be set",
     );
     assert!(
@@ -339,7 +339,7 @@ fn test_core_token_event_emissions() {
         .test_token
         .mint(
             Option::Some(test_contracts.minigame.contract_address),
-            Option::Some("EventPlayer"),
+            Option::Some('EventPlayer'),
             Option::Some(10),
             Option::Some(1000),
             Option::Some(2000),

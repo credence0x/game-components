@@ -17,7 +17,7 @@ fn test_context_extension_operations() {
         .test_token
         .mint(
             Option::Some(test_contracts.minigame.contract_address),
-            Option::Some("Player1"),
+            Option::Some('Player1'),
             Option::None,
             Option::None,
             Option::None,
@@ -44,7 +44,7 @@ fn test_context_through_metagame() {
         .metagame_mock
         .mint_game(
             Option::Some(test_contracts.minigame.contract_address),
-            Option::Some("ContextualPlayer"),
+            Option::Some('ContextualPlayer'),
             Option::None, // No settings_id
             Option::Some(1000), // start
             Option::Some(2000), // end
@@ -69,7 +69,7 @@ fn test_multiple_context_mints() {
     let test_contracts = setup();
 
     // Mint multiple tokens through metagame
-    let players = array![("Alice", ALICE()), ("Bob", BOB())];
+    let players = array![('Alice', ALICE()), ('Bob', BOB())];
 
     let mut token_ids: Array<u64> = array![];
     let mut i = 0;
@@ -118,7 +118,7 @@ fn test_context_with_game_lifecycle() {
         .metagame_mock
         .mint_game(
             Option::Some(test_contracts.minigame.contract_address),
-            Option::Some("TimedPlayer"),
+            Option::Some('TimedPlayer'),
             Option::None,
             Option::Some(start_time),
             Option::Some(end_time),
@@ -145,7 +145,7 @@ fn test_context_with_soulbound() {
         .metagame_mock
         .mint_game(
             Option::Some(test_contracts.minigame.contract_address),
-            Option::Some("SoulboundPlayer"),
+            Option::Some('SoulboundPlayer'),
             Option::None,
             Option::None,
             Option::None,
@@ -188,7 +188,7 @@ fn test_context_extension_edge_cases() {
         .metagame_mock
         .mint_game(
             Option::Some(test_contracts.minigame.contract_address),
-            Option::Some("FullPlayer"),
+            Option::Some('FullPlayer'),
             Option::None, // No settings
             Option::Some(1000), // start
             Option::Some(2000), // end
@@ -210,7 +210,7 @@ fn test_context_extension_edge_cases() {
     );
 
     // Verify other metadata
-    assert!(test_contracts.test_token.player_name(token_id1) == "", "Empty player name");
-    assert!(test_contracts.test_token.player_name(token_id2) == "FullPlayer", "Full player name");
+    assert!(test_contracts.test_token.player_name(token_id1) == '', "Empty player name");
+    assert!(test_contracts.test_token.player_name(token_id2) == 'FullPlayer', "Full player name");
     assert!(test_contracts.test_token.objectives_count(token_id2) == 0, "Should have 0 objectives");
 }

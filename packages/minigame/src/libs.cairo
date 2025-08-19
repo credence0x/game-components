@@ -132,7 +132,7 @@ pub fn register_game(
 pub fn mint(
     minigame_token_address: ContractAddress,
     game_address: ContractAddress,
-    player_name: Option<ByteArray>,
+    player_name: Option<felt252>,
     settings_id: Option<u32>,
     start: Option<u64>,
     end: Option<u64>,
@@ -170,7 +170,7 @@ pub fn mint(
 ///
 /// # Returns
 /// * `felt252` - The player name
-pub fn get_player_name(minigame_token_address: ContractAddress, token_id: u64) -> ByteArray {
+pub fn get_player_name(minigame_token_address: ContractAddress, token_id: u64) -> felt252 {
     let minigame_token_dispatcher = IMinigameTokenDispatcher {
         contract_address: minigame_token_address,
     };

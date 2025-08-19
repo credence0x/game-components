@@ -90,7 +90,7 @@ pub mod MetagameComponent {
         fn mint(
             ref self: ComponentState<TContractState>,
             game_address: Option<ContractAddress>,
-            player_name: Option<ByteArray>,
+            player_name: Option<felt252>,
             settings_id: Option<u32>,
             start: Option<u64>,
             end: Option<u64>,

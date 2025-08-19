@@ -24,9 +24,6 @@ use crate::extensions::settings::settings::SettingsComponent;
 use crate::interface::{ITokenEventRelayerDispatcher, ITokenEventRelayerDispatcherTrait};
 
 use game_components_minigame::structs::GameDetail;
-use game_components_minigame::interface::{
-    IMinigameTokenDataDispatcher, IMinigameTokenDataDispatcherTrait,
-};
 use game_components_utils::renderer::create_custom_metadata;
 
 

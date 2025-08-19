@@ -20,11 +20,11 @@ pub mod ContextComponent {
     #[event]
     #[derive(Drop, starknet::Event)]
     pub enum Event {
-        TokenContextData: TokenContextData,
+        TokenContextUpdate: TokenContextUpdate,
     }
 
     #[derive(Drop, starknet::Event)]
-    pub struct TokenContextData {
+    pub struct TokenContextUpdate {
         pub token_id: u64,
         pub data: ByteArray,
     }
@@ -48,11 +48,18 @@ pub mod ContextComponent {
             let context_json = create_context_json(
                 context.name, context.description, context.id, context.context,
             );
-            let mut component = HasComponent::get_component_mut(ref self);
-            component.emit(TokenContextData { token_id: token_id, data: context_json.clone() });
 
-            if let Option::Some(event_relayer) = event_relayer {
-                event_relayer.emit_token_context_update(token_id, context_json.clone());
+            // Emit event
+            match event_relayer {
+                Option::Some(relayer) => relayer
+                    .emit_token_context_update(token_id, context_json.clone()),
+                Option::None => {
+                    let mut component = HasComponent::get_component_mut(ref self);
+                    component
+                        .emit(
+                            TokenContextUpdate { token_id: token_id, data: context_json.clone() },
+                        );
+                },
             }
         }
     }

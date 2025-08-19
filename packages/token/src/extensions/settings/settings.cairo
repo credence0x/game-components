@@ -38,12 +38,12 @@ pub mod SettingsComponent {
 
     #[derive(Drop, starknet::Event)]
     struct SettingsCreated {
-        game_address: ContractAddress,
-        settings_id: u32,
-        created_by: ContractAddress,
-        name: ByteArray,
-        description: ByteArray,
-        settings_data: Span<GameSetting>,
+        #[key]
+        pub game_address: ContractAddress,
+        #[key]
+        pub settings_id: u32,
+        pub creator_address: ContractAddress,
+        pub settings_data: ByteArray,
     }
 
     #[embeddable_as(SettingsImpl)]
@@ -93,18 +93,6 @@ pub mod SettingsComponent {
                 game_address_display,
             );
 
-            self
-                .emit(
-                    SettingsCreated {
-                        game_address,
-                        settings_id,
-                        created_by: caller,
-                        name: name.clone(),
-                        description: description.clone(),
-                        settings_data,
-                    },
-                );
-
             let settings_data_json = create_settings_json(
                 name.clone(), description.clone(), settings_data.clone(),
             );
@@ -117,6 +105,16 @@ pub mod SettingsComponent {
                 event_relayer_dispatcher
                     .emit_settings_created(
                         game_address, creator_address, settings_id, settings_data_json.clone(),
+                    );
+            } else {
+                self
+                    .emit(
+                        SettingsCreated {
+                            game_address,
+                            settings_id,
+                            creator_address,
+                            settings_data: settings_data_json.clone(),
+                        },
                     );
             }
         }

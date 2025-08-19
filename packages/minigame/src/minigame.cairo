@@ -49,7 +49,7 @@ pub mod MinigameComponent {
 
         fn mint_game(
             self: @ComponentState<TContractState>,
-            player_name: Option<ByteArray>,
+            player_name: Option<felt252>,
             settings_id: Option<u32>,
             start: Option<u64>,
             end: Option<u64>,
@@ -162,7 +162,7 @@ pub mod MinigameComponent {
             libs::post_action(self.token_address.read(), token_id);
         }
 
-        fn get_player_name(self: @ComponentState<TContractState>, token_id: u64) -> ByteArray {
+        fn get_player_name(self: @ComponentState<TContractState>, token_id: u64) -> felt252 {
             libs::get_player_name(self.token_address.read(), token_id)
         }
 

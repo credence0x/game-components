@@ -170,7 +170,7 @@ pub fn create_custom_metadata(
     game_details: Span<GameDetail>,
     score: u32,
     state: u8,
-    player_name: ByteArray,
+    player_name: felt252,
 ) -> ByteArray {
     let _score = format!("{}", score);
 
@@ -191,14 +191,17 @@ pub fn create_custom_metadata(
         .add("trait", "State")
         .add("value", game_state(state))
         .build();
+
+    let mut _player_name = Default::default();
+        _player_name.append_word(player_name, U256BytesUsedTraitImpl::bytes_used(player_name.into()).into());
     let player_name: ByteArray = JsonImpl::new()
         .add("trait", "Player Name")
-        .add("value", player_name)
+        .add("value", _player_name.clone())
         .build();
 
-    let mut attributes = array![name, developer, score, state, player_name.clone()];
+    let mut attributes = array![name, developer, score, state];
 
-    if player_name.clone().len() == 0 {
+    if player_name.clone().len() > 0 {
         attributes.append(player_name.clone());
     }
 

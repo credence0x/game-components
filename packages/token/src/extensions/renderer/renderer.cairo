@@ -23,11 +23,11 @@ pub mod RendererComponent {
     #[event]
     #[derive(Drop, starknet::Event)]
     pub enum Event {
-        RendererSet: RendererSet,
+        TokenRendererUpdate: TokenRendererUpdate,
     }
 
     #[derive(Drop, starknet::Event)]
-    pub struct RendererSet {
+    pub struct TokenRendererUpdate {
         token_id: u64,
         renderer: ContractAddress,
     }
@@ -65,10 +65,9 @@ pub mod RendererComponent {
             let mut component = HasComponent::get_component_mut(ref self);
             component.token_renderers.entry(token_id).write(renderer);
 
-            component.emit(RendererSet { token_id, renderer });
-
-            if let Option::Some(relayer) = event_relayer {
-                relayer.emit_token_renderer_update(token_id, renderer);
+            match event_relayer {
+                Option::Some(relayer) => relayer.emit_token_renderer_update(token_id, renderer),
+                Option::None => component.emit(TokenRendererUpdate { token_id, renderer }),
             }
         }
 
@@ -80,10 +79,13 @@ pub mod RendererComponent {
             let mut component = HasComponent::get_component_mut(ref self);
             component.token_renderers.entry(token_id).write(contract_address_const::<0>());
 
-            component.emit(RendererSet { token_id, renderer: contract_address_const::<0>() });
-
-            if let Option::Some(relayer) = event_relayer {
-                relayer.emit_token_renderer_update(token_id, contract_address_const::<0>());
+            match event_relayer {
+                Option::Some(relayer) => relayer
+                    .emit_token_renderer_update(token_id, contract_address_const::<0>()),
+                Option::None => component
+                    .emit(
+                        TokenRendererUpdate { token_id, renderer: contract_address_const::<0>() },
+                    ),
             }
         }
     }

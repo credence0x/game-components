@@ -88,7 +88,7 @@ fn test_tournament_flow() {
         let token_id = mixin_dispatcher
             .mint(
                 Option::Some(game_address),
-                Option::Some("Player"),
+                Option::Some('Player'),
                 Option::None,
                 Option::Some(1000), // Tournament start
                 Option::Some(2000), // Tournament end
@@ -195,7 +195,7 @@ fn test_multi_game_platform() {
             let token_id = mixin_dispatcher
                 .mint(
                     Option::Some(game_address),
-                    Option::Some("Player"),
+                    Option::Some('Player'),
                     Option::None,
                     Option::None,
                     Option::None,
@@ -257,7 +257,7 @@ fn test_time_campaign() {
     let token_id = test_contracts.test_token
         .mint(
             Option::None,
-            Option::Some("TimePlayer"),
+            Option::Some('TimePlayer'),
             Option::None,
             Option::Some(future_start),
             Option::Some(campaign_end),
@@ -314,7 +314,7 @@ fn test_achievement_hunt() {
     let token_id = test_contracts.test_token
         .mint(
             Option::Some(test_contracts.minigame.contract_address),
-            Option::Some("AchievementHunter"),
+            Option::Some('AchievementHunter'),
             Option::None,
             Option::None,
             Option::None,

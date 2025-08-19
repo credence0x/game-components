@@ -178,7 +178,7 @@ fn test_minimal_contract_token_metadata() {
     let token_id = token_dispatcher
         .mint(
             Option::None,
-            Option::Some("MinimalPlayer"),
+            Option::Some('MinimalPlayer'),
             Option::None,
             Option::None,
             Option::None,
@@ -197,5 +197,5 @@ fn test_minimal_contract_token_metadata() {
     assert!(!metadata.soulbound, "Should not be soulbound");
 
     // Check player name
-    assert!(token_dispatcher.player_name(token_id) == "MinimalPlayer", "Player name should be set");
+    assert!(token_dispatcher.player_name(token_id) == 'MinimalPlayer', "Player name should be set");
 }

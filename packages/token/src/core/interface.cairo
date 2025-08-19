@@ -10,7 +10,7 @@ pub trait IMinigameToken<TState> {
     fn token_metadata(self: @TState, token_id: u64) -> TokenMetadata;
     fn is_playable(self: @TState, token_id: u64) -> bool;
     fn settings_id(self: @TState, token_id: u64) -> u32;
-    fn player_name(self: @TState, token_id: u64) -> ByteArray;
+    fn player_name(self: @TState, token_id: u64) -> felt252;
     fn objectives_count(self: @TState, token_id: u64) -> u32;
     fn minted_by(self: @TState, token_id: u64) -> u64;
     fn game_address(self: @TState) -> ContractAddress;
@@ -23,7 +23,7 @@ pub trait IMinigameToken<TState> {
     fn mint(
         ref self: TState,
         game_address: Option<ContractAddress>,
-        player_name: Option<ByteArray>,
+        player_name: Option<felt252>,
         settings_id: Option<u32>,
         start: Option<u64>,
         end: Option<u64>,
@@ -37,7 +37,7 @@ pub trait IMinigameToken<TState> {
     fn mint_batch(
         ref self: TState,
         game_address: Option<ContractAddress>,
-        player_name: Option<ByteArray>,
+        player_name: Option<felt252>,
         settings_id: Option<u32>,
         start: Option<u64>,
         end: Option<u64>,
@@ -53,7 +53,7 @@ pub trait IMinigameToken<TState> {
         ref self: TState,
         token_id: u64,
         game_address: ContractAddress,
-        player_name: Option<ByteArray>,
+        player_name: Option<felt252>,
         settings_id: Option<u32>,
         start: Option<u64>,
         end: Option<u64>,
@@ -61,5 +61,5 @@ pub trait IMinigameToken<TState> {
         context: Option<GameContextDetails>,
     );
     fn update_game(ref self: TState, token_id: u64);
-    fn update_player_name(ref self: TState, token_id: u64, name: ByteArray);
+    fn update_player_name(ref self: TState, token_id: u64, name: felt252);
 }

@@ -22,11 +22,11 @@ pub mod MinterComponent {
     #[event]
     #[derive(Drop, starknet::Event)]
     pub enum Event {
-        MinterRegistered: MinterRegistered,
+        MinterRegistryUpdate: MinterRegistryUpdate,
     }
 
     #[derive(Drop, starknet::Event)]
-    pub struct MinterRegistered {
+    pub struct MinterRegistryUpdate {
         minter_id: u64,
         minter_address: ContractAddress,
     }
@@ -87,11 +87,10 @@ pub mod MinterComponent {
             component.minter_counter.write(minter_id);
 
             // Emit event
-            component.emit(MinterRegistered { minter_id, minter_address: minter });
-
-            if let Option::Some(event_relayer) = event_relayer {
-                event_relayer.emit_minter_registry_update(minter_id, minter);
-                event_relayer.emit_minter_counter_update(minter_id);
+            match event_relayer {
+                Option::Some(relayer) => relayer.emit_minter_registry_update(minter_id, minter),
+                Option::None => component
+                    .emit(MinterRegistryUpdate { minter_id, minter_address: minter }),
             }
 
             minter_id

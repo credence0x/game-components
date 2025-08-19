@@ -12,7 +12,7 @@ pub trait IMinigame<TState> {
     fn objectives_address(self: @TState) -> ContractAddress;
     fn mint_game(
         self: @TState,
-        player_name: Option<ByteArray>,
+        player_name: Option<felt252>,
         settings_id: Option<u32>,
         start: Option<u64>,
         end: Option<u64>,
