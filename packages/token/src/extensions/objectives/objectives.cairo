@@ -192,7 +192,7 @@ pub mod ObjectivesComponent {
                 .supports_interface(IMINIGAME_TOKEN_OBJECTIVES_ID);
             assert!(
                 supports_objectives,
-                "MinigameToken: Contract does not support IMinigameTokenObjectives",
+                "MinigameTokenObjectives: Contract does not support IMinigameTokenObjectives",
             );
             // Get objectives address from game
             let minigame_dispatcher = IMinigameDispatcher { contract_address: game_address };
@@ -205,7 +205,7 @@ pub mod ObjectivesComponent {
                 };
                 assert!(
                     objectives_src5_dispatcher.supports_interface(IMINIGAME_OBJECTIVES_ID),
-                    "CoreToken: Objectives contract does not support IMinigameObjectives interface",
+                    "MinigameTokenObjectives: Objectives contract does not support IMinigameObjectives interface",
                 );
 
                 // Validate all objectives exist

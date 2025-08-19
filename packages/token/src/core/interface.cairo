@@ -34,6 +34,21 @@ pub trait IMinigameToken<TState> {
         to: ContractAddress,
         soulbound: bool,
     ) -> u64;
+    fn mint_batch(
+        ref self: TState,
+        game_address: Option<ContractAddress>,
+        player_name: Option<ByteArray>,
+        settings_id: Option<u32>,
+        start: Option<u64>,
+        end: Option<u64>,
+        objective_ids: Option<Span<u32>>,
+        context: Option<GameContextDetails>,
+        client_url: Option<ByteArray>,
+        renderer_address: Option<ContractAddress>,
+        to: ContractAddress,
+        soulbound: bool,
+        quantity: u32,
+    );
     fn set_token_metadata(
         ref self: TState,
         token_id: u64,
@@ -46,4 +61,5 @@ pub trait IMinigameToken<TState> {
         context: Option<GameContextDetails>,
     );
     fn update_game(ref self: TState, token_id: u64);
+    fn update_player_name(ref self: TState, token_id: u64, name: ByteArray);
 }

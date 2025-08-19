@@ -8,6 +8,7 @@ pub mod CoreTokenComponent {
         StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess, Map,
     };
 
+
     use crate::core::interface::{IMinigameToken, IMINIGAME_TOKEN_ID};
     use crate::examples::minigame_registry_contract::{
         IMinigameRegistryDispatcher, IMinigameRegistryDispatcherTrait,
@@ -162,8 +163,8 @@ pub mod CoreTokenComponent {
                     let game_registry_dispatcher = IMinigameRegistryDispatcher {
                         contract_address: self.game_registry_address.read(),
                     };
-                    let game_metadata =
-                        game_registry_dispatcher.game_metadata(token_metadata.game_id);
+                    let game_metadata = game_registry_dispatcher
+                        .game_metadata(token_metadata.game_id);
                     let game_renderer_address = game_metadata.renderer_address;
                     if !game_renderer_address.is_zero() {
                         game_renderer_address
@@ -205,225 +206,71 @@ pub mod CoreTokenComponent {
             to: ContractAddress,
             soulbound: bool,
         ) -> u64 {
-            let caller = get_caller_address();
-            let token_id = self.token_counter.read() + 1;
+            self
+                .mint_game(
+                    game_address,
+                    player_name,
+                    settings_id,
+                    start,
+                    end,
+                    objective_ids,
+                    context,
+                    client_url,
+                    renderer_address,
+                    to,
+                    soulbound,
+                )
+        }
 
-            // Validate lifecycle parameters regardless of token type
-            let lifecycle = token_state::create_lifecycle_with_defaults(start, end);
-            lifecycle.validate();
-
-            match game_address {
-                Option::Some(provided_game_address) => {
-                    // Full game token with validation and setup
-                    let (final_game_address, game_id) = self
-                        .validate_and_process_game_address(provided_game_address);
-
-                    let mut contract = self.get_contract();
-                    let mut contract_self = self.get_contract_mut();
-                    // Validate settings if provided
-                    let validated_settings_id = match settings_id {
-                        Option::Some(settings_id) => {
-                            SettingsOpt::validate_settings(
-                                contract, final_game_address, settings_id,
-                            );
-                            settings_id
-                        },
-                        Option::None => 0,
-                    };
-
-                    // Validate and process objectives if provided
-                    let (objectives_count, _validated_objective_ids) = match objective_ids {
-                        Option::Some(objective_ids) => {
-                            let (objectives_count, _validated_objective_ids) =
-                                ObjectivesOpt::validate_objectives(
-                                contract, final_game_address, objective_ids,
-                            );
-                            ObjectivesOpt::set_token_objectives(
-                                ref contract_self,
-                                token_id,
-                                objective_ids,
-                                self.get_event_relayer(),
-                            );
-                            (objectives_count, _validated_objective_ids)
-                        },
-                        Option::None => (0, array![].span()),
-                    };
-
-                    // Handle context if provided
-                    let has_context = match context {
-                        Option::Some(context) => {
-                            ContextOpt::emit_context(
-                                ref contract_self,
-                                caller,
-                                token_id,
-                                context,
-                                self.get_event_relayer(),
-                            );
-                            true
-                        },
-                        Option::None => false,
-                    };
-
-                    // Handle minter tracking if enabled
-                    let minted_by = MinterOpt::add_minter(
-                        ref contract_self, caller, self.get_event_relayer(),
-                    );
-
-                    // Handle renderer if provided
-                    match renderer_address {
-                        Option::Some(renderer_address) => {
-                            RendererOpt::set_token_renderer(
-                                ref contract_self,
-                                token_id,
-                                renderer_address,
-                                self.get_event_relayer(),
-                            );
-                        },
-                        Option::None => {},
-                    }
-
-                    // Create token metadata
-                    let current_time = get_block_timestamp();
-                    let metadata = token_state::create_game_token_metadata(
-                        game_id,
-                        validated_settings_id,
-                        lifecycle,
-                        minted_by,
+        fn mint_batch(
+            ref self: ComponentState<TContractState>,
+            game_address: Option<ContractAddress>,
+            player_name: Option<ByteArray>,
+            settings_id: Option<u32>,
+            start: Option<u64>,
+            end: Option<u64>,
+            objective_ids: Option<Span<u32>>,
+            context: Option<GameContextDetails>,
+            client_url: Option<ByteArray>,
+            renderer_address: Option<ContractAddress>,
+            to: ContractAddress,
+            soulbound: bool,
+            quantity: u32,
+        ) {
+            let mut mint_index: u32 = 0;
+            loop {
+                if (mint_index == quantity) {
+                    break;
+                }
+                // For each mint, reconstruct the Option values
+                let player_name_copy = match @player_name {
+                    Option::Some(name) => Option::Some(name.clone()),
+                    Option::None => Option::None,
+                };
+                let context_copy = match @context {
+                    Option::Some(ctx) => Option::Some(ctx.clone()),
+                    Option::None => Option::None,
+                };
+                let client_url_copy = match @client_url {
+                    Option::Some(url) => Option::Some(url.clone()),
+                    Option::None => Option::None,
+                };
+                
+                self
+                    .mint_game(
+                        game_address,
+                        player_name_copy,
+                        settings_id,
+                        start,
+                        end,
+                        objective_ids,
+                        context_copy,
+                        client_url_copy,
+                        renderer_address,
+                        to,
                         soulbound,
-                        has_context,
-                        objectives_count.try_into().unwrap(),
-                        current_time,
                     );
-
-                    self.token_metadata.entry(token_id).write(metadata);
-                    self.token_counter.write(token_id);
-
-                    // Set player name if provided
-                    if let Option::Some(name) = player_name {
-                        self.token_player_names.entry(token_id).write(name.clone());
-                        if let Option::Some(relayer) = self.get_event_relayer() {
-                            relayer.emit_token_player_name_update(token_id, name);
-                        }
-                    }
-
-                    // Set client url if provided
-                    if let Option::Some(client_url) = client_url {
-                        self.token_client_url.entry(token_id).write(client_url.clone());
-                        if let Option::Some(relayer) = self.get_event_relayer() {
-                            relayer.emit_token_client_url_update(token_id, client_url);
-                        }
-                    }
-
-                    // Emit relayer events for metadata and counter
-                    if let Option::Some(relayer) = self.get_event_relayer() {
-                        relayer
-                            .emit_token_metadata_update(
-                                token_id,
-                                metadata.game_id,
-                                metadata.minted_at,
-                                metadata.settings_id,
-                                metadata.lifecycle.start,
-                                metadata.lifecycle.end,
-                                metadata.minted_by,
-                                metadata.soulbound,
-                                metadata.game_over,
-                                metadata.completed_all_objectives,
-                                metadata.has_context,
-                                metadata.objectives_count,
-                            );
-                        relayer.emit_token_counter_update(token_id);
-                    }
-
-                    // Mint the ERC721 token
-                    let mut contract = self.get_contract_mut();
-                    let mut erc721_component = ERC721::get_component_mut(ref contract);
-                    erc721_component.mint(to, token_id.into());
-
-                    // Emit events
-                    self.emit(TokenMinted { token_id, to, game_address: final_game_address });
-
-                    token_id
-                },
-                Option::None => {
-                    let src5_component = get_dep_component!(@self, SRC5);
-                    let supports_minter = src5_component
-                        .supports_interface(IMINIGAME_TOKEN_MINTER_ID);
-                    assert!(
-                        supports_minter,
-                        "MinigameToken: Game does not support IMinigameTokenMinter interface",
-                    );
-                    // Blank token - minimal processing with default values
-                    let mut contract_self = self.get_contract_mut();
-
-                    // Only handle minter tracking for blank tokens
-                    let minted_by = MinterOpt::add_minter(
-                        ref contract_self, caller, self.get_event_relayer(),
-                    );
-
-                    // Handle renderer if provided
-                    match renderer_address {
-                        Option::Some(renderer_address) => {
-                            RendererOpt::set_token_renderer(
-                                ref contract_self,
-                                token_id,
-                                renderer_address,
-                                self.get_event_relayer(),
-                            );
-                        },
-                        Option::None => {},
-                    }
-
-                    // Create minimal token metadata with empty/default values
-                    let current_time = get_block_timestamp();
-                    let metadata = token_state::create_blank_token_metadata(
-                        lifecycle, minted_by, soulbound, current_time,
-                    );
-
-                    self.token_metadata.entry(token_id).write(metadata);
-                    self.token_counter.write(token_id);
-
-                    // Set player name if provided
-                    if let Option::Some(name) = player_name {
-                        self.token_player_names.entry(token_id).write(name.clone());
-                        if let Option::Some(relayer) = self.get_event_relayer() {
-                            relayer.emit_token_player_name_update(token_id, name);
-                        }
-                    }
-
-                    // Emit relayer events for metadata and counter
-                    if let Option::Some(relayer) = self.get_event_relayer() {
-                        relayer
-                            .emit_token_metadata_update(
-                                token_id,
-                                metadata.game_id,
-                                metadata.minted_at,
-                                metadata.settings_id,
-                                metadata.lifecycle.start,
-                                metadata.lifecycle.end,
-                                metadata.minted_by,
-                                metadata.soulbound,
-                                metadata.game_over,
-                                metadata.completed_all_objectives,
-                                metadata.has_context,
-                                metadata.objectives_count,
-                            );
-                        relayer.emit_token_counter_update(token_id);
-                    }
-
-                    // Mint the ERC721 token
-                    let mut erc721_component = ERC721::get_component_mut(ref contract_self);
-                    erc721_component.mint(to, token_id.into());
-
-                    // Emit events with zero address for blank token
-                    self
-                        .emit(
-                            TokenMinted {
-                                token_id, to, game_address: contract_address_const::<0>(),
-                            },
-                        );
-
-                    token_id
-                },
+                mint_index += 1;
             }
         }
 
@@ -563,7 +410,7 @@ pub mod CoreTokenComponent {
             let mut erc721_component = ERC721::get_component_mut(ref contract);
             assert!(
                 erc721_component.exists(token_id.into()),
-                "CoreToken: Token {} does not exist",
+                "MinigameToken: Token {} does not exist",
                 token_id,
             );
 
@@ -574,7 +421,7 @@ pub mod CoreTokenComponent {
             let game_src5_dispatcher = ISRC5Dispatcher { contract_address: game_address };
             assert!(
                 game_src5_dispatcher.supports_interface(IMINIGAME_ID),
-                "CoreToken: Game does not support IMinigame interface",
+                "MinigameToken: Game does not support IMinigame interface",
             );
 
             // Check objectives completion if token has objectives
@@ -658,6 +505,21 @@ pub mod CoreTokenComponent {
                     },
                 );
         }
+
+        fn update_player_name(
+            ref self: ComponentState<TContractState>, token_id: u64, name: ByteArray,
+        ) {
+            assert!(name.len() > 0, "MinigameToken: Player name is empty");
+            let mut contract = self.get_contract();
+            let erc721_component = ERC721::get_component(contract);
+            assert!(
+                erc721_component.exists(token_id.into()),
+                "MinigameToken: Token id {} not minted",
+                token_id,
+            );
+            self.assert_token_ownership(token_id);
+            self.token_player_names.entry(token_id).write(name.clone());
+        }
     }
 
     #[generate_trait]
@@ -688,13 +550,14 @@ pub mod CoreTokenComponent {
 
             // Set game address if provided
             if let Option::Some(game_address) = game_address {
-                assert!(!game_address.is_zero(), "CoreToken: Game address is zero");
+                assert!(!game_address.is_zero(), "MinigameToken: Game address is zero");
                 self.game_address.write(game_address);
             }
 
             if let Option::Some(game_registry_address) = game_registry_address {
                 assert!(
-                    !game_registry_address.is_zero(), "CoreToken: Game registry address is zero",
+                    !game_registry_address.is_zero(),
+                    "MinigameToken: Game registry address is zero",
                 );
                 self.game_registry_address.write(game_registry_address);
             } else {
@@ -702,11 +565,11 @@ pub mod CoreTokenComponent {
                 // so mint token 0 to the creator.
                 assert!(
                     game_address.is_some(),
-                    "CoreToken: Game address must be provided for single game token",
+                    "MinigameToken: Game address must be provided for single game token",
                 );
                 assert!(
                     creator_address.is_some(),
-                    "CoreToken: Creator address must be provided for single game token",
+                    "MinigameToken: Creator address must be provided for single game token",
                 );
                 let mut contract = self.get_contract_mut();
                 let mut erc721_component = ERC721::get_component_mut(ref contract);
@@ -715,14 +578,17 @@ pub mod CoreTokenComponent {
 
             if let Option::Some(event_relayer_address) = event_relayer_address {
                 assert!(
-                    !event_relayer_address.is_zero(), "CoreToken: Event relayer address is zero",
+                    !event_relayer_address.is_zero(),
+                    "MinigameToken: Event relayer address is zero",
                 );
                 self.event_relayer_address.write(event_relayer_address);
             }
 
             // Ensure at least one game address is set
             if game_address.is_none() && game_registry_address.is_none() {
-                panic!("Either game_address or game_registry_address must be provided");
+                panic!(
+                    "MinigameToken: Either game_address or game_registry_address must be provided",
+                );
             }
         }
 
@@ -730,15 +596,251 @@ pub mod CoreTokenComponent {
             self.token_counter.read()
         }
 
+        fn mint_game(
+            ref self: ComponentState<TContractState>,
+            game_address: Option<ContractAddress>,
+            player_name: Option<ByteArray>,
+            settings_id: Option<u32>,
+            start: Option<u64>,
+            end: Option<u64>,
+            objective_ids: Option<Span<u32>>,
+            context: Option<GameContextDetails>,
+            client_url: Option<ByteArray>,
+            renderer_address: Option<ContractAddress>,
+            to: ContractAddress,
+            soulbound: bool,
+        ) -> u64 {
+            let caller = get_caller_address();
+            let token_id = self.token_counter.read() + 1;
+
+            // Validate lifecycle parameters regardless of token type
+            let lifecycle = token_state::create_lifecycle_with_defaults(start, end);
+            lifecycle.validate();
+
+            match game_address {
+                Option::Some(provided_game_address) => {
+                    // Full game token with validation and setup
+                    let (final_game_address, game_id) = self
+                        .validate_and_process_game_address(provided_game_address);
+
+                    let mut contract = self.get_contract();
+                    let mut contract_self = self.get_contract_mut();
+                    // Validate settings if provided
+                    let validated_settings_id = match settings_id {
+                        Option::Some(settings_id) => {
+                            SettingsOpt::validate_settings(
+                                contract, final_game_address, settings_id,
+                            );
+                            settings_id
+                        },
+                        Option::None => 0,
+                    };
+
+                    // Validate and process objectives if provided
+                    let (objectives_count, _validated_objective_ids) = match objective_ids {
+                        Option::Some(objective_ids) => {
+                            let (objectives_count, _validated_objective_ids) =
+                                ObjectivesOpt::validate_objectives(
+                                contract, final_game_address, objective_ids,
+                            );
+                            ObjectivesOpt::set_token_objectives(
+                                ref contract_self,
+                                token_id,
+                                objective_ids,
+                                self.get_event_relayer(),
+                            );
+                            (objectives_count, _validated_objective_ids)
+                        },
+                        Option::None => (0, array![].span()),
+                    };
+
+                    // Handle context if provided
+                    let has_context = match context {
+                        Option::Some(context) => {
+                            ContextOpt::emit_context(
+                                ref contract_self,
+                                caller,
+                                token_id,
+                                context,
+                                self.get_event_relayer(),
+                            );
+                            true
+                        },
+                        Option::None => false,
+                    };
+
+                    // Handle minter tracking if enabled
+                    let minted_by = MinterOpt::add_minter(
+                        ref contract_self, caller, self.get_event_relayer(),
+                    );
+
+                    // Handle renderer if provided
+                    match renderer_address {
+                        Option::Some(renderer_address) => {
+                            RendererOpt::set_token_renderer(
+                                ref contract_self,
+                                token_id,
+                                renderer_address,
+                                self.get_event_relayer(),
+                            );
+                        },
+                        Option::None => {},
+                    }
+
+                    // Create token metadata
+                    let current_time = get_block_timestamp();
+                    let metadata = token_state::create_game_token_metadata(
+                        game_id,
+                        validated_settings_id,
+                        lifecycle,
+                        minted_by,
+                        soulbound,
+                        has_context,
+                        objectives_count.try_into().unwrap(),
+                        current_time,
+                    );
+
+                    self.token_metadata.entry(token_id).write(metadata);
+                    self.token_counter.write(token_id);
+
+                    // Set player name if provided
+                    if let Option::Some(name) = player_name {
+                        self.token_player_names.entry(token_id).write(name.clone());
+                        if let Option::Some(relayer) = self.get_event_relayer() {
+                            relayer.emit_token_player_name_update(token_id, name);
+                        }
+                    }
+
+                    // Set client url if provided
+                    if let Option::Some(url) = client_url {
+                        self.token_client_url.entry(token_id).write(url.clone());
+                        if let Option::Some(relayer) = self.get_event_relayer() {
+                            relayer.emit_token_client_url_update(token_id, url);
+                        }
+                    }
+
+                    // Emit relayer events for metadata and counter
+                    if let Option::Some(relayer) = self.get_event_relayer() {
+                        relayer
+                            .emit_token_metadata_update(
+                                token_id,
+                                metadata.game_id,
+                                metadata.minted_at,
+                                metadata.settings_id,
+                                metadata.lifecycle.start,
+                                metadata.lifecycle.end,
+                                metadata.minted_by,
+                                metadata.soulbound,
+                                metadata.game_over,
+                                metadata.completed_all_objectives,
+                                metadata.has_context,
+                                metadata.objectives_count,
+                            );
+                        relayer.emit_token_counter_update(token_id);
+                    }
+
+                    // Mint the ERC721 token
+                    let mut contract = self.get_contract_mut();
+                    let mut erc721_component = ERC721::get_component_mut(ref contract);
+                    erc721_component.mint(to, token_id.into());
+
+                    // Emit events
+                    self.emit(TokenMinted { token_id, to, game_address: final_game_address });
+
+                    token_id
+                },
+                Option::None => {
+                    let src5_component = get_dep_component!(@self, SRC5);
+                    let supports_minter = src5_component
+                        .supports_interface(IMINIGAME_TOKEN_MINTER_ID);
+                    assert!(
+                        supports_minter,
+                        "MinigameToken: Game does not support IMinigameTokenMinter interface",
+                    );
+                    // Blank token - minimal processing with default values
+                    let mut contract_self = self.get_contract_mut();
+
+                    // Only handle minter tracking for blank tokens
+                    let minted_by = MinterOpt::add_minter(
+                        ref contract_self, caller, self.get_event_relayer(),
+                    );
+
+                    // Handle renderer if provided
+                    match renderer_address {
+                        Option::Some(renderer_address) => {
+                            RendererOpt::set_token_renderer(
+                                ref contract_self,
+                                token_id,
+                                renderer_address,
+                                self.get_event_relayer(),
+                            );
+                        },
+                        Option::None => {},
+                    }
+
+                    // Create minimal token metadata with empty/default values
+                    let current_time = get_block_timestamp();
+                    let metadata = token_state::create_blank_token_metadata(
+                        lifecycle, minted_by, soulbound, current_time,
+                    );
+
+                    self.token_metadata.entry(token_id).write(metadata);
+                    self.token_counter.write(token_id);
+
+                    // Set player name if provided
+                    if let Option::Some(name) = player_name {
+                        self.token_player_names.entry(token_id).write(name.clone());
+                        if let Option::Some(relayer) = self.get_event_relayer() {
+                            relayer.emit_token_player_name_update(token_id, name);
+                        }
+                    }
+
+                    // Emit relayer events for metadata and counter
+                    if let Option::Some(relayer) = self.get_event_relayer() {
+                        relayer
+                            .emit_token_metadata_update(
+                                token_id,
+                                metadata.game_id,
+                                metadata.minted_at,
+                                metadata.settings_id,
+                                metadata.lifecycle.start,
+                                metadata.lifecycle.end,
+                                metadata.minted_by,
+                                metadata.soulbound,
+                                metadata.game_over,
+                                metadata.completed_all_objectives,
+                                metadata.has_context,
+                                metadata.objectives_count,
+                            );
+                        relayer.emit_token_counter_update(token_id);
+                    }
+
+                    // Mint the ERC721 token
+                    let mut erc721_component = ERC721::get_component_mut(ref contract_self);
+                    erc721_component.mint(to, token_id.into());
+
+                    // Emit events with zero address for blank token
+                    self
+                        .emit(
+                            TokenMinted {
+                                token_id, to, game_address: contract_address_const::<0>(),
+                            },
+                        );
+
+                    token_id
+                },
+            }
+        }
+
         fn validate_and_process_game_address(
             self: @ComponentState<TContractState>, game_address: ContractAddress,
         ) -> (ContractAddress, u64) {
-            assert!(!game_address.is_zero(), "CoreToken: Game address is zero");
+            assert!(!game_address.is_zero(), "MinigameToken: Game address is zero");
             // Validate game address supports IMinigame interface
             let game_src5_dispatcher = ISRC5Dispatcher { contract_address: game_address };
             assert!(
                 game_src5_dispatcher.supports_interface(IMINIGAME_ID),
-                "CoreToken: Game address does not support IMinigame interface",
+                "MinigameToken: Game does not support IMinigame interface",
             );
 
             // Check if this has a game registry address
@@ -761,7 +863,7 @@ pub mod CoreTokenComponent {
                 let component_game_address = self.game_address.read();
                 assert!(
                     game_address == component_game_address,
-                    "CoreToken: Game address does not match component's game address",
+                    "MinigameToken: Game address does not match component's game address",
                 );
                 (game_address, 0)
             }
@@ -789,7 +891,7 @@ pub mod CoreTokenComponent {
             let erc721_component = ERC721::get_component(contract);
             let token_owner = erc721_component._owner_of(token_id.into());
             let caller = get_caller_address();
-            assert!(token_owner == caller, "CoreToken: Caller is not owner of token");
+            assert!(token_owner == caller, "MinigameToken: Caller is not owner of token");
         }
 
         fn assert_playable(self: @ComponentState<TContractState>, token_id: u64) {
@@ -798,7 +900,7 @@ pub mod CoreTokenComponent {
             let is_active = metadata.lifecycle.is_playable(current_time);
             assert!(
                 is_active && !metadata.completed_all_objectives && !metadata.game_over,
-                "CoreToken: Token is not playable",
+                "MinigameToken: Token is not playable",
             );
         }
 

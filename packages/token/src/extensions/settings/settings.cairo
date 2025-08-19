@@ -68,7 +68,7 @@ pub mod SettingsComponent {
             let caller = get_caller_address();
             assert!(
                 settings_address == caller,
-                "Denshokan: Settings address {} not registered by caller",
+                "MinigameTokenSettings: Settings address {} not registered by caller",
                 settings_address_display,
             );
 
@@ -135,7 +135,7 @@ pub mod SettingsComponent {
             let settings_component = HasComponent::get_component(self);
             let mut src5_component = get_dep_component!(settings_component, SRC5);
             let supports_settings = src5_component.supports_interface(IMINIGAME_TOKEN_SETTINGS_ID);
-            assert!(supports_settings, "MinigameToken: Contract does not support settings");
+            assert!(supports_settings, "MinigameTokenSettings: Contract does not support settings");
             // Get settings address from game
             let minigame_dispatcher = IMinigameDispatcher { contract_address: game_address };
             let settings_address = minigame_dispatcher.settings_address();
@@ -147,7 +147,7 @@ pub mod SettingsComponent {
                 };
                 assert!(
                     settings_src5_dispatcher.supports_interface(IMINIGAME_SETTINGS_ID),
-                    "CoreToken: Settings contract does not support IMinigameSettings interface",
+                    "MinigameTokenSettings: Settings contract does not support IMinigameSettings interface",
                 );
 
                 // Validate settings exist
@@ -156,7 +156,7 @@ pub mod SettingsComponent {
                 };
                 assert!(
                     settings_dispatcher.settings_exist(settings_id),
-                    "CoreToken: Settings ID {} does not exist",
+                    "MinigameTokenSettings: Settings ID {} does not exist",
                     settings_id,
                 );
             }

@@ -43,7 +43,7 @@ pub mod ContextComponent {
             let src5_dispatcher = ISRC5Dispatcher { contract_address: caller };
             assert!(
                 src5_dispatcher.supports_interface(IMETAGAME_CONTEXT_ID),
-                "Denshokan: Minter does not implement IMetagameContext",
+                "MinigameTokenContext: Minter does not implement IMetagameContext",
             );
             let context_json = create_context_json(
                 context.name, context.description, context.id, context.context,
