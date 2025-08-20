@@ -77,11 +77,11 @@ pub mod TicketBoothComponent {
     #[event]
     #[derive(Drop, starknet::Event)]
     pub enum Event {
-        GameMinted: GameMinted,
+        GameBought: GameBought,
     }
 
     #[derive(Drop, starknet::Event)]
-    pub struct GameMinted {
+    pub struct GameBought {
         #[key]
         pub player: ContractAddress,
         pub token_id: u64,
@@ -93,7 +93,7 @@ pub mod TicketBoothComponent {
         fn buy_game(
             ref self: TContractState,
             payment_type: PaymentType,
-            player_name: felt252,
+            player_name: Option<felt252>,
             to: ContractAddress,
             soulbound: bool,
         ) -> u64;
@@ -125,7 +125,7 @@ pub mod TicketBoothComponent {
         fn buy_game(
             ref self: ComponentState<TContractState>,
             payment_type: PaymentType,
-            player_name: felt252,
+            player_name: Option<felt252>,
             to: ContractAddress,
             soulbound: bool,
         ) -> u64 {
@@ -158,23 +158,16 @@ pub mod TicketBoothComponent {
             };
 
             // Mint the game token with configured settings
-            let token_id = libs::mint(
-                self.game_token_address.read(),
-                Option::Some(self.game_address.read()),
-                Option::Some(player_name),
-                self.settings_id.read(),
-                self.start_time.read(),
-                expiration,
-                Option::None,
-                Option::None,
-                self.client_url.read(),
-                self.renderer_address.read(),
+            let token_id = self.mint_game(
+                player_name,
                 to,
                 soulbound,
+                self.start_time.read(),
+                expiration,
             );
 
             // Emit the event
-            self.emit(GameMinted { player: to, token_id, payment_type });
+            self.emit(GameBought { player: to, token_id, payment_type });
 
             token_id
         }
@@ -404,6 +397,32 @@ pub mod TicketBoothComponent {
                     Option::Some(current_time + duration)
                 },
             }
+        }
+
+        fn mint_game(
+            ref self: ComponentState<TContractState>,
+            player_name: Option<felt252>,
+            to: ContractAddress,
+            soulbound: bool,
+            start_time: Option<u64>,
+            expiration: Option<u64>,
+        ) -> u64 {
+            let token_id = libs::mint(
+                self.game_token_address.read(),
+                Option::Some(self.game_address.read()),
+                player_name,
+                self.settings_id.read(),
+                start_time,
+                expiration,
+                Option::None,
+                Option::None,
+                self.client_url.read(),
+                self.renderer_address.read(),
+                to,
+                soulbound,
+            );
+
+            token_id
         }
 
         fn assert_before_opening(ref self: ComponentState<TContractState>) {
