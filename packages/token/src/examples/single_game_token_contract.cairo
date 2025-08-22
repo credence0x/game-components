@@ -245,6 +245,7 @@ pub mod SingleGameTokenContract {
                 // In production, you'd get these from the game contract or store them
                 let game_name = "Game"; // Default or fetch from game
                 let game_developer = "Developer"; // Default or fetch from game
+                let minted_by_address = self.minter.get_minter_address(token_metadata.minted_by);
 
                 create_custom_metadata(
                     token_id.try_into().unwrap(),
@@ -255,6 +256,7 @@ pub mod SingleGameTokenContract {
                     game_details,
                     score,
                     state,
+                    minted_by_address,
                     player_name,
                 )
             } else {

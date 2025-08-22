@@ -10,3 +10,5 @@ argent_account_sepolia.json
 argent_account_mainnet.json
 .snfoundry_cache/
 packages/test_dojo/
+.DS_Store
+coverage.lcov

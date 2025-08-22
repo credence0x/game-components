@@ -418,3 +418,104 @@ fn test_core_token_minter_edge_cases() {
         i += 1;
     };
 }
+
+#[test]
+#[should_panic]
+fn test_set_token_metadata_invalid_caller_should_panic() {
+    let test_contracts = setup();
+
+    // Mint a blank token with ALICE as caller
+    cheat_caller_address(
+        test_contracts.test_token.contract_address, ALICE(), CheatSpan::TargetCalls(1),
+    );
+    
+    let token_id = test_contracts
+        .test_token
+        .mint(
+            Option::None, // No game - blank token
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            ALICE(),
+            false,
+        );
+
+    // Try to set metadata with BOB as caller (different from minter ALICE)
+    cheat_caller_address(
+        test_contracts.test_token.contract_address, BOB(), CheatSpan::TargetCalls(1),
+    );
+    
+    // This should panic because BOB is not the minter of the token
+    test_contracts
+        .test_token
+        .set_token_metadata(
+            token_id,
+            test_contracts.minigame.contract_address,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+        );
+}
+
+#[test]
+#[should_panic(expected: "MinigameToken: Game address is zero")]
+fn test_mint_with_zero_game_address_should_panic() {
+    let test_contracts = setup();
+
+    // Try to mint with zero game address - this should trigger validation
+    let zero_address = contract_address_const::<0>();
+    
+    test_contracts
+        .test_token
+        .mint(
+            Option::Some(zero_address),
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            ALICE(),
+            false,
+        );
+}
+
+#[test]
+#[should_panic(expected: "MinigameToken: Token 999 does not exist")]
+fn test_update_game_nonexistent_token_should_panic() {
+    let test_contracts = setup();
+
+    // Try to update game for a non-existent token
+    test_contracts.test_token.update_game(999);
+}
+
+#[test]
+#[should_panic(expected: "MinigameToken: Token id 999 not minted")]
+fn test_set_token_metadata_nonexistent_token_should_panic() {
+    let test_contracts = setup();
+
+    // Try to set metadata on a non-existent token
+    test_contracts
+        .test_token
+        .set_token_metadata(
+            999, // Non-existent token
+            test_contracts.minigame.contract_address,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+            Option::None,
+        );
+}
+

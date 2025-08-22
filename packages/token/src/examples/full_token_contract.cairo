@@ -257,6 +257,7 @@ pub mod FullTokenContract {
                 };
                 let state = 0;
                 let player_name = self.core_token.player_name(token_id.try_into().unwrap());
+                let minted_by_address = self.minter.get_minter_address(token_metadata.minted_by);
 
                 create_custom_metadata(
                     token_id.try_into().unwrap(),
@@ -267,6 +268,7 @@ pub mod FullTokenContract {
                     game_details,
                     score,
                     state,
+                    minted_by_address,
                     player_name,
                 )
             } else {

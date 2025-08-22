@@ -6,6 +6,7 @@ use core::num::traits::Zero;
 use crate::encoding::{U256BytesUsedTraitImpl, bytes_base64_encode};
 use graffiti::json::JsonImpl;
 use game_components_minigame::structs::GameDetail;
+use starknet::ContractAddress;
 
 fn logo(image: ByteArray) -> ByteArray {
     format!(
@@ -170,11 +171,13 @@ pub fn create_custom_metadata(
     game_details: Span<GameDetail>,
     score: u32,
     state: u8,
+    minted_by: ContractAddress,
     player_name: felt252,
 ) -> ByteArray {
     let _score = format!("{}", score);
-
     let _game_id = format!("{}", token_id);
+    let address_as_felt: felt252 = minted_by.into();
+    let _minted_by = format!("0x{:x}", address_as_felt);
 
     let mut metadata = JsonImpl::new()
         .add("name", "Game" + " #" + _game_id)
@@ -191,6 +194,11 @@ pub fn create_custom_metadata(
         .add("trait", "State")
         .add("value", game_state(state))
         .build();
+    let minted_by: ByteArray = JsonImpl::new()
+        .add("trait", "Minted By")
+        .add("value", _minted_by)
+        .build();
+
 
     let mut _player_name = Default::default();
         _player_name.append_word(player_name, U256BytesUsedTraitImpl::bytes_used(player_name.into()).into());
@@ -199,7 +207,7 @@ pub fn create_custom_metadata(
         .add("value", _player_name.clone())
         .build();
 
-    let mut attributes = array![name, developer, score, state];
+    let mut attributes = array![name, developer, score, state, minted_by];
 
     if player_name.clone().len() > 0 {
         attributes.append(player_name.clone());
@@ -230,6 +238,7 @@ pub fn create_custom_metadata(
 #[cfg(test)]
 mod tests {
     use super::{create_metadata, create_custom_metadata};
+    use starknet::contract_address_const;
 
     use game_components_minigame::structs::GameDetail;
 
@@ -264,7 +273,8 @@ mod tests {
                 .span(),
             100,
             1,
-            "test Player",
+            contract_address_const::<0x065d2AB17338b5AffdEbAF95E2D79834B5f30Bac596fF55563c62C3c98700150>(),
+            'test Player',
         );
 
         println!("{}", _current_1);

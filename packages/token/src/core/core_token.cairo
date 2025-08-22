@@ -319,11 +319,12 @@ pub mod CoreTokenComponent {
             // Get minted by address and assert it is the caller
             let minted_by = token_metadata.minted_by;
             let minter_address = MinterOpt::get_minter_address(contract, minted_by);
+            let minter_address_felt: felt252 = minter_address.into();
             assert!(
                 minter_address == caller,
                 "MinigameToken: Token id {} minted by {} not by caller",
                 token_id,
-                minted_by,
+                minter_address_felt,
             );
 
             let (final_game_address, game_id) = self
