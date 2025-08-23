@@ -25,8 +25,11 @@ use crate::examples::minigame_registry_contract::{
 
 use crate::interface::{ITokenEventRelayerDispatcher, ITokenEventRelayerDispatcherTrait};
 
+use game_components_metagame::extensions::context::structs::GameContextDetails;
+use game_components_minigame::extensions::settings::structs::GameSettingDetails;
+use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
 use game_components_minigame::structs::GameDetail;
-use game_components_utils::renderer::create_custom_metadata;
+use game_components_utils::renderer::{create_default_svg, create_custom_metadata};
 
 
 #[starknet::contract]
@@ -190,16 +193,24 @@ pub mod FullTokenContract {
                 let renderer_address = self
                     .core_token
                     .renderer_address(token_id.try_into().unwrap());
+                let player_name = self.core_token.player_name(token_id.try_into().unwrap());
+                let game_dispatcher = IMinigameDispatcher { contract_address: game_address };
+                let settings_address = game_dispatcher.settings_address();
 
                 let score_selector = selector!("score");
                 let token_description_selector = selector!("token_description");
-                let details_svg_selector = selector!("game_details_svg");
-                let details_selector = selector!("game_details");
-                let mut calldata = array![];
-                calldata.append(token_id.low.into());
+                let game_details_svg_selector = selector!("game_details_svg");
+                let game_details_selector = selector!("game_details");
+                let settings_details_selector = selector!("settings_details");
+                let context_details_selector = selector!("context_details");
+
+                let mut token_calldata = array![];
+                token_calldata.append(token_id.low.into());
 
                 let score =
-                    match call_contract_syscall(game_address, score_selector, calldata.span()) {
+                    match call_contract_syscall(
+                        game_address, score_selector, token_calldata.span(),
+                    ) {
                     Result::Ok(result) => {
                         // Try to deserialize the result as u32
                         let mut result_span = result;
@@ -213,7 +224,7 @@ pub mod FullTokenContract {
 
                 let token_description =
                     match call_contract_syscall(
-                        renderer_address, token_description_selector, calldata.span(),
+                        renderer_address, token_description_selector, token_calldata.span(),
                     ) {
                     Result::Ok(result) => {
                         // Try to deserialize the result as ByteArray
@@ -228,22 +239,26 @@ pub mod FullTokenContract {
 
                 let game_details_svg =
                     match call_contract_syscall(
-                        renderer_address, details_svg_selector, calldata.span(),
+                        renderer_address, game_details_svg_selector, token_calldata.span(),
                     ) {
                     Result::Ok(result) => {
                         // Try to deserialize the result as ByteArray
                         let mut result_span = result;
                         match Serde::<ByteArray>::deserialize(ref result_span) {
                             Option::Some(game_details_svg) => game_details_svg,
-                            Option::None => "https://denshokan.dev/game/1",
+                            Option::None => create_default_svg(
+                                token_id.try_into().unwrap(), game_metadata.clone(), score, player_name,
+                            ),
                         }
                     },
-                    Result::Err(_) => "https://denshokan.dev/game/1",
+                    Result::Err(_) => create_default_svg(
+                        token_id.try_into().unwrap(), game_metadata.clone(), score, player_name,
+                    ),
                 };
 
                 let game_details =
                     match call_contract_syscall(
-                        renderer_address, details_selector, calldata.span(),
+                        renderer_address, game_details_selector, token_calldata.span(),
                     ) {
                     Result::Ok(result) => {
                         // Try to deserialize the result as Span<GameDetail>
@@ -255,21 +270,67 @@ pub mod FullTokenContract {
                     },
                     Result::Err(_) => array![].span(),
                 };
-                let state = 0;
-                let player_name = self.core_token.player_name(token_id.try_into().unwrap());
+
+                let mut settings_calldata = array![];
+                settings_calldata.append(token_metadata.settings_id.into());
+
+                let settings_details =
+                    match call_contract_syscall(
+                        settings_address, settings_details_selector, settings_calldata.span(),
+                    ) {
+                    Result::Ok(result) => {
+                        // Try to deserialize the result as GameSettingDetails
+                        let mut result_span = result;
+                        match Serde::<GameSettingDetails>::deserialize(ref result_span) {
+                            Option::Some(settings_details) => settings_details,
+                            Option::None => GameSettingDetails {
+                                name: "", description: "", settings: array![].span(),
+                            },
+                        }
+                    },
+                    Result::Err(_) => GameSettingDetails {
+                        name: "", description: "", settings: array![].span(),
+                    },
+                };
+
                 let minted_by_address = self.minter.get_minter_address(token_metadata.minted_by);
+
+                let context_details =
+                    match call_contract_syscall(
+                        minted_by_address, context_details_selector, token_calldata.span(),
+                    ) {
+                    Result::Ok(result) => {
+                        // Try to deserialize the result as GameContextDetails
+                        let mut result_span = result;
+                        match Serde::<GameContextDetails>::deserialize(ref result_span) {
+                            Option::Some(settings_details) => settings_details,
+                            Option::None => GameContextDetails {
+                                name: "",
+                                description: "",
+                                id: Option::None,
+                                context: array![].span(),
+                            },
+                        }
+                    },
+                    Result::Err(_) => GameContextDetails {
+                        name: "", description: "", id: Option::None, context: array![].span(),
+                    },
+                };
+                let objective_ids = self.objectives.objective_ids(token_id.try_into().unwrap());
 
                 create_custom_metadata(
                     token_id.try_into().unwrap(),
                     token_description,
-                    game_metadata.name,
-                    game_metadata.developer,
+                    game_metadata,
                     game_details_svg,
                     game_details,
+                    settings_details,
+                    context_details,
+                    token_metadata,
                     score,
-                    state,
                     minted_by_address,
                     player_name,
+                    objective_ids,
                 )
             } else {
                 // return the blank NFT renderer

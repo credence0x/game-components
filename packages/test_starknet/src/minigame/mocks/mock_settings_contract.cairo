@@ -1,5 +1,5 @@
 use game_components_minigame::extensions::settings::interface::{
-    IMinigameSettings, IMinigameSettingsSVG, IMINIGAME_SETTINGS_ID,
+    IMinigameSettings, IMinigameSettingsDetails, IMinigameSettingsSVG, IMINIGAME_SETTINGS_ID,
 };
 use game_components_minigame::extensions::settings::structs::{GameSettingDetails, GameSetting};
 use starknet::ContractAddress;
@@ -14,7 +14,7 @@ pub trait ISettingsSetter<TContractState> {
 #[starknet::contract]
 pub mod MockSettingsContract {
     use game_components_minigame::extensions::settings::interface::{
-        IMinigameSettings, IMinigameSettingsSVG, IMINIGAME_SETTINGS_ID,
+        IMinigameSettings, IMinigameSettingsDetails, IMinigameSettingsSVG, IMINIGAME_SETTINGS_ID,
     };
     use game_components_minigame::extensions::settings::structs::{GameSettingDetails, GameSetting};
     use openzeppelin_introspection::src5::SRC5Component;
@@ -91,8 +91,11 @@ pub mod MockSettingsContract {
         fn settings_exist(self: @ContractState, settings_id: u32) -> bool {
             self.settings_exist.read(settings_id)
         }
+    }
 
-        fn settings(self: @ContractState, settings_id: u32) -> GameSettingDetails {
+    #[abi(embed_v0)]
+    impl SettingsDetailsImpl of IMinigameSettingsDetails<ContractState> {
+        fn settings_details(self: @ContractState, settings_id: u32) -> GameSettingDetails {
             assert!(self.settings_exist(settings_id), "Settings not found");
 
             let name = self.settings_name.read(settings_id);
@@ -122,7 +125,7 @@ pub mod MockSettingsContract {
     #[abi(embed_v0)]
     impl SettingsSVGImpl of IMinigameSettingsSVG<ContractState> {
         fn settings_svg(self: @ContractState, settings_id: u32) -> ByteArray {
-            let settings = self.settings(settings_id);
+            let settings = self.settings_details(settings_id);
             // Return mock SVG
             "<svg><text>" + settings.name + "</text></svg>"
         }

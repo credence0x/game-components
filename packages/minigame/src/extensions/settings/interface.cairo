@@ -6,8 +6,11 @@ pub const IMINIGAME_SETTINGS_ID: felt252 =
 #[starknet::interface]
 pub trait IMinigameSettings<TState> {
     fn settings_exist(self: @TState, settings_id: u32) -> bool;
-    // TODO: Could be optional
-    fn settings(self: @TState, settings_id: u32) -> GameSettingDetails;
+}
+
+#[starknet::interface]
+pub trait IMinigameSettingsDetails<TState> {
+    fn settings_details(self: @TState, settings_id: u32) -> GameSettingDetails;
 }
 
 #[starknet::interface]

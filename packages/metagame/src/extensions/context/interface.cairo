@@ -6,7 +6,11 @@ pub const IMETAGAME_CONTEXT_ID: felt252 =
 #[starknet::interface]
 pub trait IMetagameContext<TState> {
     fn has_context(self: @TState, token_id: u64) -> bool;
-    fn context(self: @TState, token_id: u64) -> GameContextDetails;
+}
+
+#[starknet::interface]
+pub trait IMetagameContextDetails<TState> {
+    fn context_details(self: @TState, token_id: u64) -> GameContextDetails;
 }
 
 #[starknet::interface]

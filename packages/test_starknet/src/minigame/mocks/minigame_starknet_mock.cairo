@@ -47,10 +47,10 @@ pub trait IMinigameStarknetMockInit<TContractState> {
 pub mod minigame_starknet_mock {
     use game_components_minigame::interface::{IMinigameTokenData, IMinigameDetails};
     use game_components_minigame::extensions::objectives::interface::{
-        IMinigameObjectives, IMINIGAME_OBJECTIVES_ID,
+        IMinigameObjectives, IMinigameObjectivesDetails, IMINIGAME_OBJECTIVES_ID,
     };
     use game_components_minigame::extensions::settings::interface::{
-        IMinigameSettings, IMINIGAME_SETTINGS_ID,
+        IMinigameSettings, IMinigameSettingsDetails, IMINIGAME_SETTINGS_ID,
     };
     use game_components_minigame::minigame::MinigameComponent;
     use game_components_minigame::extensions::objectives::objectives::ObjectivesComponent;
@@ -154,8 +154,11 @@ pub mod minigame_starknet_mock {
             let (_, _, exists) = self.settings_details.entry(settings_id).read();
             exists
         }
+    }
 
-        fn settings(self: @ContractState, settings_id: u32) -> GameSettingDetails {
+    #[abi(embed_v0)]
+    impl SettingsDetailsImpl of IMinigameSettingsDetails<ContractState> {
+        fn settings_details(self: @ContractState, settings_id: u32) -> GameSettingDetails {
             let (name, description, _) = self.settings_details.entry(settings_id).read();
             let difficulty = self.settings_difficulty.entry(settings_id).read();
 
@@ -182,8 +185,11 @@ pub mod minigame_starknet_mock {
             let player_score = self.scores.entry(token_id).read();
             player_score >= target_score
         }
+    }
 
-        fn objectives(self: @ContractState, token_id: u64) -> Span<GameObjective> {
+    #[abi(embed_v0)]
+    impl ObjectivesDetailsImpl of IMinigameObjectivesDetails<ContractState> {
+        fn objectives_details(self: @ContractState, token_id: u64) -> Span<GameObjective> {
             let objective_count = self.token_objective_count.entry(token_id).read();
             let mut objectives = array![];
 

@@ -7,7 +7,11 @@ pub const IMINIGAME_OBJECTIVES_ID: felt252 =
 pub trait IMinigameObjectives<TState> {
     fn objective_exists(self: @TState, objective_id: u32) -> bool;
     fn completed_objective(self: @TState, token_id: u64, objective_id: u32) -> bool;
-    fn objectives(self: @TState, token_id: u64) -> Span<GameObjective>;
+}
+
+#[starknet::interface]
+pub trait IMinigameObjectivesDetails<TState> {
+    fn objectives_details(self: @TState, token_id: u64) -> Span<GameObjective>;
 }
 
 #[starknet::interface]

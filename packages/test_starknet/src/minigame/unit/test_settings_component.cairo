@@ -1,5 +1,6 @@
 use game_components_minigame::extensions::settings::interface::{
     IMinigameSettings, IMinigameSettingsDispatcher, IMinigameSettingsDispatcherTrait,
+    IMinigameSettingsDetails, IMinigameSettingsDetailsDispatcher, IMinigameSettingsDetailsDispatcherTrait,
     IMinigameSettingsSVG, IMinigameSettingsSVGDispatcher, IMinigameSettingsSVGDispatcherTrait,
     IMINIGAME_SETTINGS_ID,
 };
@@ -55,17 +56,18 @@ fn test_get_settings_valid_id() {
     let contract_address = deploy_mock_settings_contract();
 
     let settings_dispatcher = IMinigameSettingsDispatcher { contract_address };
+    let settings_details_dispatcher = IMinigameSettingsDetailsDispatcher { contract_address };
 
     // Get settings ID 1
-    let settings1 = settings_dispatcher.settings(1);
+    let settings1 = settings_details_dispatcher.settings_details(1);
     assert!(settings1.name == "Easy Mode", "Settings 1 name mismatch");
     assert!(
         settings1.description == "Beginner friendly settings", "Settings 1 description mismatch",
     );
-    assert!(settings1.settings.len() == 2, "Settings 1 should have 2 items");
+    assert!(SpanTrait::len(settings1.settings) == 2, "Settings 1 should have 2 items");
 
     // Get settings ID 2
-    let settings2 = settings_dispatcher.settings(2);
+    let settings2 = settings_details_dispatcher.settings_details(2);
     assert!(settings2.name == "Hard Mode", "Settings 2 name mismatch");
     assert!(settings2.description == "Expert settings", "Settings 2 description mismatch");
 }
@@ -76,8 +78,8 @@ fn test_get_settings_valid_id() {
 fn test_get_settings_nonexistent_id() {
     let contract_address = deploy_mock_settings_contract();
 
-    let settings_dispatcher = IMinigameSettingsDispatcher { contract_address };
-    settings_dispatcher.settings(999); // Should panic
+    let settings_details_dispatcher = IMinigameSettingsDetailsDispatcher { contract_address };
+    settings_details_dispatcher.settings_details(999); // Should panic
 }
 
 // Test SET-U-06: Create settings with valid data
@@ -101,11 +103,12 @@ fn test_create_settings_valid_data() {
 
     // Verify settings were created
     let settings_dispatcher = IMinigameSettingsDispatcher { contract_address };
+    let settings_details_dispatcher = IMinigameSettingsDetailsDispatcher { contract_address };
     assert!(settings_dispatcher.settings_exist(10), "New settings should exist");
 
-    let retrieved = settings_dispatcher.settings(10);
+    let retrieved = settings_details_dispatcher.settings_details(10);
     assert!(retrieved.name == "Custom Mode", "Name mismatch");
-    assert!(retrieved.settings.len() == 3, "Should have 3 settings");
+    assert!(SpanTrait::len(retrieved.settings) == 3, "Should have 3 settings");
 }
 
 // Test SET-U-07: Create settings with empty name
@@ -123,7 +126,8 @@ fn test_create_settings_empty_name() {
     setter.create_test_settings(20, empty_name_settings);
 
     let settings_dispatcher = IMinigameSettingsDispatcher { contract_address };
-    let retrieved = settings_dispatcher.settings(20);
+    let settings_details_dispatcher = IMinigameSettingsDetailsDispatcher { contract_address };
+    let retrieved = settings_details_dispatcher.settings_details(20);
     assert!(retrieved.name == "", "Name should be empty");
 }
 
@@ -157,8 +161,9 @@ fn test_create_settings_50_items() {
     setter.create_test_settings(30, large_settings);
 
     let settings_dispatcher = IMinigameSettingsDispatcher { contract_address };
-    let retrieved = settings_dispatcher.settings(30);
-    assert!(retrieved.settings.len() == 20, "Should have 20 settings items");
+    let settings_details_dispatcher = IMinigameSettingsDetailsDispatcher { contract_address };
+    let retrieved = settings_details_dispatcher.settings_details(30);
+    assert!(SpanTrait::len(retrieved.settings) == 20, "Should have 20 settings items");
 }
 
 // Test SET-U-09: Get_settings_id from token

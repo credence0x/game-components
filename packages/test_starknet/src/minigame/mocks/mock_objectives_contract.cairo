@@ -1,5 +1,5 @@
 use game_components_minigame::extensions::objectives::interface::{
-    IMinigameObjectives, IMinigameObjectivesSVG, IMINIGAME_OBJECTIVES_ID,
+    IMinigameObjectives, IMinigameObjectivesDetails, IMinigameObjectivesSVG, IMINIGAME_OBJECTIVES_ID,
 };
 use game_components_minigame::extensions::objectives::structs::GameObjective;
 use starknet::ContractAddress;
@@ -33,7 +33,7 @@ pub trait IObjectivesSetter<TContractState> {
 #[starknet::contract]
 pub mod MockObjectivesContract {
     use game_components_minigame::extensions::objectives::interface::{
-        IMinigameObjectives, IMinigameObjectivesSVG, IMINIGAME_OBJECTIVES_ID,
+        IMinigameObjectives, IMinigameObjectivesDetails, IMinigameObjectivesSVG, IMINIGAME_OBJECTIVES_ID,
     };
     use game_components_minigame::extensions::objectives::structs::GameObjective;
     use super::ObjectiveDetails;
@@ -152,8 +152,11 @@ pub mod MockObjectivesContract {
         fn completed_objective(self: @ContractState, token_id: u64, objective_id: u32) -> bool {
             self.token_objectives.read((token_id, objective_id))
         }
+    }
 
-        fn objectives(self: @ContractState, token_id: u64) -> Span<GameObjective> {
+    #[abi(embed_v0)]
+    impl ObjectivesDetailsImpl of IMinigameObjectivesDetails<ContractState> {
+        fn objectives_details(self: @ContractState, token_id: u64) -> Span<GameObjective> {
             // Return mock objectives for the token
             let mut objectives_list = array![];
 

@@ -29,7 +29,7 @@ pub trait IMetagameStarknetMockInit<TContractState> {
 
 #[starknet::contract]
 pub mod metagame_starknet_mock {
-    use game_components_metagame::extensions::context::interface::IMetagameContext;
+    use game_components_metagame::extensions::context::interface::{IMetagameContext, IMetagameContextDetails};
     use game_components_metagame::metagame::MetagameComponent;
     use game_components_metagame::metagame::MetagameComponent::InternalTrait as MetagameInternalTrait;
     use game_components_metagame::extensions::context::context::ContextComponent;
@@ -86,8 +86,11 @@ pub mod metagame_starknet_mock {
         fn has_context(self: @ContractState, token_id: u64) -> bool {
             self.token_context_exists.read(token_id)
         }
+    }
 
-        fn context(self: @ContractState, token_id: u64) -> GameContextDetails {
+    #[abi(embed_v0)]
+    impl MetagameContextDetailsImpl of IMetagameContextDetails<ContractState> {
+        fn context_details(self: @ContractState, token_id: u64) -> GameContextDetails {
             let context_count = self.token_context_count.read(token_id);
             let mut contexts = array![];
 

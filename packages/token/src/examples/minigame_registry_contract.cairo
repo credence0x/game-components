@@ -3,7 +3,7 @@ use starknet::ContractAddress;
 pub const IMINIGAME_REGISTRY_ID: felt252 =
     0x014a8d6e4bf56a4bbf869257d1f846e5a2ac1e3508466147556f186143409be1;
 
-#[derive(Drop, Serde, starknet::Store)]
+#[derive(Drop, Serde, Clone, starknet::Store)]
 pub struct GameMetadata {
     pub contract_address: ContractAddress,
     pub name: ByteArray,

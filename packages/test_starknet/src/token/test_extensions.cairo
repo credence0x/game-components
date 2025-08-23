@@ -302,7 +302,7 @@ fn test_metadata_update_event() { // This would be tested with update_game when 
 
 #[starknet::contract]
 mod MockSettingsContract {
-    use game_components_minigame::extensions::settings::interface::IMinigameSettings;
+    use game_components_minigame::extensions::settings::interface::{IMinigameSettings, IMinigameSettingsDetails};
     use game_components_minigame::extensions::settings::structs::{GameSettingDetails};
 
     #[storage]
@@ -317,15 +317,17 @@ mod MockSettingsContract {
         fn settings_exist(self: @ContractState, settings_id: u32) -> bool {
             true // Mock always returns true
         }
+    }
 
-        fn settings(self: @ContractState, settings_id: u32) -> GameSettingDetails {
+    #[abi(embed_v0)]
+    impl MinigameSettingsDetailsImpl of IMinigameSettingsDetails<ContractState> {
+        fn settings_details(self: @ContractState, settings_id: u32) -> GameSettingDetails {
             GameSettingDetails {
                 name: "Mock Settings",
                 description: "Mock settings for testing",
                 settings: array![].span(),
             }
         }
-        // settings_svg is not part of the IMinigameSettings interface
     }
 }
 

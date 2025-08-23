@@ -462,7 +462,7 @@ fn test_access_escalation_attack() {
 
 #[starknet::contract]
 mod MockContextProvider {
-    use game_components_metagame::extensions::context::interface::IMetagameContext;
+    use game_components_metagame::extensions::context::interface::{IMetagameContext, IMetagameContextDetails};
     use game_components_metagame::extensions::context::structs::{GameContextDetails, GameContext};
 
     #[storage]
@@ -473,8 +473,11 @@ mod MockContextProvider {
         fn has_context(self: @ContractState, token_id: u64) -> bool {
             true
         }
+    }
 
-        fn context(self: @ContractState, token_id: u64) -> GameContextDetails {
+    #[abi(embed_v0)]
+    impl MetagameContextDetailsImpl of IMetagameContextDetails<ContractState> {
+        fn context_details(self: @ContractState, token_id: u64) -> GameContextDetails {
             GameContextDetails {
                 name: "Tournament",
                 description: "Test tournament",
@@ -486,9 +489,6 @@ mod MockContextProvider {
                     .span(),
             }
         }
-        // fn context_svg(self: @ContractState, token_id: u64) -> ByteArray {
-    //     "<svg>Tournament</svg>"
-    // }
     }
 }
 

@@ -24,6 +24,9 @@ use crate::extensions::settings::settings::SettingsComponent;
 use crate::interface::{ITokenEventRelayerDispatcher, ITokenEventRelayerDispatcherTrait};
 
 use game_components_minigame::structs::GameDetail;
+use game_components_minigame::extensions::settings::structs::GameSettingDetails;
+use game_components_metagame::extensions::context::structs::GameContextDetails;
+use game_components_token::examples::minigame_registry_contract::GameMetadata;
 use game_components_utils::renderer::create_custom_metadata;
 
 
@@ -238,26 +241,50 @@ pub mod SingleGameTokenContract {
                     Result::Err(_) => [].span(),
                 };
 
-                let state = 0;
+                let _state = 0; // Unused for now, but may be needed for future game state tracking
                 let player_name = self.core_token.player_name(token_id.try_into().unwrap());
 
                 // For single-game tokens, we need to get game metadata from the game contract
                 // In production, you'd get these from the game contract or store them
-                let game_name = "Game"; // Default or fetch from game
-                let game_developer = "Developer"; // Default or fetch from game
+                let game_metadata = GameMetadata {
+                    contract_address: game_address,
+                    name: "Game",
+                    description: "A sample game",
+                    developer: "Developer",
+                    publisher: "Publisher",
+                    genre: "Strategy",
+                    image: "https://example.com/image.png",
+                    color: "#ffffff",
+                    client_url: "https://example.com/game",
+                    renderer_address: renderer_address,
+                };
+
+                // Default settings details - empty
+                let settings_details = GameSettingDetails {
+                    name: "", description: "", settings: [].span(),
+                };
+
+                // Default context details - empty
+                let context_details = GameContextDetails {
+                    name: "", description: "", id: Option::None, context: [].span(),
+                };
+
                 let minted_by_address = self.minter.get_minter_address(token_metadata.minted_by);
+                let objective_ids: Span<u32> = [].span(); // Default empty objectives
 
                 create_custom_metadata(
                     token_id.try_into().unwrap(),
                     token_description,
-                    game_name,
-                    game_developer,
+                    game_metadata,
                     game_details_svg,
                     game_details,
+                    settings_details,
+                    context_details,
+                    token_metadata,
                     score,
-                    state,
                     minted_by_address,
                     player_name,
+                    objective_ids,
                 )
             } else {
                 // Fallback if no game address is set
