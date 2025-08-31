@@ -257,7 +257,7 @@
 ## 7. Tooling & Environment
 
 ### Frameworks
-- **Scarb**: v2.10.1 - Cairo package manager and compiler
+- **Scarb**: v2.11.4 - Cairo package manager and compiler
 - **Starknet Foundry (snforge)**: v0.45.0 - Testing framework
 - **Dojo (sozo)**: v1.5.1 - Optional for game-specific tests
 

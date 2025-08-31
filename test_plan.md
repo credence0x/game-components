@@ -336,7 +336,7 @@ This test plan enables implementation of tests achieving 100% behavioral, branch
 
 ### 7.1 Test Frameworks
 - **Primary**: StarkNet Foundry (`snforge`)
-- **Build**: Scarb 2.10.1
+- **Build**: Scarb 2.11.4
 - **Coverage**: cairo-coverage (90% minimum threshold)
 
 ### 7.2 Required Mocks

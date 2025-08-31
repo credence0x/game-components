@@ -133,8 +133,8 @@ Components use interface-based extensions:
 
 ### Key Dependencies
 
-- Cairo 2.10.1 (exact version required)
-- StarkNet 2.10.1
+- Cairo 2.11.4 (exact version required)
+- StarkNet 2.11.4
 - OpenZeppelin contracts for token and introspection
 - Optional: Dojo v1.5.1 for game engine features
 
