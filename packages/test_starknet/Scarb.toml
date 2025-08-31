@@ -5,8 +5,8 @@ edition.workspace = true
 
 [dependencies]
 starknet.workspace = true
-openzeppelin_introspection = "1.0.0"
-openzeppelin_token = "1.0.0"
+openzeppelin_introspection = "2.0.0"
+openzeppelin_token = "2.0.0"
 game_components_metagame = { path = "../metagame" }
 game_components_minigame = { path = "../minigame" }
 game_components_utils = { path = "../utils" }

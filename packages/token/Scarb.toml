@@ -6,8 +6,8 @@ cairo-version = "=2.11.4"
 
 [dependencies]
 starknet = "2.11.4"
-openzeppelin_token = "1.0.0"
-openzeppelin_introspection = "1.0.0"
+openzeppelin_token = "2.0.0"
+openzeppelin_introspection = "2.0.0"
 # Game components dependencies
 game_components_minigame = { path = "../minigame" }
 game_components_metagame = { path = "../metagame" }
