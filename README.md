@@ -1,7 +1,7 @@
 # Game Components Library
 
-[![Cairo](https://img.shields.io/badge/Cairo-2.11.4-blue)](https://github.com/starkware-libs/cairo)
-[![StarkNet](https://img.shields.io/badge/StarkNet-2.11.4-orange)](https://starknet.io/)
+[![Cairo](https://img.shields.io/badge/Cairo-2.12.1-blue)](https://github.com/starkware-libs/cairo)
+[![StarkNet](https://img.shields.io/badge/StarkNet-2.12.1-orange)](https://starknet.io/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Coverage](https://img.shields.io/badge/Coverage-90%25+-brightgreen)](./packages/test_starknet/coverage/)
 
@@ -48,8 +48,8 @@ Minigame
 
 ### Prerequisites
 
-- **Cairo**: 2.11.4 (exact version required)
-- **StarkNet**: 2.11.4
+- **Cairo**: 2.12.1 (exact version required)
+- **StarkNet**: 2.12.1
 - **StarkNet Foundry**: 0.45.0
 - **Scarb**: Latest compatible version
 

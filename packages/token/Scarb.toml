@@ -2,10 +2,10 @@
 name = "game_components_token"
 version = "1.5.1"
 edition = "2024_07"
-cairo-version = "=2.11.4"
+cairo-version = "=2.12.1"
 
 [dependencies]
-starknet = "2.11.4"
+starknet = "2.12.1"
 openzeppelin_token = "2.0.0"
 openzeppelin_introspection = "2.0.0"
 # Game components dependencies
